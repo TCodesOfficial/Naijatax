@@ -1,0 +1,43 @@
+# ==========================================
+# Root Level Explicit Ignores
+# ==========================================
+/Essentials/
+/stitch_design/
+
+# Generic OS & System Files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# ==========================================
+# SERVER: Express Backend Ignores
+# ==========================================
+server/node_modules/
+server/dist/
+server/build/
+server/.env
+server/.env.local
+server/.env.example
+
+# Prisma 7 Custom Generated Client files 
+# (These are generated dynamically using 'npx prisma generate')
+server/prisma/generated/
+
+# ==========================================
+# CLIENT: Flutter Frontend Ignores
+# ==========================================
+client/.dart_tool/
+client/.flutter-plugins
+client/.flutter-plugins-dependencies
+client/.packages
+client/.pub/
+client/build/
+
+# Flutter OS Specific Compilation files
+client/android/**/gradle-wrapper.jar
+client/ios/.generated/
+client/ios/Flutter/Generated.xcconfig
+client/ios/Flutter/flutter_export_environment.sh
+client/macos/Flutter/GeneratedPluginRegistrant.swift
