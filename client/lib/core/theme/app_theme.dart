@@ -67,7 +67,7 @@ class AppTheme {
           titleTextStyle: GoogleFonts.plusJakartaSans(
               fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -153,11 +153,11 @@ class AppTheme {
               fontWeight: FontWeight.w700,
               color: AppColors.inversePrimary),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFF44454F))),
+              side: const BorderSide(color: const Color(0xFF44454F))),
           color: const Color(0xFF1E2638),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
