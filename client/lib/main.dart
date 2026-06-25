@@ -2,22 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_constants.dart';
-import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 import 'providers/theme_provider.dart';
 import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Offline Caching
   await StorageService.init();
 
-  // Initialize Supabase Auth & DB client with placeholders
-  await Supabase.initialize(
-    url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
-  );
+  // Initialize Supabase Auth & DB client
+  // Gracefully handle placeholder or missing credentials
+  try {
+    const url = AppConstants.supabaseUrl;
+    const key = AppConstants.supabaseAnonKey;
+
+    if (url.contains('YOUR_PROJECT') || key.contains('YOUR_ANON_KEY')) {
+      debugPrint(
+          '⚠️ Supabase credentials are placeholders. Running in offline/demo mode.');
+    } else {
+      await Supabase.initialize(url: url, publishableKey: key);
+    }
+  } catch (e) {
+    debugPrint(
+        '⚠️ Supabase initialization failed: $e. Running in offline/demo mode.');
+  }
 
   runApp(
     const ProviderScope(
@@ -35,7 +46,7 @@ class MyApp extends ConsumerWidget {
     final isDarkMode = ref.watch(themeProvider);
 
     return MaterialApp.router(
-      title: 'NaijaTax Enlighten',
+      title: 'NaijaTax',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,

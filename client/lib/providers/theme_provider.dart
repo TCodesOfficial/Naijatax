@@ -1,23 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../core/constants/app_constants.dart';
+import '../services/storage_service.dart';
 
 class ThemeNotifier extends Notifier<bool> {
   @override
   bool build() {
-    _loadFromPrefs();
-    return false; // default: light mode
-  }
-
-  Future<void> _loadFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(AppConstants.themeKey) ?? false;
+    // Load synchronously from Hive (already initialized before runApp)
+    return StorageService.getSetting<bool>('darkMode') ?? false;
   }
 
   Future<void> toggle() async {
     state = !state;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.themeKey, state);
+    await StorageService.setSetting('darkMode', state);
   }
 }
 

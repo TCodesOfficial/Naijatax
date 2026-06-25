@@ -95,8 +95,8 @@ class _AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvid
                   style: ElevatedButton.styleFrom(
                     backgroundColor: defaultBgColor,
                     foregroundColor: defaultFgColor,
-                    disabledBackgroundColor: theme.colorScheme.onSurface.withOpacity(0.12),
-                    disabledForegroundColor: theme.colorScheme.onSurface.withOpacity(0.38),
+                    disabledBackgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                    disabledForegroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),

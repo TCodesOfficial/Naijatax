@@ -4,7 +4,7 @@ export async function getForumTopics(tag?: string) {
   return await prisma.forumTopic.findMany({
     where: tag ? {
       tags: {
-        array_contains: tag
+        string_contains: tag
       }
     } : undefined,
     include: {
@@ -25,6 +25,9 @@ export async function getForumTopicDetail(topicId: string) {
     include: {
       user: {
         select: { id: true, email: true }
+      },
+      _count: {
+        select: { replies: true }
       },
       replies: {
         include: {

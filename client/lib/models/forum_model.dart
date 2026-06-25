@@ -37,6 +37,8 @@ class ForumTopic {
   final List<String> tags;
   final ForumUser user;
   final int replyCount;
+  final int upVotes;
+  final int downVotes;
   final DateTime createdAt;
   final List<ForumReply>? replies;
 
@@ -47,6 +49,8 @@ class ForumTopic {
     required this.tags,
     required this.user,
     required this.replyCount,
+    this.upVotes = 0,
+    this.downVotes = 0,
     required this.createdAt,
     this.replies,
   });
@@ -58,6 +62,8 @@ class ForumTopic {
         tags: (json['tags'] as List).map((e) => e.toString()).toList(),
         user: ForumUser.fromJson(json['user'] as Map<String, dynamic>),
         replyCount: (json['_count'] as Map<String, dynamic>?)?['replies'] as int? ?? 0,
+        upVotes: json['upVotes'] as int? ?? 0,
+        downVotes: json['downVotes'] as int? ?? 0,
         createdAt: DateTime.parse(json['createdAt'] as String),
         replies: json['replies'] != null
             ? (json['replies'] as List)

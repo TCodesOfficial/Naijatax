@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 
@@ -13,7 +14,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
-  final List<Map<String, String>> _messages = [];
+  final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
   String? _sessionId;
   final ScrollController _scrollController = ScrollController();
@@ -35,29 +36,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  Future<void> _sendMessage() async {
-    final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _sendMessage({String? text}) async {
+    final msg = text ?? _messageController.text.trim();
+    if (msg.isEmpty) return;
 
     _messageController.clear();
+    final now = DateFormat('h:mm a').format(DateTime.now());
     setState(() {
-      _messages.add({'role': 'user', 'content': text});
+      _messages.add({'role': 'user', 'content': msg, 'time': now});
       _isLoading = true;
     });
     Future.microtask(_scrollToBottom);
 
     try {
-      final res = await ApiService.instance.sendChatMessage(text, sessionId: _sessionId);
+      final res = await ApiService.instance.sendChatMessage(msg, sessionId: _sessionId);
+      final replyTime = DateFormat('h:mm a').format(DateTime.now());
       setState(() {
         _sessionId = res['sessionId'] as String?;
         final content = res['message']['content'] as String;
-        _messages.add({'role': 'assistant', 'content': content});
+        _messages.add({'role': 'assistant', 'content': content, 'time': replyTime});
         _isLoading = false;
       });
       Future.microtask(_scrollToBottom);
     } catch (e) {
+      final replyTime = DateFormat('h:mm a').format(DateTime.now());
       setState(() {
-        _messages.add({'role': 'assistant', 'content': 'Sorry, I couldn\'t process your request. Check your server connection.'});
+        _messages.add({
+          'role': 'assistant',
+          'content': 'Sorry, I couldn\'t process your request. Check your server connection.',
+          'time': replyTime,
+        });
         _isLoading = false;
       });
       Future.microtask(_scrollToBottom);
@@ -69,7 +77,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
 
-    // If guest, show lock overlay screen
     if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
       return Container(
         padding: const EdgeInsets.all(24),
@@ -77,7 +84,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.lock_outline, size: 80, color: theme.colorScheme.primary),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.lock_outline, size: 48, color: theme.colorScheme.primary),
+              ),
               const SizedBox(height: 24),
               Text(
                 'AI Assistant Locked',
@@ -85,7 +99,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Chatting with the AI Tax Assistant is reserved for registered users. Create an account or log in to continue.',
+                'Chatting with the AI Tax Assistant requires an account.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
@@ -102,7 +116,57 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Column(
       children: [
-        // ─── Chat Message Bubble List ─────────────────────────────────────
+        // Chat header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.psychology, size: 18, color: theme.colorScheme.primary),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tax Expert AI',
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF15803D),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Assistant Online',
+                          style: theme.textTheme.labelSmall?.copyWith(color: const Color(0xFF15803D)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Messages
         Expanded(
           child: _messages.isEmpty
               ? _buildWelcomeMessage(theme)
@@ -113,34 +177,49 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   itemBuilder: (context, idx) {
                     final msg = _messages[idx];
                     final isUser = msg['role'] == 'user';
-                    return _chatBubble(theme, isUser, msg['content'] ?? '');
+                    return _chatBubble(theme, isUser, msg['content'] ?? '', msg['time'] ?? '');
                   },
                 ),
         ),
 
-        // ─── Typing Indicator ─────────────────────────────────────────────
+        // Typing indicator
         if (_isLoading)
           Padding(
-            padding: const EdgeInsets.only(left: 16.0, bottom: 12),
+            padding: const EdgeInsets.only(left: 16, bottom: 12),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 12,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    backgroundColor: theme.colorScheme.primaryContainer,
                     child: Icon(Icons.psychology, size: 14, color: theme.colorScheme.primary),
                   ),
                   const SizedBox(width: 8),
-                  Text('AI is thinking...', style: theme.textTheme.bodySmall),
+                  _typingDots(theme),
                 ],
               ),
             ),
           ),
 
-        // ─── Message Input Box ────────────────────────────────────────────
+        // Suggestion chips (only when no messages)
+        if (_messages.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _suggestionChip(theme, 'Am I tax exempt?'),
+                _suggestionChip(theme, 'VAT on groceries?'),
+                _suggestionChip(theme, 'New NTA 2025 rates'),
+              ],
+            ),
+          ),
+
+        // Input box
         Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               Expanded(
@@ -148,23 +227,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   controller: _messageController,
                   minLines: 1,
                   maxLines: 5,
-                  decoration: const InputDecoration(
-                    hintText: 'Ask about the 2025 Tax Act (e.g. rent reliefs...)',
+                  decoration: InputDecoration(
+                    hintText: 'Ask about the 2025 Tax Act...',
+                    prefixIcon: const Icon(Icons.attach_file, size: 20),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onSubmitted: (_) => _sendMessage(),
                 ),
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.send),
+                icon: const Icon(Icons.send, size: 20),
                 onPressed: _sendMessage,
                 style: IconButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                 ),
               ),
             ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'AI can make mistakes. Verify important financial decisions.',
+            style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
           ),
         ),
       ],
@@ -172,33 +260,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildWelcomeMessage(ThemeData theme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    final now = DateFormat('h:mm a').format(DateTime.now());
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Today, $now',
+          style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.psychology, size: 64, color: theme.colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(
-              'AI Tax Assistant',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Icon(Icons.psychology, size: 18, color: theme.colorScheme.primary),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'How can I help you today? You can ask me questions about individual PAYE brackets, company income tax thresholds, or tax exemptions under the 2025 Act.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  'Hello! I\'m your AI Tax Assistant. I can help you understand the new Nigeria Tax Act (NTA) 2025, calculate potential liabilities, or answer specific questions about exemptions.',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
+              ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _chatBubble(ThemeData theme, bool isUser, String text) {
+  Widget _chatBubble(ThemeData theme, bool isUser, String text, String time) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,24 +314,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isUser ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(12),
-                  topRight: const Radius.circular(12),
-                  bottomLeft: isUser ? const Radius.circular(12) : const Radius.circular(0),
-                  bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(12),
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isUser ? theme.colorScheme.primary : theme.colorScheme.surface,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: isUser ? const Radius.circular(16) : Radius.zero,
+                      bottomRight: isUser ? Radius.zero : const Radius.circular(16),
+                    ),
+                    border: isUser
+                        ? null
+                        : Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                  ),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      color: isUser ? Colors.white : theme.colorScheme.onSurface,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: isUser ? Colors.white : theme.colorScheme.onSurface,
-                  fontSize: 15,
+                const SizedBox(height: 4),
+                Text(
+                  time,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.outline,
+                    fontSize: 10,
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           if (isUser) ...[
@@ -241,6 +360,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _suggestionChip(ThemeData theme, String text) {
+    return ActionChip(
+      label: Text(text, style: TextStyle(fontSize: 13, color: theme.colorScheme.primary)),
+      side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+      backgroundColor: theme.colorScheme.surface,
+      onPressed: () => _sendMessage(text: text),
+    );
+  }
+
+  Widget _typingDots(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(3, (i) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+          );
+        }),
       ),
     );
   }

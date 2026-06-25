@@ -11,6 +11,13 @@ Thumbs.db
 .vscode/
 .idea/
 
+implementation_plan.md
+task.md
+
+
+/implementation_plan.md
+/task.md
+
 # ==========================================
 # SERVER: Express Backend Ignores
 # ==========================================

@@ -26,15 +26,12 @@ class BiometricService {
   /// Prompts the user to authenticate with biometrics.
   /// Returns true on success, false on failure or cancellation.
   static Future<bool> authenticate({
-    String reason = 'Authenticate to access NaijaTax Enlighten',
+    String reason = 'Authenticate to access NaijaTax',
   }) async {
     try {
       return await _auth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
-          biometricOnly: false, // allows PIN fallback
-          stickyAuth: true,
-        ),
+        biometricOnly: false,
       );
     } catch (_) {
       return false;

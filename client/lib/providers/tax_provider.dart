@@ -9,26 +9,22 @@ class TaxState {
   final TaxStatus status;
   final TaxProfile? profile;
   final String? error;
-  final Map<String, dynamic>? parsedStatement;
 
   const TaxState({
     this.status = TaxStatus.idle,
     this.profile,
     this.error,
-    this.parsedStatement,
   });
 
   TaxState copyWith({
     TaxStatus? status,
     TaxProfile? profile,
     String? error,
-    Map<String, dynamic>? parsedStatement,
   }) =>
       TaxState(
         status: status ?? this.status,
         profile: profile ?? this.profile,
         error: error ?? this.error,
-        parsedStatement: parsedStatement ?? this.parsedStatement,
       );
 }
 

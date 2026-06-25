@@ -1,4 +1,4 @@
-package com.naijatax.naijatax_enlighten
+package com.example.naijatax_enlighten
 
 import io.flutter.embedding.android.FlutterActivity
 

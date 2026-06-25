@@ -31,6 +31,19 @@
 
   <title>naijatax_enlighten</title>
   <link rel="manifest" href="manifest.json">
+  <script type="text/javascript">
+    const urlParams = new URLSearchParams(window.location.search);
+    window = Object.assign(window, {
+      FlutterEngineInitializer: {
+        ...window.FlutterEngineInitializer,
+        config: {
+          canvasKitBaseUrl: "canvaskit/"
+        }
+      }
+    });
+  </script>
+  <script src="bundle.js" type="application/javascript"></script>
+  <script src="https://github.com/corbado/flutter-passkeys/..."></script>
 </head>
 <body>
   <!--

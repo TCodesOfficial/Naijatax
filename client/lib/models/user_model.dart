@@ -17,15 +17,15 @@ class UserModel {
         id: json['id'] as String,
         email: json['email'] as String,
         role: json['role'] as String? ?? 'USER',
-        avatarUrl: json['avatar_url'] as String?,
-        createdAt: DateTime.parse(json['created_at'] as String),
+        avatarUrl: json['avatarUrl'] as String?,
+        createdAt: DateTime.parse(json['createdAt'] as String),
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'email': email,
         'role': role,
-        'avatar_url': avatarUrl,
-        'created_at': createdAt.toIso8601String(),
+        'avatarUrl': avatarUrl,
+        'createdAt': createdAt.toIso8601String(),
       };
 }

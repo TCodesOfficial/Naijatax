@@ -29,7 +29,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET) as any;
+    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as any;
     
     // Supabase standard JWT claims: 'sub' contains the user UUID, 'email' contains the user email
     req.user = {
@@ -61,7 +61,7 @@ export function optionalAuth(req: AuthenticatedRequest, res: Response, next: Nex
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET) as any;
+    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as any;
     req.user = {
       id: decoded.sub || decoded.id,
       email: decoded.email,

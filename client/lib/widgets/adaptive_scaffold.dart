@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 
@@ -31,135 +33,188 @@ class AdaptiveScaffold extends ConsumerWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < AppConstants.mobileBreakpoint;
-    
-    final authState = ref.watch(authProvider);
-    final userEmail = authState.user?.email ?? 'Guest User';
-    final isGuest = authState.isGuest;
 
-    // Get current screen title based on selected index
-    final String currentTitle = destinations[navigationShell.currentIndex].label;
+    final authState = ref.watch(authProvider);
+    final isGuest = authState.isGuest;
+    final displayName = authState.user != null
+        ? authState.user!.email.split('@').first
+        : 'Guest';
 
     return Scaffold(
+      // ─── AppBar matching Stitch design ────────────────────────────────────
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.account_balance, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: theme.colorScheme.primary,
+              child: Icon(
+                Icons.account_balance,
+                color: theme.colorScheme.onPrimary,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 10),
             Text(
-              currentTitle,
+              'NaijaTax Enlighten',
               style: theme.textTheme.headlineSmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w700,
+                fontSize: 18,
               ),
             ),
           ],
         ),
+        // Desktop navigation links (hidden on mobile)
         actions: [
+          if (!isMobile) ...[
+            _desktopNavLink(context, 'Home', 0, theme),
+            _desktopNavLink(context, 'Calculator', 1, theme),
+            _desktopNavLink(context, 'AI Assistant', 2, theme),
+            _desktopNavLink(context, 'Community', 3, theme),
+            const SizedBox(width: 8),
+          ],
+          // Notification bell
+          IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          // User avatar or login button
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 12.0),
             child: isGuest
                 ? TextButton.icon(
-                    onPressed: () {
-                      ref.read(authProvider.notifier).signOut();
-                    },
-                    icon: const Icon(Icons.login),
+                    onPressed: () => context.go('/login'),
+                    icon: const Icon(Icons.login, size: 18),
                     label: const Text('Log In'),
                   )
-                : Row(
-                    children: [
-                      Text(
-                        userEmail.split('@').first,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      const SizedBox(width: 8),
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        child: Text(
-                          userEmail[0].toUpperCase(),
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                : CircleAvatar(
+                    radius: 16,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    backgroundImage: authState.user?.avatarUrl != null
+                        ? CachedNetworkImageProvider(authState.user!.avatarUrl!)
+                        : null,
+                    child: authState.user?.avatarUrl == null
+                        ? Text(
+                            displayName[0].toUpperCase(),
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          )
+                        : null,
                   ),
           ),
         ],
       ),
-      body: isMobile
-          ? navigationShell
-          : Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: navigationShell.currentIndex,
-                  onDestinationSelected: (index) => _onTap(context, index),
-                  labelType: NavigationRailLabelType.all,
-                  backgroundColor: theme.colorScheme.surfaceContainerLow,
-                  leading: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: theme.colorScheme.primary,
-                          child: const Icon(Icons.account_balance, color: Colors.white),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'NaijaTax',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  trailing: Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 24.0),
-                        child: IconButton(
-                          icon: const Icon(Icons.logout),
-                          onPressed: () {
-                            ref.read(authProvider.notifier).signOut();
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  destinations: destinations
-                      .map(
-                        (d) => NavigationRailDestination(
-                          icon: d.icon,
-                          selectedIcon: d.selectedIcon,
-                          label: Text(d.label),
-                        ),
-                      )
-                      .toList(),
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(child: navigationShell),
-              ],
-            ),
+
+      // ─── Body ────────────────────────────────────────────────────────────
+      body: navigationShell,
+
+      // ─── Bottom Navigation Bar (mobile only) using google_nav_bar ──────
       bottomNavigationBar: isMobile
-          ? BottomNavigationBar(
-              currentIndex: navigationShell.currentIndex,
-              onTap: (index) => _onTap(context, index),
-              items: destinations
-                  .map(
-                    (d) => BottomNavigationBarItem(
-                      icon: d.icon,
-                      activeIcon: d.selectedIcon,
-                      label: d.label,
+          ? Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outlineVariant,
+                    width: 1,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: GNav(
+                  selectedIndex: navigationShell.currentIndex,
+                  onTabChange: (index) => _onTap(context, index),
+                  gap: 4,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  tabBorderRadius: 20,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  backgroundColor: Colors.transparent,
+                  activeColor: theme.colorScheme.onSecondaryContainer,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  tabBackgroundColor: theme.colorScheme.secondaryContainer,
+                  iconSize: 22,
+                  textStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                  tabs: [
+                    GButton(
+                      icon: navigationShell.currentIndex == 0 ? Icons.home : Icons.home_outlined,
+                      text: 'Home',
                     ),
-                  )
-                  .toList(),
+                    GButton(
+                      icon: navigationShell.currentIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
+                      text: 'Calculator',
+                    ),
+                    GButton(
+                      icon: navigationShell.currentIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
+                      text: 'AI Assistant',
+                    ),
+                    GButton(
+                      icon: navigationShell.currentIndex == 3 ? Icons.groups : Icons.groups_outlined,
+                      text: 'Community',
+                    ),
+                    GButton(
+                      icon: navigationShell.currentIndex == 4 ? Icons.person : Icons.person_outline,
+                      text: 'Profile',
+                    ),
+                  ],
+                ),
+              ),
             )
           : null,
+    );
+  }
+
+  Widget _desktopNavLink(BuildContext context, String label, int index, ThemeData theme) {
+    final isActive = navigationShell.currentIndex == index;
+    return GestureDetector(
+      onTap: () => _onTap(context, index),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 2),
+            if (isActive)
+              Container(
+                height: 2,
+                width: 24,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 

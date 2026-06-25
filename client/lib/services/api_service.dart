@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide MultipartFile;
+
 import '../core/constants/app_constants.dart';
 
 class ApiService {
@@ -23,8 +24,13 @@ class ApiService {
         }
         handler.next(options);
       },
-      onError: (error, handler) {
-        // Log errors but let them propagate for UI handling
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          // Token expired or invalid — sign out
+          try {
+            await Supabase.instance.client.auth.signOut();
+          } catch (_) {}
+        }
         handler.next(error);
       },
     ));
@@ -50,7 +56,8 @@ class ApiService {
   }
 
   // ── AI Chat ──────────────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> sendChatMessage(String content, {String? sessionId}) async {
+  Future<Map<String, dynamic>> sendChatMessage(String content,
+      {String? sessionId}) async {
     final res = await _dio.post('/ai/message', data: {
       'content': content,
       if (sessionId != null) 'sessionId': sessionId,
@@ -74,7 +81,8 @@ class ApiService {
 
   // ── Forum ────────────────────────────────────────────────────────────────
   Future<List<dynamic>> getTopics({String? tag}) async {
-    final res = await _dio.get('/forum', queryParameters: tag != null ? {'tag': tag} : null);
+    final res = await _dio.get('/forum',
+        queryParameters: tag != null ? {'tag': tag} : null);
     return res.data['data'] as List<dynamic>;
   }
 
@@ -83,8 +91,10 @@ class ApiService {
     return res.data['data'] as Map<String, dynamic>;
   }
 
-  Future<void> createTopic(String title, String content, List<String> tags) async {
-    await _dio.post('/forum', data: {'title': title, 'content': content, 'tags': tags});
+  Future<void> createTopic(
+      String title, String content, List<String> tags) async {
+    await _dio.post('/forum',
+        data: {'title': title, 'content': content, 'tags': tags});
   }
 
   Future<void> createReply(String topicId, String content) async {
@@ -98,7 +108,8 @@ class ApiService {
   }
 
   Future<void> submitScore(int score, int total) async {
-    await _dio.post('/quiz/scores', data: {'score': score, 'totalQuestions': total});
+    await _dio
+        .post('/quiz/scores', data: {'score': score, 'totalQuestions': total});
   }
 
   Future<List<dynamic>> getScoreHistory() async {
@@ -108,7 +119,8 @@ class ApiService {
 
   // ── News ─────────────────────────────────────────────────────────────────
   Future<List<dynamic>> getArticles({bool featured = false}) async {
-    final res = await _dio.get('/news', queryParameters: {'featured': featured});
+    final res =
+        await _dio.get('/news', queryParameters: {'featured': featured});
     return res.data['data'] as List<dynamic>;
   }
 

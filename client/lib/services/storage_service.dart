@@ -33,7 +33,9 @@ class StorageService {
     final box = Hive.box('tax_articles');
     final raw = box.get('cached_articles');
     if (raw == null) return null;
-    return (raw as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    return (raw as List)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
   }
 
   // ── App Settings ─────────────────────────────────────────────────────────

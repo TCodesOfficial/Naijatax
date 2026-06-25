@@ -1,36 +1,40 @@
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+
 import '../providers/tax_provider.dart';
 import '../services/api_service.dart';
 import '../services/pdf_service.dart';
-import '../widgets/custom_text_field.dart';
 import '../widgets/animated_button.dart';
+import '../widgets/custom_text_field.dart';
 import '../widgets/tax_charts_widget.dart';
 
 class AssessmentFormScreen extends ConsumerStatefulWidget {
   const AssessmentFormScreen({super.key});
 
   @override
-  ConsumerState<AssessmentFormScreen> createState() => _AssessmentFormScreenState();
+  ConsumerState<AssessmentFormScreen> createState() =>
+      _AssessmentFormScreenState();
 }
 
 class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final _incomeController = TextEditingController(text: '250000');
   final _rentController = TextEditingController(text: '0');
-  final _pensionController = TextEditingController(text: '8'); // represented in %
+  final _pensionController =
+      TextEditingController(text: '8'); // represented in %
   final _turnoverController = TextEditingController(text: '0');
   final _assetsController = TextEditingController(text: '0');
 
   bool _isUploading = false;
   String? _uploadError;
 
-  final _naira = NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
+  final _naira =
+      NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
 
   @override
   void dispose() {
@@ -67,10 +71,9 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
     });
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
-        withData: true,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
       );
 
       if (result == null || result.files.isEmpty) {
@@ -81,16 +84,18 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
       final file = result.files.first;
       MultipartFile dioFile;
 
+      final bytes = file.bytes;
+
       if (kIsWeb) {
-        if (file.bytes == null) throw Exception('File data is empty');
-        dioFile = MultipartFile.fromBytes(file.bytes!, filename: file.name);
+        if (bytes == null) throw Exception('File data is empty');
+        dioFile = MultipartFile.fromBytes(bytes, filename: file.name);
       } else {
         if (file.path == null) throw Exception('File path is missing');
         dioFile = await MultipartFile.fromFile(file.path!, filename: file.name);
       }
 
       final parsed = await ApiService.instance.parseStatement(dioFile);
-      
+
       // Auto-fill form values with parsed values
       if (parsed['monthlyIncome'] != null) {
         _incomeController.text = parsed['monthlyIncome'].toString();
@@ -100,15 +105,19 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
       }
       if (parsed['pensionRate'] != null) {
         // Decimal value back to percent
-        _pensionController.text = ((parsed['pensionRate'] as double) * 100).toStringAsFixed(0);
+        _pensionController.text =
+            ((parsed['pensionRate'] as double) * 100).toStringAsFixed(0);
       }
 
       setState(() {
         _isUploading = false;
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Statement parsed and inputs pre-filled!'), backgroundColor: Colors.green),
+        const SnackBar(
+            content: Text('Statement parsed and inputs pre-filled!'),
+            backgroundColor: Colors.green),
       );
 
       _calculate();
@@ -141,37 +150,43 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                   children: [
                     Text(
                       'Tax Parameters',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     CustomTextField(
                       controller: _incomeController,
                       label: 'Monthly Gross Income (₦)',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _rentController,
                       label: 'Rent Paid Annually (₦)',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _pensionController,
                       label: 'Pension Contribution Rate (%)',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _turnoverController,
                       label: 'Business Turnover / Revenue (₦) - Optional',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _assetsController,
                       label: 'Business Net Assets (₦) - Optional',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -191,11 +206,13 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                               ? const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.upload_file),
                           style: IconButton.styleFrom(
-                            backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHigh,
                             foregroundColor: theme.colorScheme.primary,
                             padding: const EdgeInsets.all(12),
                           ),
@@ -206,7 +223,8 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                       const SizedBox(height: 8),
                       Text(
                         _uploadError!,
-                        style: TextStyle(color: theme.colorScheme.error, fontSize: 13),
+                        style: TextStyle(
+                            color: theme.colorScheme.error, fontSize: 13),
                       ),
                     ],
                   ],
@@ -241,19 +259,24 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                       children: [
                         Text(
                           'Assessment Summary',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         IconButton(
                           icon: const Icon(Icons.picture_as_pdf),
                           tooltip: 'Export Report as PDF',
-                          onPressed: () => PdfService.exportTaxReport(taxState.profile!),
+                          onPressed: () =>
+                              PdfService.exportTaxReport(taxState.profile!),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _resultRow('Annual Gross Income', _naira.format(taxState.profile!.annualGross)),
-                    _resultRow('Pension Deductible', _naira.format(taxState.profile!.pensionDeduction)),
-                    _resultRow('Rent Relief Portion', _naira.format(taxState.profile!.rentRelief)),
+                    _resultRow('Annual Gross Income',
+                        _naira.format(taxState.profile!.annualGross)),
+                    _resultRow('Pension Deductible',
+                        _naira.format(taxState.profile!.pensionDeduction)),
+                    _resultRow('Rent Relief Portion',
+                        _naira.format(taxState.profile!.rentRelief)),
                     const Divider(height: 24),
                     _resultRow(
                       'Computed Monthly Tax (PAYE)',
@@ -291,7 +314,8 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
     );
   }
 
-  Widget _resultRow(String label, String value, {Color? valueColor, bool bold = false}) {
+  Widget _resultRow(String label, String value,
+      {Color? valueColor, bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(

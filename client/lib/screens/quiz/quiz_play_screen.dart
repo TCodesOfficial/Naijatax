@@ -167,117 +167,209 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
     final q = questions[_questionIdx];
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Progress Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
+        children: [
+          // ─── Task-Focused Header ──────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+            ),
+            child: Column(
               children: [
-                Text(
-                  'Question ${_questionIdx + 1}/${questions.length}',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.maybePop(context),
+                      icon: const Icon(Icons.close, size: 22),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Question ${_questionIdx + 1} of ${questions.length}',
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '12s',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Text('Score: $_score', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: (_questionIdx + 1) / questions.length,
+                    backgroundColor: theme.colorScheme.outlineVariant,
+                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.secondary),
+                    minHeight: 4,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: (_questionIdx + 1) / questions.length,
-              backgroundColor: theme.colorScheme.outlineVariant,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-            ),
-            const SizedBox(height: 24),
+          ),
 
-            // Question Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Text(
-                  q.question,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Options List
-            ...List.generate(q.options.length, (idx) {
-              final opt = q.options[idx];
-              Color? cardColor;
-              Color? textColor;
-              BorderSide? borderSide;
-
-              if (_answered) {
-                if (idx == q.correctIndex) {
-                  cardColor = const Color(0xFFE2FBE9); // Correct green
-                  textColor = const Color(0xFF15803D);
-                  borderSide = const BorderSide(color: Color(0xFF15803D), width: 1.5);
-                } else if (_selectedAns == idx) {
-                  cardColor = const Color(0xFFFBEBEB); // Incorrect red
-                  textColor = const Color(0xFFB91C1C);
-                  borderSide = const BorderSide(color: Color(0xFFB91C1C), width: 1.5);
-                }
-              }
-
-              return Card(
-                color: cardColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: borderSide ?? BorderSide(color: theme.colorScheme.outlineVariant),
-                ),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: InkWell(
-                  onTap: () => _answerQuestion(idx, q.correctIndex),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+          // ─── Question Body ────────────────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Question badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Text(
-                      opt,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: textColor,
+                      '2025 NTA Reforms',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ),
-              );
-            }),
-
-            // Explanation panel
-            if (_answered) ...[
-              const SizedBox(height: 16),
-              Card(
-                color: theme.colorScheme.surfaceContainerLow,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.info, size: 18, color: Colors.blue),
-                          SizedBox(width: 6),
-                          Text('Explanation', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(q.explanation, style: const TextStyle(fontSize: 14)),
-                    ],
+                  const SizedBox(height: 16),
+                  Text(
+                    q.question,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      height: 1.4,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+
+                  // Options
+                  ...List.generate(q.options.length, (idx) {
+                    final opt = q.options[idx];
+                    Color? cardColor;
+                    Color? textColor;
+                    BorderSide? borderSide;
+                    FontWeight fontWeight = FontWeight.w500;
+                    double elevation = 0;
+
+                    if (_answered) {
+                      if (idx == q.correctIndex) {
+                        cardColor = const Color(0xFFE2FBE9);
+                        textColor = const Color(0xFF15803D);
+                        borderSide = const BorderSide(color: Color(0xFF15803D), width: 1.5);
+                      } else if (_selectedAns == idx) {
+                        cardColor = const Color(0xFFFBEBEB);
+                        textColor = const Color(0xFFB91C1C);
+                        borderSide = const BorderSide(color: Color(0xFFB91C1C), width: 1.5);
+                      }
+                    } else if (_selectedAns == idx) {
+                      cardColor = theme.colorScheme.primaryContainer.withValues(alpha: 0.1);
+                      borderSide = BorderSide(color: theme.colorScheme.primary, width: 2);
+                      elevation = 2;
+                      fontWeight = FontWeight.w600;
+                    }
+
+                    final optionLabel = String.fromCharCode(65 + idx); // A, B, C, D
+
+                    return Card(
+                      color: cardColor,
+                      elevation: elevation,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: borderSide ?? BorderSide(color: theme.colorScheme.outlineVariant),
+                      ),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: InkWell(
+                        onTap: () => _answerQuestion(idx, q.correctIndex),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: textColor != null
+                                      ? textColor.withValues(alpha: 0.1)
+                                      : theme.colorScheme.surfaceContainerHigh,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    optionLabel,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: textColor ?? theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  opt,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: fontWeight,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+
+                  // Explanation
+                  if (_answered) ...[
+                    const SizedBox(height: 16),
+                    Card(
+                      color: theme.colorScheme.surfaceContainerLow,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFF15803D)),
+                                SizedBox(width: 6),
+                                Text('Explanation', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(q.explanation, style: const TextStyle(fontSize: 14, height: 1.5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    AnimatedButton(
+                      onPressed: () => _nextQuestion(questions.length),
+                      text: _questionIdx < questions.length - 1 ? 'Next Question' : 'Finish Quiz',
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ],
               ),
-              const SizedBox(height: 24),
-              AnimatedButton(
-                onPressed: () => _nextQuestion(questions.length),
-                text: _questionIdx < questions.length - 1 ? 'Next Question' : 'Finish Quiz',
-              ),
-            ],
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

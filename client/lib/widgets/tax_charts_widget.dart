@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../core/theme/theme_colors.dart';
 import '../models/tax_profile.dart';
 
 class TaxChartsWidget extends StatelessWidget {
@@ -71,21 +72,21 @@ class TaxChartsWidget extends StatelessWidget {
         centerSpaceRadius: 40,
         sections: [
           PieChartSectionData(
-            color: const Color(0xFF15803D), // Success Green
+            color: AppColors.success,
             value: netVal,
             title: '${((netVal / total) * 100).toStringAsFixed(0)}%',
             radius: 50,
             titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           PieChartSectionData(
-            color: const Color(0xFFB91C1C), // Gov Red
+            color: AppColors.govRed,
             value: taxVal,
             title: '${((taxVal / total) * 100).toStringAsFixed(0)}%',
             radius: 50,
             titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           PieChartSectionData(
-            color: const Color(0xFF0060AC), // Secondary Blue
+            color: theme.colorScheme.secondary,
             value: dedVal,
             title: '${((dedVal / total) * 100).toStringAsFixed(0)}%',
             radius: 50,
@@ -100,16 +101,16 @@ class TaxChartsWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _legendItem(const Color(0xFF15803D), 'Net Take-Home'),
+        _legendItem(AppColors.success, 'Net Take-Home', theme),
         const SizedBox(height: 8),
-        _legendItem(const Color(0xFFB91C1C), 'Tax Liability (PAYE)'),
+        _legendItem(AppColors.govRed, 'Tax Liability (PAYE)', theme),
         const SizedBox(height: 8),
-        _legendItem(const Color(0xFF0060AC), 'Deductions / Reliefs'),
+        _legendItem(theme.colorScheme.secondary, 'Deductions / Reliefs', theme),
       ],
     );
   }
 
-  Widget _legendItem(Color color, String label) {
+  Widget _legendItem(Color color, String label, ThemeData theme) {
     return Row(
       children: [
         Container(
@@ -118,14 +119,16 @@ class TaxChartsWidget extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+        ),
       ],
     );
   }
 
   Widget _buildBarChart(ThemeData theme) {
     final double computedTax = profile.computedTax.toDouble();
-    // Simulate old tax as being higher if there are savings, or compute it
     final double oldTax = computedTax + profile.savings.toDouble();
 
     return BarChart(
@@ -141,9 +144,9 @@ class TaxChartsWidget extends StatelessWidget {
               getTitlesWidget: (double value, TitleMeta meta) {
                 switch (value.toInt()) {
                   case 0:
-                    return const Text('Old Tax Act', style: TextStyle(fontWeight: FontWeight.bold));
+                    return Text('Old Tax Act', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold));
                   case 1:
-                    return const Text('NTA 2025', style: TextStyle(fontWeight: FontWeight.bold));
+                    return Text('NTA 2025', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold));
                   default:
                     return const Text('');
                 }
@@ -162,7 +165,7 @@ class TaxChartsWidget extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: oldTax,
-                color: const Color(0xFF757684), // Slate Gray
+                color: theme.colorScheme.outline,
                 width: 32,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(6),
@@ -176,7 +179,7 @@ class TaxChartsWidget extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: computedTax,
-                color: const Color(0xFF00288E), // Primary Blue
+                color: theme.colorScheme.primary,
                 width: 32,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(6),
