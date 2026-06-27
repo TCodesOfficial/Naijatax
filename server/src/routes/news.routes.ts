@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getTaxArticles, getEconomicMetrics, syncTaxNews } from '../services/news.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { requireAuth } from '../auth/auth.middleware.js';
 
 const router = Router();
 
@@ -17,8 +18,8 @@ router.get('/metrics', asyncHandler(async (_req: Request, res: Response) => {
   res.status(200).json({ success: true, data: metrics });
 }));
 
-// Internal: Trigger a manual RSS sync (protect with a simple key check in production)
-router.post('/sync', asyncHandler(async (_req: Request, res: Response) => {
+// Internal: Trigger a manual RSS sync (requires authentication)
+router.post('/sync', requireAuth, asyncHandler(async (_req: Request, res: Response) => {
   const result = await syncTaxNews();
   res.status(200).json({ success: true, data: result });
 }));

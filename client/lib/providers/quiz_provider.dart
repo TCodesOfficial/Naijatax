@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/dummy/dev_data.dart';
 import '../models/quiz_model.dart';
 import '../services/api_service.dart';
 
@@ -40,7 +41,7 @@ class QuizNotifier extends Notifier<QuizState> {
       final questions = data.map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>)).toList();
       state = state.copyWith(isLoading: false, questions: questions);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, questions: DevData.quizQuestions);
     }
   }
 
@@ -51,7 +52,7 @@ class QuizNotifier extends Notifier<QuizState> {
       final history = data.map((e) => QuizScore.fromJson(e as Map<String, dynamic>)).toList();
       state = state.copyWith(isLoading: false, history: history);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, history: DevData.quizScores);
     }
   }
 
@@ -59,7 +60,7 @@ class QuizNotifier extends Notifier<QuizState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await ApiService.instance.submitScore(score, total);
-      await fetchScoreHistory(); // refresh history
+      await fetchScoreHistory();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }

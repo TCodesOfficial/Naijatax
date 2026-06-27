@@ -29,4 +29,15 @@ class TaxArticle {
         isFeatured: json['isFeatured'] as bool? ?? false,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'summary': summary,
+        'content': content,
+        'source': source,
+        'url': url,
+        'isFeatured': isFeatured,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }

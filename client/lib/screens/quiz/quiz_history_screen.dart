@@ -38,7 +38,7 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: quizState.history.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, idx) {
                     final item = quizState.history[idx];
                     final String formattedDate = DateFormat.yMMMd().add_jm().format(item.createdAt);

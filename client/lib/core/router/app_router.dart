@@ -1,33 +1,40 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../providers/auth_provider.dart';
+import '../../screens/ai_chat/chat_screen.dart';
+import '../../screens/assessment_form_screen.dart';
+import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/register_screen.dart';
+import '../../screens/calculator/nta_brackets_screen.dart';
+import '../../screens/dashboard/analytics_history_screen.dart';
+import '../../screens/dashboard_screen.dart';
+import '../../screens/documents/documents_vault_screen.dart';
+import '../../screens/educational/tax_education_screen.dart';
+import '../../screens/forum/topic_detail_screen.dart';
+import '../../screens/forum/topic_list_screen.dart';
+import '../../screens/landing/web_landing_screen.dart';
+import '../../screens/landing/mobile_landing_screen.dart';
+import '../../screens/news/latest_news_screen.dart';
+import '../../screens/onboarding/onboarding_screen.dart';
+import '../../screens/profile/profile_screen.dart';
+import '../../screens/profile/verify_account_screen.dart';
+import '../../screens/quiz/quiz_history_screen.dart';
+import '../../screens/quiz/quiz_play_screen.dart';
+import '../../screens/support/support_center_screen.dart';
 import '../../widgets/adaptive_scaffold.dart';
 import '../constants/app_constants.dart';
 
-// Screens imports
-import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/register_screen.dart';
-import '../../screens/onboarding/onboarding_screen.dart';
-import '../../screens/landing/web_landing_screen.dart';
-import '../../screens/dashboard_screen.dart';
-import '../../screens/assessment_form_screen.dart';
-import '../../screens/ai_chat/chat_screen.dart';
-import '../../screens/forum/topic_list_screen.dart';
-import '../../screens/forum/topic_detail_screen.dart';
-import '../../screens/quiz/quiz_play_screen.dart';
-import '../../screens/quiz/quiz_history_screen.dart';
-import '../../screens/educational/tax_education_screen.dart';
-import '../../screens/profile/profile_screen.dart';
-import '../../screens/support/support_center_screen.dart';
-import '../../screens/documents/documents_vault_screen.dart';
-import '../../screens/profile/verify_account_screen.dart';
-import '../../screens/calculator/nta_brackets_screen.dart';
-import '../../screens/news/latest_news_screen.dart';
-import '../../screens/dashboard/analytics_history_screen.dart';
-
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+bool get _isMobile {
+  if (kIsWeb) return false;
+  return Platform.isAndroid || Platform.isIOS;
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -39,22 +46,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       final prefs = await SharedPreferences.getInstance();
       final hasOnboarded = prefs.getBool(AppConstants.onboardedKey) ?? false;
       final location = state.matchedLocation;
-      final isLoggingIn = location == '/login' || location == '/register';
+      final isAuthRoute = location == '/login' || location == '/register';
+      final isOnboarding = location == '/onboarding';
+      final isLanding = location == '/landing';
 
-      if (!hasOnboarded && location != '/onboarding') {
+      // ── Mobile platforms (Android, iOS, Mac, Windows) ────────────────
+      // If user has onboarded or is authenticated, skip landing + onboarding
+      if (_isMobile) {
+        if ((hasOnboarded || authState.isAuthenticated) && (isLanding || isOnboarding)) {
+          return '/dashboard';
+        }
+      }
+
+      // ── Web ─────────────────────────────────────────────────────────
+      // If authenticated and hasn't onboarded, force onboarding
+      if (authState.isAuthenticated && !hasOnboarded && !isOnboarding) {
         return '/onboarding';
       }
 
-      if (authState.status != AuthStatus.unauthenticated && isLoggingIn) {
+      // If authenticated and trying to visit auth pages, go to dashboard
+      if (authState.isAuthenticated && isAuthRoute) {
         return '/dashboard';
-      }
-
-      // Guard protected routes for guests/unauthenticated users
-      final isProtected = location.startsWith('/chat') ||
-          location.startsWith('/profile/documents') ||
-          location.startsWith('/profile/verify');
-      if (isProtected && authState.isGuest) {
-        return '/login';
       }
 
       return null;
@@ -62,16 +74,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/landing',
-        builder: (context, state) => const WebLandingScreen(),
+        builder: (context, state) => _isMobile
+            ? const MobileLandingScreen()
+            : const WebLandingScreen(),
       ),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
@@ -112,7 +123,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
         branches: [
-          // ─── Branch 0: Home ──────────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -136,7 +146,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // ─── Branch 1: Calculator ────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -152,7 +161,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // ─── Branch 2: AI Assistant ──────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -162,7 +170,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // ─── Branch 3: Community ─────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -191,7 +198,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // ─── Branch 4: Profile ───────────────────────────────────────────
           StatefulShellBranch(
             routes: [
               GoRoute(

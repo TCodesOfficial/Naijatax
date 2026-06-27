@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/biometric_service.dart';
+import '../../widgets/guest_restriction_dialog.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -150,7 +151,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final isDarkMode = ref.watch(themeProvider);
 
     final String displayName = authState.user != null
-        ? authState.user!.email.split('@').first
+        ? (authState.user!.displayName ?? authState.user!.email?.split('@').first ?? 'User')
         : 'Guest User';
     final String email = authState.user?.email ?? '';
 
@@ -190,12 +191,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ? CachedNetworkImageProvider(authState.user!.avatarUrl!)
                                 : null,
                             child: authState.user?.avatarUrl == null
-                                ? Text(
-                                    displayName[0].toUpperCase(),
-                                    style: theme.textTheme.headlineLarge?.copyWith(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ? Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: theme.colorScheme.primary,
                                   )
                                 : null,
                           ),
@@ -321,7 +320,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           icon: Icons.notifications_active_outlined,
           title: 'Notification Settings',
           subtitle: 'Control email and push alert preferences.',
-          onTap: () {},
+          trailing: _comingSoonBadge(theme),
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('This feature is coming soon!')),
+            );
+          },
         ),
         _settingsTile(
           theme,
@@ -376,13 +380,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       size: 20,
                     ),
                   ),
-                  title: const Text('Privacy & Security'),
+                  title: Row(
+                    children: [
+                      const Text('Privacy & Security'),
+                      const SizedBox(width: 8),
+                      _comingSoonBadge(theme),
+                    ],
+                  ),
                   subtitle: const Text('Manage passwords, 2FA, and data access.'),
                   trailing: Icon(
                     Icons.chevron_right,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This feature is coming soon!')),
+                    );
+                  },
                 ),
               ],
             ),
@@ -396,24 +410,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           icon: Icons.help_outline,
           title: 'Support Center',
           subtitle: 'Get help with using the app.',
-          onTap: () => context.go('/profile/support'),
+          trailing: _comingSoonBadge(theme),
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('This feature is coming soon!')),
+            );
+          },
         ),
-        if (authState.isAuthenticated) ...[
-          _settingsTile(
-            theme,
-            icon: Icons.folder_outlined,
-            title: 'My Documents',
-            subtitle: 'Manage bank statements and tax reports.',
-            onTap: () => context.go('/profile/documents'),
-          ),
-          _settingsTile(
-            theme,
-            icon: Icons.verified_user_outlined,
-            title: 'Verify Account',
-            subtitle: 'Complete identity verification for full access.',
-            onTap: () => context.go('/profile/verify'),
-          ),
-        ],
+        _settingsTile(
+          theme,
+          icon: Icons.folder_outlined,
+          title: 'My Documents',
+          subtitle: 'Manage bank statements and tax reports.',
+          onTap: () {
+            if (authState.isGuest) {
+              showGuestRestrictionDialog(context);
+            } else {
+              context.go('/profile/documents');
+            }
+          },
+        ),
+        _settingsTile(
+          theme,
+          icon: Icons.verified_user_outlined,
+          title: 'Verify Account',
+          subtitle: 'Complete identity verification for full access.',
+          onTap: () {
+            if (authState.isGuest) {
+              showGuestRestrictionDialog(context);
+            } else {
+              context.go('/profile/verify');
+            }
+          },
+        ),
         const SizedBox(height: 20),
 
         // ─── Logout Button ──────────────────────────────────────────────
@@ -444,6 +473,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _comingSoonBadge(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'Coming Soon',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onTertiaryContainer,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
+      ),
     );
   }
 

@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../widgets/animated_button.dart';
+import '../../widgets/app_logo.dart';
 
 class WebLandingScreen extends StatelessWidget {
   const WebLandingScreen({super.key});
@@ -42,36 +44,36 @@ class WebLandingScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: theme.colorScheme.primary,
-                child: Icon(
-                  Icons.account_balance,
-                  color: theme.colorScheme.onPrimary,
-                  size: 20,
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const AppLogo(radius: 18, iconSize: 20),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    AppConstants.appName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'NaijaTax Enlighten',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          Row(
+          const SizedBox(width: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.end,
             children: [
-              if (isDesktop) ...[
+              if (isDesktop)
                 TextButton(
                   onPressed: () => context.go('/login'),
                   child: const Text('Sign In'),
                 ),
-                const SizedBox(width: 8),
-              ],
               AnimatedButton(
                 onPressed: () => context.go('/register'),
                 text: 'Get Started',
@@ -108,7 +110,7 @@ class WebLandingScreen extends StatelessWidget {
           child: isDesktop
               ? Row(
                   children: [
-                    Expanded(child: _heroContent(context, theme)),
+                    Expanded(child: _heroContent(context, theme, isDesktop)),
                     const SizedBox(width: 80),
                     Expanded(child: _heroVisual(theme)),
                   ],
@@ -117,7 +119,7 @@ class WebLandingScreen extends StatelessWidget {
                   children: [
                     _heroVisual(theme),
                     const SizedBox(height: 40),
-                    _heroContent(context, theme),
+                    _heroContent(context, theme, isDesktop),
                   ],
                 ),
         ),
@@ -125,7 +127,7 @@ class WebLandingScreen extends StatelessWidget {
     );
   }
 
-  Widget _heroContent(BuildContext context, ThemeData theme) {
+  Widget _heroContent(BuildContext context, ThemeData theme, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -148,7 +150,7 @@ class WebLandingScreen extends StatelessWidget {
         Text(
           'Master the 2025\nNigeria Tax Act Reforms',
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 42,
+            fontSize: isDesktop ? 42 : 28,
             fontWeight: FontWeight.w700,
             color: theme.colorScheme.primary,
             height: 1.15,
@@ -166,14 +168,15 @@ class WebLandingScreen extends StatelessWidget {
           ),
         ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1),
         const SizedBox(height: 36),
-        Row(
+        Wrap(
+          spacing: 16,
+          runSpacing: 12,
           children: [
             AnimatedButton(
               onPressed: () => context.go('/login'),
               text: 'Launch App',
               icon: const Icon(Icons.rocket_launch, size: 18),
             ).animate().fadeIn(delay: 800.ms).slideX(begin: -0.1),
-            const SizedBox(width: 16),
             AnimatedButton(
               onPressed: () => context.go('/login'),
               text: 'Try Calculator',
@@ -455,6 +458,8 @@ class WebLandingScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.onSurface,
@@ -464,6 +469,8 @@ class WebLandingScreen extends StatelessWidget {
           Expanded(
             child: Text(
               description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.5,
@@ -503,14 +510,20 @@ class WebLandingScreen extends StatelessWidget {
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _stepCard(theme, '01', Icons.upload_file_outlined,
-                            'Upload', 'Upload your bank\nstatement PDF'),
+                        Flexible(
+                          child: _stepCard(theme, '01', Icons.upload_file_outlined,
+                              'Upload', 'Upload your bank\nstatement PDF'),
+                        ),
                         _stepConnector(theme),
-                        _stepCard(theme, '02', Icons.calculate_outlined,
-                            'Calculate', 'AI parses and\ncomputes your tax'),
+                        Flexible(
+                          child: _stepCard(theme, '02', Icons.calculate_outlined,
+                              'Calculate', 'AI parses and\ncomputes your tax'),
+                        ),
                         _stepConnector(theme),
-                        _stepCard(theme, '03', Icons.picture_as_pdf_outlined,
-                            'Export', 'Download your\nPDF tax report'),
+                        Flexible(
+                          child: _stepCard(theme, '03', Icons.picture_as_pdf_outlined,
+                              'Export', 'Download your\nPDF tax report'),
+                        ),
                       ],
                     )
                   : Column(
@@ -673,55 +686,120 @@ class WebLandingScreen extends StatelessWidget {
 
   // ─── Footer ──────────────────────────────────────────────────────────────
   Widget _buildFooter(BuildContext context, ThemeData theme) {
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width >= 900;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 40 : 20,
+        vertical: 32,
+      ),
       color: theme.colorScheme.onSurface,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.account_balance,
-                        color: theme.colorScheme.inversePrimary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'NaijaTax Enlighten',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+          child: isDesktop
+              ? Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.account_balance,
+                                color: theme.colorScheme.inversePrimary,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  AppConstants.appName,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            _footerLink(theme, 'Privacy Policy'),
+                            _footerLink(theme, 'Terms of Service'),
+                            _footerLink(theme, 'Contact'),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Divider(color: Colors.white.withValues(alpha: 0.15)),
+                    const SizedBox(height: 16),
+                    Text(
+                      '© 2025 ${AppConstants.appName}. Built for the 2025 Nigeria Tax Act reforms.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _footerLink(theme, 'Privacy Policy'),
-                      _footerLink(theme, 'Terms of Service'),
-                      _footerLink(theme, 'Contact'),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Divider(color: Colors.white.withValues(alpha: 0.15)),
-              const SizedBox(height: 16),
-              Text(
-                '© 2025 NaijaTax Enlighten. Built for the 2025 Nigeria Tax Act reforms.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.account_balance,
+                          color: theme.colorScheme.inversePrimary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppConstants.appName,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _footerLink(theme, 'Privacy Policy'),
+                        _footerLink(theme, 'Terms of Service'),
+                        _footerLink(theme, 'Contact'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.white.withValues(alpha: 0.15)),
+                    const SizedBox(height: 12),
+                    Text(
+                      '© 2025 ${AppConstants.appName}.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    Text(
+                      'Built for the 2025 Nigeria Tax Act reforms.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );

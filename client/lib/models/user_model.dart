@@ -1,21 +1,27 @@
 class UserModel {
   final String id;
-  final String email;
+  final String? email;
+  final String? phone;
+  final String? displayName;
   final String role;
   final String? avatarUrl;
   final DateTime createdAt;
 
   const UserModel({
     required this.id,
-    required this.email,
-    required this.role,
+    this.email,
+    this.phone,
+    this.displayName,
+    this.role = 'USER',
     this.avatarUrl,
     required this.createdAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: json['id'] as String,
-        email: json['email'] as String,
+        email: json['email'] as String?,
+        phone: json['phone'] as String?,
+        displayName: json['displayName'] as String?,
         role: json['role'] as String? ?? 'USER',
         avatarUrl: json['avatarUrl'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
@@ -24,6 +30,8 @@ class UserModel {
   Map<String, dynamic> toJson() => {
         'id': id,
         'email': email,
+        'phone': phone,
+        'displayName': displayName,
         'role': role,
         'avatarUrl': avatarUrl,
         'createdAt': createdAt.toIso8601String(),

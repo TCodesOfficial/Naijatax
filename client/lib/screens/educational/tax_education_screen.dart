@@ -88,7 +88,7 @@ class _TaxEducationScreenState extends ConsumerState<TaxEducationScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: articlesState.articles.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, idx) {
                     final art = articlesState.articles[idx];
                     return Card(

@@ -22,12 +22,12 @@ class ForumReply {
   });
 
   factory ForumReply.fromJson(Map<String, dynamic> json) => ForumReply(
-        id: json['id'] as String,
-        content: json['content'] as String,
-        user: ForumUser.fromJson(json['user'] as Map<String, dynamic>),
-        isAccepted: json['isAccepted'] as bool? ?? false,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-      );
+    id: json['id'] as String,
+    content: json['content'] as String,
+    user: ForumUser.fromJson(json['user'] as Map<String, dynamic>),
+    isAccepted: json['isAccepted'] as bool? ?? false,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+  );
 }
 
 class ForumTopic {
@@ -56,19 +56,20 @@ class ForumTopic {
   });
 
   factory ForumTopic.fromJson(Map<String, dynamic> json) => ForumTopic(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        content: json['content'] as String,
-        tags: (json['tags'] as List).map((e) => e.toString()).toList(),
-        user: ForumUser.fromJson(json['user'] as Map<String, dynamic>),
-        replyCount: (json['_count'] as Map<String, dynamic>?)?['replies'] as int? ?? 0,
-        upVotes: json['upVotes'] as int? ?? 0,
-        downVotes: json['downVotes'] as int? ?? 0,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        replies: json['replies'] != null
-            ? (json['replies'] as List)
-                .map((e) => ForumReply.fromJson(e as Map<String, dynamic>))
-                .toList()
-            : null,
-      );
+    id: json['id'] as String,
+    title: json['title'] as String,
+    content: json['content'] as String,
+    tags: (json['tags'] as List).map((e) => e.toString()).toList(),
+    user: ForumUser.fromJson(json['user'] as Map<String, dynamic>),
+    replyCount:
+        (json['_count'] as Map<String, dynamic>?)?['replies'] as int? ?? 0,
+    upVotes: json['upVotes'] as int? ?? 0,
+    downVotes: json['downVotes'] as int? ?? 0,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    replies: json['replies'] != null
+        ? (json['replies'] as List)
+              .map((e) => ForumReply.fromJson(e as Map<String, dynamic>))
+              .toList()
+        : null,
+  );
 }

@@ -17,15 +17,15 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
 
   // NTA 2025 bands (annual)
   final _bands = [
-     _Band('First ₦300k', 0.07, 300000),
-     _Band('Next ₦300k', 0.11, 300000),
-     _Band('Next ₦500k', 0.15, 500000),
-     _Band('Next ₦500k', 0.19, 500000),
-     _Band('Next ₦1.6M', 0.21, 1600000),
-     _Band('Above ₦3.2M', 0.24, double.infinity),
+     _Band('Exempt (≤₦800k)', 0.0, 800000),
+     _Band('₦800k–₦3.8M', 0.15, 3000000),
+     _Band('₦3.8M–₦6.8M', 0.20, 3000000),
+     _Band('₦6.8M–₦20.8M', 0.22, 14000000),
+     _Band('Above ₦20.8M', 0.25, double.infinity),
   ];
 
-  double get _cra => 200000 + (_annualIncome * 0.2);
+  // NTA 2025: flat ₦800k exemption (replaces old CRA)
+  double get _cra => 800000;
   double get _chargeableIncome => max(0, _annualIncome - _cra);
 
   double get _totalTax {
@@ -161,7 +161,7 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
             const SizedBox(height: 20),
             Slider(
               value: _annualIncome,
-              min: 300000,
+              min: 0,
               max: 15000000,
               divisions: 100,
               onChanged: (v) => setState(() => _annualIncome = v),
@@ -169,7 +169,7 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('₦300K', style: theme.textTheme.labelSmall),
+                Text('₦0', style: theme.textTheme.labelSmall),
                 Text('₦15M+', style: theme.textTheme.labelSmall),
               ],
             ),

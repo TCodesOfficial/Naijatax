@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 
@@ -38,7 +38,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       role: decoded.role || 'USER',
     };
     next();
-  } catch (error) {
+  } catch (err) {
     return res.status(401).json({
       success: false,
       error: {
@@ -68,9 +68,9 @@ export function optionalAuth(req: AuthenticatedRequest, res: Response, next: Nex
       role: decoded.role || 'USER',
     };
     next();
-  } catch (error) {
+  } catch (err) {
     // Even if token is expired/invalid, let guest proceed (or force login based on preference, but here we fall back to guest)
-    req.user = undefined;
+    req.user = undefined // for the errors from the user not being resolvedcorrectly;
     next();
   }
 }

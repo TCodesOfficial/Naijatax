@@ -1,4 +1,5 @@
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import '../core/constants/app_constants.dart';
 
 class StorageService {
   static bool _initialized = false;
@@ -6,9 +7,9 @@ class StorageService {
   static Future<void> init() async {
     if (_initialized) return;
     await Hive.initFlutter();
-    await Hive.openBox('tax_profiles');
-    await Hive.openBox('tax_articles');
-    await Hive.openBox('app_settings');
+    await Hive.openBox(AppConstants.taxProfileBox);
+    await Hive.openBox(AppConstants.articlesBox);
+    await Hive.openBox(AppConstants.settingsBox);
     _initialized = true;
   }
 

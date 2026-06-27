@@ -18,10 +18,12 @@ class ApiService {
     // Inject Supabase JWT on every authenticated request
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          options.headers['Authorization'] = 'Bearer ${session.accessToken}';
-        }
+        try {
+          final session = Supabase.instance.client.auth.currentSession;
+          if (session != null) {
+            options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+          }
+        } catch (_) {}
         handler.next(options);
       },
       onError: (error, handler) async {
@@ -58,10 +60,9 @@ class ApiService {
   // ── AI Chat ──────────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> sendChatMessage(String content,
       {String? sessionId}) async {
-    final res = await _dio.post('/ai/message', data: {
-      'content': content,
-      if (sessionId != null) 'sessionId': sessionId,
-    });
+    final data = <String, dynamic>{'content': content};
+    if (sessionId != null) data['sessionId'] = sessionId;
+    final res = await _dio.post('/ai/message', data: data);
     return res.data['data'] as Map<String, dynamic>;
   }
 

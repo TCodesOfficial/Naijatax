@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/forum_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/forum_provider.dart';
 import '../../widgets/custom_text_field.dart';
@@ -184,7 +185,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         itemCount: forumState.topics.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
                         itemBuilder: (context, idx) {
                           final topic = forumState.topics[idx];
                           return _topicCard(theme, topic);
@@ -196,9 +197,9 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
     );
   }
 
-  Widget _topicCard(ThemeData theme, dynamic topic) {
-    final replyCount = topic.replyCount ?? 0;
-    final tagList = topic.tags is List ? List<String>.from(topic.tags) : <String>[];
+  Widget _topicCard(ThemeData theme, ForumTopic topic) {
+    final replyCount = topic.replyCount;
+    final tagList = List<String>.from(topic.tags);
 
     return Card(
       child: InkWell(
@@ -214,7 +215,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                 children: [
                   Icon(Icons.keyboard_arrow_up, color: theme.colorScheme.onSurfaceVariant),
                   Text(
-                    '${topic.upVotes ?? 0}',
+                    '${topic.upVotes}',
                     style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   Icon(Icons.keyboard_arrow_down, color: theme.colorScheme.onSurfaceVariant),
@@ -253,7 +254,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      topic.content ?? '',
+                      topic.content,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),

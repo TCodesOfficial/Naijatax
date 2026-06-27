@@ -40,9 +40,8 @@ Instructions:
 - Keep answers factual. If you do not know the answer, do not make up tax details. Politely refer them to a tax practitioner.
 - Remind users that your advice is for educational purposes and does not constitute official legal advice.
 `;
-
-export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
-  if (sessionId) {
+export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation' ) {
+  if (sessionId) { 
     const session = await prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
       include: { messages: { orderBy: { createdAt: 'asc' } } }

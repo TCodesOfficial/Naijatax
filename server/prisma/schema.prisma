@@ -9,11 +9,13 @@ datasource db {
 }
 
 model User {
-  id           String           @id // Matches Supabase Auth user ID (UUID)
-  email        String           @unique
-  role         String           @default("USER") // USER or ADMIN
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id           String        @id // Matches Supabase Auth user ID (UUID)
+  email        String?       @unique // Optional for phone-based auth
+  phone        String?       @unique // Phone number for phone-based auth
+  displayName  String?       @map("display_name") // User's display name
+  role         String        @default("USER") // USER or ADMIN
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   taxProfiles  TaxProfile[]
   forumTopics  ForumTopic[]
   forumReplies ForumReply[]
@@ -24,18 +26,18 @@ model User {
 }
 
 model TaxProfile {
-  id           String   @id @default(cuid())
- userId       String  @map("user_id")
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   monthlyIncome Decimal  @map("monthly_income") @db.Decimal(15, 2)
-  annualGross  Decimal  @map("annual_gross") @db.Decimal(15, 2)
-  rentPaid     Decimal  @map("rent_paid") @db.Decimal(15, 2)
-  pensionRate  Decimal  @map("pension_rate") @db.Decimal(4, 2)
-  computedTax  Decimal  @map("computed_tax") @db.Decimal(15, 2)
-  netIncome    Decimal  @map("net_income") @db.Decimal(15, 2)
-  isExempt     Boolean  @default(false) @map("is_exempt")
-  citExemption String   @default("EXEMPT") @map("cit_exemption") // EXEMPT, TAXABLE_15, TAXABLE_20 etc.
-  createdAt    DateTime @default(now()) @map("created_at")
+  annualGross   Decimal  @map("annual_gross") @db.Decimal(15, 2)
+  rentPaid      Decimal  @map("rent_paid") @db.Decimal(15, 2)
+  pensionRate   Decimal  @map("pension_rate") @db.Decimal(4, 2)
+  computedTax   Decimal  @map("computed_tax") @db.Decimal(15, 2)
+  netIncome     Decimal  @map("net_income") @db.Decimal(15, 2)
+  isExempt      Boolean  @default(false) @map("is_exempt")
+  citExemption  String   @default("EXEMPT") @map("cit_exemption") // EXEMPT, TAXABLE_15, TAXABLE_20 etc.
+  createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([userId, createdAt])
   @@map("tax_profiles")
@@ -45,7 +47,7 @@ model VatItem {
   id        String   @id @default(cuid())
   name      String   @unique
   category  String
-  status    String   // STANDARD, ZERO_RATED, EXEMPT
+  status    String // STANDARD, ZERO_RATED, EXEMPT
   rate      Decimal  @db.Decimal(4, 2)
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -55,7 +57,7 @@ model VatItem {
 model QuizQuestion {
   id           String   @id @default(cuid())
   question     String
-  options      Json     // Array of strings ["Option A", "Option B", ...]
+  options      Json // Array of strings ["Option A", "Option B", ...]
   correctIndex Int      @map("correct_index")
   explanation  String
   createdAt    DateTime @default(now()) @map("created_at")
@@ -92,7 +94,7 @@ model ChatMessage {
   id        String      @id @default(cuid())
   sessionId String      @map("session_id")
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role      String      // user, assistant, system
+  role      String // user, assistant, system
   content   String
   createdAt DateTime    @default(now()) @map("created_at")
 
@@ -104,7 +106,7 @@ model ForumTopic {
   id        String       @id @default(cuid())
   title     String
   content   String
-  tags      Json         // Array of tags ["PAYE", "VAT", ...]
+  tags      Json // Array of tags ["PAYE", "VAT", ...]
   userId    String       @map("user_id")
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now()) @map("created_at")
@@ -136,7 +138,7 @@ model TaxArticle {
   title      String
   summary    String
   content    String
-  source     String   // FIRS, NRS, KPMG etc.
+  source     String // FIRS, NRS, KPMG etc.
   url        String?
   isFeatured Boolean  @default(false) @map("is_featured")
   createdAt  DateTime @default(now()) @map("created_at")

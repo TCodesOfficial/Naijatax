@@ -19,9 +19,9 @@ void main() async {
     const url = AppConstants.supabaseUrl;
     const key = AppConstants.supabaseAnonKey;
 
-    if (url.contains('YOUR_PROJECT') || key.contains('YOUR_ANON_KEY')) {
+    if (url.isEmpty || key.isEmpty) {
       debugPrint(
-          '⚠️ Supabase credentials are placeholders. Running in offline/demo mode.');
+          '⚠️ Supabase credentials not provided via --dart-define. Running in offline/demo mode.');
     } else {
       await Supabase.initialize(url: url, publishableKey: key);
     }
@@ -46,12 +46,13 @@ class MyApp extends ConsumerWidget {
     final isDarkMode = ref.watch(themeProvider);
 
     return MaterialApp.router(
-      title: 'NaijaTax',
+      title: AppConstants.appShortName,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      showPerformanceOverlay: false,
     );
   }
 }

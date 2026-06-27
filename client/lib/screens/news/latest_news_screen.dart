@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../models/article_model.dart';
 import '../../providers/article_provider.dart';
 
 class LatestNewsScreen extends ConsumerStatefulWidget {
@@ -48,7 +49,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, idx) {
                 final f = filters[idx];
                 final isActive = _selectedFilter == f;
@@ -118,7 +119,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     );
   }
 
-  Widget _featuredCard(ThemeData theme, dynamic article, bool isMobile) {
+  Widget _featuredCard(ThemeData theme, TaxArticle article, bool isMobile) {
     return Card(
       child: Container(
         decoration: BoxDecoration(
@@ -227,7 +228,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     );
   }
 
-  Widget _newsCard(ThemeData theme, dynamic article) {
+  Widget _newsCard(ThemeData theme, TaxArticle article) {
     return Card(
       child: InkWell(
         onTap: () {

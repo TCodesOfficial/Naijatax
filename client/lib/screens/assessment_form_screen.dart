@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -82,17 +81,8 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
       }
 
       final file = result.files.first;
-      MultipartFile dioFile;
-
-      final bytes = file.bytes;
-
-      if (kIsWeb) {
-        if (bytes == null) throw Exception('File data is empty');
-        dioFile = MultipartFile.fromBytes(bytes, filename: file.name);
-      } else {
-        if (file.path == null) throw Exception('File path is missing');
-        dioFile = await MultipartFile.fromFile(file.path!, filename: file.name);
-      }
+      final bytes = await file.readAsBytes();
+      final dioFile = MultipartFile.fromBytes(bytes, filename: file.name);
 
       final parsed = await ApiService.instance.parseStatement(dioFile);
 

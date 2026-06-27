@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment config files (contain secrets — never commit)
+config.dev.json
+config.staging.json
+config.prod.json

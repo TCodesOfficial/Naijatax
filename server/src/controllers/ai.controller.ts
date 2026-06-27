@@ -14,7 +14,7 @@ export const sendMessage = asyncHandler(async (req: AuthenticatedRequest, res: R
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Chat sessions require user login.' },
+      error: { code: 'UNAUTHORIZED', message: 'Chat sessions require user login.'},
     });
   }
 

@@ -4,7 +4,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.6.0 <4.0.0"
+  sdk: ">=3.9.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -31,7 +31,7 @@ dependencies:
   firebase_analytics: ^12.4.3
 
   # ── Offline Storage ──────────────────────────────────────────────────────────
-  hive_flutter: ^1.1.0
+  hive_ce_flutter: ^2.3.4
 
   # ── Biometrics ──────────────────────────────────────────────────────────────
   local_auth: ^3.0.1
@@ -50,19 +50,18 @@ dependencies:
   google_fonts: ^8.1.0
 
   # ── File Picker (bank statement upload) ─────────────────────────────────────
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-beta.7
 
   # ── Image Picker (profile avatar upload) ─────────────────────────────────────
-  image_picker: ^1.1.2
-  cached_network_image: ^3.4.1
+  image_picker: ^1.2.2
+  cached_network_image_ce: ^4.6.4
 
   # ── Shared Preferences (simple key-value: theme toggle, biometric flag) ──────
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.5.5
 
   # ── Utilities ────────────────────────────────────────────────────────────────
   intl: ^0.20.2
   url_launcher: ^6.3.0
-  share_plus: ^12.0.2
 
   # ── UI Enhancements ──────────────────────────────────────────────────────────
   flutter_svg: ^2.0.10+1
@@ -73,10 +72,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^5.0.0
   build_runner: ^2.4.12
   riverpod_generator: ^2.4.0
-  hive_generator: ^2.0.1
+  hive_ce_generator: ^1.9.2
 
 flutter:
   uses-material-design: true

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/dummy/dev_data.dart';
 import '../models/forum_model.dart';
 import '../services/api_service.dart';
 
@@ -40,7 +41,7 @@ class ForumNotifier extends Notifier<ForumState> {
       final topics = data.map((e) => ForumTopic.fromJson(e as Map<String, dynamic>)).toList();
       state = state.copyWith(isLoading: false, topics: topics);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, topics: DevData.topics);
     }
   }
 
@@ -51,7 +52,8 @@ class ForumNotifier extends Notifier<ForumState> {
       final topic = ForumTopic.fromJson(data);
       state = state.copyWith(isLoading: false, selectedTopic: topic);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final devTopic = DevData.topics.where((t) => t.id == id).firstOrNull;
+      state = state.copyWith(isLoading: false, selectedTopic: devTopic);
     }
   }
 
@@ -59,7 +61,7 @@ class ForumNotifier extends Notifier<ForumState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await ApiService.instance.createTopic(title, content, tags);
-      await fetchTopics(); // refresh
+      await fetchTopics();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -69,7 +71,7 @@ class ForumNotifier extends Notifier<ForumState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await ApiService.instance.createReply(topicId, content);
-      await fetchTopicDetail(topicId); // refresh detail with replies
+      await fetchTopicDetail(topicId);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }

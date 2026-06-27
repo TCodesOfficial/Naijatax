@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../core/dummy/dev_data.dart';
+import '../core/utils/app_formatter.dart';
+import '../models/tax_profile.dart';
+import '../models/article_model.dart';
 import '../providers/auth_provider.dart';
 import '../providers/tax_provider.dart';
 import '../providers/article_provider.dart';
+import '../providers/inflation_provider.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -20,6 +26,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     Future.microtask(() {
       ref.read(articlesProvider.notifier).fetchArticles();
       ref.read(articlesProvider.notifier).fetchMetrics();
+      ref.read(inflationProvider.notifier).fetch();
     });
   }
 
@@ -32,9 +39,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final authState = ref.watch(authProvider);
     final taxState = ref.watch(taxProvider);
     final articlesState = ref.watch(articlesProvider);
+    final inflationState = ref.watch(inflationProvider);
 
     final String displayName = authState.user != null
-        ? authState.user!.email.split('@').first
+        ? (authState.user!.displayName ?? authState.user!.email?.split('@').first ?? 'User')
         : 'Guest';
 
     return SingleChildScrollView(
@@ -53,8 +61,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             _buildCalculatorCTA(theme, isMobile),
           SizedBox(height: isMobile ? 20 : 24),
 
-          // ─── Quick Actions ────────────────────────────────────────────────
-          _buildQuickActions(theme, isMobile),
+          // ─── Tax Category Results ─────────────────────────────────────────
+          if (taxState.profile != null) ...[
+            _buildTaxCategoryResults(theme, taxState, isMobile),
+            SizedBox(height: isMobile ? 20 : 24),
+          ],
+
+          // ─── Inflation Chart ──────────────────────────────────────────────
+          _buildInflationChart(theme, inflationState, isMobile),
           SizedBox(height: isMobile ? 20 : 24),
 
           // ─── Recent News ──────────────────────────────────────────────────
@@ -104,7 +118,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top accent bar
             Container(
               height: 4,
               decoration: BoxDecoration(
@@ -195,7 +208,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildMetricsGrid(ThemeData theme, dynamic profile) {
+  Widget _buildMetricsGrid(ThemeData theme, TaxProfile profile) {
     return Column(
       children: [
         Row(
@@ -204,7 +217,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _metricBox(
                 theme,
                 'Estimated Income',
-                '₦${(profile.annualGross / 1000000).toStringAsFixed(1)}M',
+                AppFormatter.nairaCompact(profile.annualGross),
                 theme.colorScheme.onSurface,
               ),
             ),
@@ -213,7 +226,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _metricBox(
                 theme,
                 'Tax Liability',
-                '₦${(profile.computedTax / 1000000).toStringAsFixed(1)}M',
+                AppFormatter.nairaCompact(profile.computedTax),
                 const Color(0xFFB91C1C),
               ),
             ),
@@ -344,13 +357,94 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // ─── Quick Actions ─────────────────────────────────────────────────────
-  Widget _buildQuickActions(ThemeData theme, bool isMobile) {
+  // ─── Tax Category Results ──────────────────────────────────────────────
+  Widget _buildTaxCategoryResults(ThemeData theme, TaxState taxState, bool isMobile) {
+    final p = DevData.taxProfile;
+    final annualGross = p.annualGross;
+    final computedTax = p.computedTax;
+    final netIncome = p.netIncome;
+    final pension = p.pensionDeduction;
+    final rentRelief = p.rentRelief;
+    final vatPayable = DevData.vatPayable;
+    final payeRate = DevData.payeRate;
+    final netRatio = DevData.netIncomeRatio;
+    final pensionRatio = DevData.pensionRatio;
+    final reliefRatio = DevData.reliefRatio;
+
+    final categories = [
+      _TaxCategory(
+        label: 'PAYE',
+        ratio: payeRate.clamp(0.0, 1.0),
+        percentage: '${(payeRate * 100).toStringAsFixed(1)}%',
+        amount: AppFormatter.naira(computedTax),
+        subtitle: 'of ${AppFormatter.nairaCompact(annualGross)} gross',
+        color: theme.colorScheme.primary,
+        bgColor: theme.colorScheme.primaryContainer,
+        icon: Icons.receipt_long_outlined,
+        route: '/calculator',
+      ),
+      _TaxCategory(
+        label: 'VAT',
+        ratio: (vatPayable / DevData.vatMaxRef).clamp(0.0, 1.0),
+        percentage: '7.5%',
+        amount: AppFormatter.naira(vatPayable),
+        subtitle: 'monthly on spending',
+        color: theme.colorScheme.secondary,
+        bgColor: theme.colorScheme.secondaryContainer,
+        icon: Icons.shopping_cart_outlined,
+        route: '/calculator',
+      ),
+      _TaxCategory(
+        label: 'CIT',
+        ratio: DevData.citRatio,
+        percentage: p.citExemption == 'EXEMPT' ? 'Exempt' : '75%',
+        amount: AppFormatter.naira(0),
+        subtitle: 'below \u20A650M threshold',
+        color: theme.colorScheme.tertiary,
+        bgColor: theme.colorScheme.tertiaryFixedDim,
+        icon: Icons.business_outlined,
+        route: '/calculator',
+      ),
+      _TaxCategory(
+        label: 'Net Income',
+        ratio: netRatio.clamp(0.0, 1.0),
+        percentage: '${(netRatio * 100).toStringAsFixed(0)}%',
+        amount: AppFormatter.naira(netIncome),
+        subtitle: 'of ${AppFormatter.nairaCompact(annualGross)} gross',
+        color: const Color(0xFF15803D),
+        bgColor: const Color(0xFF15803D).withValues(alpha: 0.1),
+        icon: Icons.account_balance_wallet_outlined,
+        route: '/dashboard/analytics',
+      ),
+      _TaxCategory(
+        label: 'Pension',
+        ratio: pensionRatio.clamp(0.0, 1.0),
+        percentage: '${(pensionRatio * 100).toStringAsFixed(0)}%',
+        amount: AppFormatter.naira(pension),
+        subtitle: '8% of gross',
+        color: const Color(0xFFB45309),
+        bgColor: const Color(0xFFB45309).withValues(alpha: 0.1),
+        icon: Icons.savings_outlined,
+        route: '/calculator',
+      ),
+      _TaxCategory(
+        label: 'Relief',
+        ratio: reliefRatio.clamp(0.0, 1.0),
+        percentage: '${(reliefRatio * 100).toStringAsFixed(0)}%',
+        amount: AppFormatter.naira(rentRelief),
+        subtitle: 'max rent relief cap',
+        color: const Color(0xFF7C3AED),
+        bgColor: const Color(0xFF7C3AED).withValues(alpha: 0.1),
+        icon: Icons.discount_outlined,
+        route: '/calculator',
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          'Tax Breakdown',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -358,98 +452,299 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: isMobile ? 2 : 4,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.0,
-          children: [
-            _actionTile(
-              theme,
-              icon: Icons.calculate_outlined,
-              label: 'PAYE Calculator',
-              color: theme.colorScheme.primary,
-              bgColor: theme.colorScheme.primaryContainer,
-              onTap: () => context.go('/calculator'),
-            ),
-            _actionTile(
-              theme,
-              icon: Icons.domain_outlined,
-              label: 'Business Tax',
-              color: theme.colorScheme.secondary,
-              bgColor: theme.colorScheme.secondaryContainer,
-              onTap: () => context.go('/calculator'),
-            ),
-            _actionTile(
-              theme,
-              icon: Icons.receipt_long_outlined,
-              label: 'VAT Guide',
-              color: theme.colorScheme.tertiary,
-              bgColor: theme.colorScheme.tertiaryFixedDim,
-              onTap: () => context.go('/calculator'),
-            ),
-            _actionTile(
-              theme,
-              icon: Icons.smart_toy_outlined,
-              label: 'AI Assistant',
-              color: theme.colorScheme.primary,
-              bgColor: theme.colorScheme.surfaceTint,
-              onTap: () => context.go('/chat'),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = isMobile ? 2 : 3;
+            final spacing = 12.0;
+            final cardWidth = (constraints.maxWidth - (crossAxisCount - 1) * spacing) / crossAxisCount;
+            final cardHeight = cardWidth * 1.35;
+            final aspectRatio = cardWidth / cardHeight;
+
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+              childAspectRatio: aspectRatio,
+              children: categories.map((cat) => _taxCategoryTile(theme, cat)).toList(),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _actionTile(
-    ThemeData theme, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required Color bgColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+  Widget _taxCategoryTile(ThemeData theme, _TaxCategory cat) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final circleSize = (constraints.maxWidth * 0.38).clamp(32.0, 52.0);
+        final labelSize = (constraints.maxWidth * 0.095).clamp(11.0, 14.0);
+        final percentSize = (constraints.maxWidth * 0.085).clamp(9.0, 12.0);
+        final amountSize = (constraints.maxWidth * 0.095).clamp(11.0, 14.0);
+        final subtitleSize = (constraints.maxWidth * 0.075).clamp(9.0, 11.0);
+        final strokeWidth = (circleSize * 0.09).clamp(3.0, 5.0);
+        final verticalGap = (constraints.maxHeight * 0.04).clamp(2.0, 8.0);
+
+        return InkWell(
+          onTap: () => context.go(cat.route),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  cat.label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: labelSize,
+                  ),
+                ),
+                SizedBox(height: verticalGap),
+                SizedBox(
+                  width: circleSize,
+                  height: circleSize,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: circleSize,
+                        height: circleSize,
+                        child: CircularProgressIndicator(
+                          value: cat.ratio,
+                          strokeWidth: strokeWidth,
+                          backgroundColor: cat.bgColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(cat.color),
+                          strokeCap: StrokeCap.round,
+                        ),
+                      ),
+                      Text(
+                        cat.percentage,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: percentSize,
+                          fontWeight: FontWeight.w700,
+                          color: cat.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: verticalGap),
+                Text(
+                  cat.amount,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: amountSize,
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(height: verticalGap * 0.4),
+                Text(
+                  cat.subtitle,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: subtitleSize,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ─── Inflation Chart ───────────────────────────────────────────────────
+  Widget _buildInflationChart(ThemeData theme, InflationState state, bool isMobile) {
+    return Card(
       child: Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: theme.colorScheme.outlineVariant),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Nigeria Inflation Rate',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (state.data.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Latest: ${state.data.last.value.toStringAsFixed(1)}%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+              const SizedBox(height: 4),
+              Text(
+                'Consumer prices, annual % \u2014 World Bank',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+              SizedBox(height: isMobile ? 16 : 24),
+              if (state.isLoading)
+                const SizedBox(
+                  height: 200,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (state.error != null && state.data.isEmpty)
+                SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.cloud_off_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Unable to load inflation data',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => ref.read(inflationProvider.notifier).retry(),
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 220,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: state.data.map((d) => d.value).reduce((a, b) => a > b ? a : b) * 1.2,
+                      barTouchData: BarTouchData(
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipItem: (group, groupIdx, rod, rodIdx) {
+                            return BarTooltipItem(
+                              '${state.data[group.x.toInt()].year}\n${rod.toY.toStringAsFixed(1)}%',
+                              GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final idx = value.toInt();
+                              if (idx < state.data.length) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    '${state.data[idx].year}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                            reservedSize: 32,
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 40,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                '${value.toInt()}%',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: 5,
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                          strokeWidth: 1,
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      barGroups: List.generate(state.data.length, (i) {
+                        final d = state.data[i];
+                        final isLatest = i == state.data.length - 1;
+                        return BarChartGroupData(
+                          x: i,
+                          barRods: [
+                            BarChartRodData(
+                              toY: d.value,
+                              color: isLatest
+                                  ? theme.colorScheme.error
+                                  : theme.colorScheme.primary.withValues(alpha: 0.7),
+                              width: isMobile ? 20 : 28,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -500,7 +795,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: state.articles.take(5).length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, idx) {
                 final art = state.articles[idx];
                 return _newsCard(theme, art);
@@ -511,7 +806,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _newsCard(ThemeData theme, dynamic article) {
+  Widget _newsCard(ThemeData theme, TaxArticle article) {
     final badgeColor = article.source.contains('FIRS') || article.source.contains('Alert')
         ? theme.colorScheme.errorContainer
         : article.source.contains('Guide')
@@ -603,4 +898,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (diff.inHours > 0) return '${diff.inHours}h ago';
     return 'Just now';
   }
+}
+
+class _TaxCategory {
+  final String label;
+  final double ratio;
+  final String percentage;
+  final String amount;
+  final String subtitle;
+  final Color color;
+  final Color bgColor;
+  final IconData icon;
+  final String route;
+
+  const _TaxCategory({
+    required this.label,
+    required this.ratio,
+    required this.percentage,
+    required this.amount,
+    required this.subtitle,
+    required this.color,
+    required this.bgColor,
+    required this.icon,
+    required this.route,
+  });
 }

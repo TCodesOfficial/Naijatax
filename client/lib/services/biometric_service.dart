@@ -1,4 +1,5 @@
 import 'package:local_auth/local_auth.dart';
+import '../core/constants/app_constants.dart';
 
 class BiometricService {
   static final _auth = LocalAuthentication();
@@ -26,7 +27,7 @@ class BiometricService {
   /// Prompts the user to authenticate with biometrics.
   /// Returns true on success, false on failure or cancellation.
   static Future<bool> authenticate({
-    String reason = 'Authenticate to access NaijaTax',
+    String reason = 'Authenticate to access ${AppConstants.appShortName}',
   }) async {
     try {
       return await _auth.authenticate(

@@ -13,7 +13,7 @@ app.use(helmet());
 app.use(cors({
   origin: env.NODE_ENV === 'production'
     ? ['https://naijatax.app']          // replace with your deployed domain
-    : ['http://localhost:3000', 'http://localhost:5173', '*'],
+    : ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:5173', 'http://localhost:8080'],
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));

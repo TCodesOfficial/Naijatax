@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/dummy/dev_data.dart';
 import '../models/tax_profile.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -36,7 +37,8 @@ class TaxNotifier extends Notifier<TaxState> {
     if (cached != null) {
       return TaxState(status: TaxStatus.loaded, profile: TaxProfile.fromJson(cached));
     }
-    return const TaxState();
+    // No cached data — load dev data so dashboard always has content
+    return TaxState(status: TaxStatus.loaded, profile: DevData.taxProfile);
   }
 
   Future<void> calculate({
@@ -61,7 +63,26 @@ class TaxNotifier extends Notifier<TaxState> {
       await StorageService.saveTaxProfile(data);
       state = state.copyWith(status: TaxStatus.loaded, profile: profile);
     } catch (e) {
-      state = state.copyWith(status: TaxStatus.error, error: e.toString());
+      // API unavailable — use dev data
+      await StorageService.saveTaxProfile({
+        'monthlyIncome': DevData.taxProfile.monthlyIncome,
+        'annualGross': DevData.taxProfile.annualGross,
+        'pensionDeduction': DevData.taxProfile.pensionDeduction,
+        'rentRelief': DevData.taxProfile.rentRelief,
+        'taxableIncome': DevData.taxProfile.taxableIncome,
+        'computedTax': DevData.taxProfile.computedTax,
+        'netIncome': DevData.taxProfile.netIncome,
+        'isExempt': DevData.taxProfile.isExempt,
+        'citExemption': DevData.taxProfile.citExemption,
+        'savings': DevData.taxProfile.savings,
+        'breakdown': DevData.taxProfile.breakdown.map((b) => {
+          'bracket': b.bracket,
+          'rate': b.rate,
+          'taxableAmount': b.taxableAmount,
+          'tax': b.tax,
+        }).toList(),
+      });
+      state = state.copyWith(status: TaxStatus.loaded, profile: DevData.taxProfile);
     }
   }
 

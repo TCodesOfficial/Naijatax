@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../providers/auth_provider.dart';
+import '../../widgets/guest_restriction_dialog.dart';
 
 class VerifyAccountScreen extends ConsumerWidget {
   const VerifyAccountScreen({super.key});
@@ -10,6 +12,13 @@ class VerifyAccountScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width >= 900;
+    final authState = ref.watch(authProvider);
+
+    if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showGuestRestrictionDialog(context);
+      });
+    }
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(isDesktop ? 24 : 16),

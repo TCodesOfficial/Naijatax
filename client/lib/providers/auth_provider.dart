@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/dummy/dev_data.dart';
 import '../models/user_model.dart';
 import '../core/constants/app_constants.dart';
 
@@ -10,8 +11,16 @@ class AuthState {
   final AuthStatus status;
   final UserModel? user;
   final String? error;
+  final bool needsOtpVerification;
+  final String? pendingPhone;
 
-  const AuthState({required this.status, this.user, this.error});
+  const AuthState({
+    required this.status,
+    this.user,
+    this.error,
+    this.needsOtpVerification = false,
+    this.pendingPhone,
+  });
 
   bool get isGuest => status == AuthStatus.guest;
   bool get isAuthenticated => status == AuthStatus.authenticated;
@@ -26,18 +35,25 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = _client.auth.currentSession;
       if (session != null) {
         _listenToAuthChanges();
+        final user = session.user;
         return AuthState(
           status: AuthStatus.authenticated,
           user: UserModel(
-            id: session.user.id,
-            email: session.user.email ?? '',
+            id: user.id,
+            email: user.email,
+            phone: user.phone,
+            displayName: user.userMetadata?['display_name'] as String?,
             role: 'USER',
             createdAt: DateTime.now(),
           ),
         );
       }
     } catch (_) {
-      // Supabase not initialized (demo/offline mode)
+      // Supabase not initialized — use dev data for offline/demo mode
+      return AuthState(
+        status: AuthStatus.authenticated,
+        user: DevData.user,
+      );
     }
     _listenToAuthChanges();
     return const AuthState(status: AuthStatus.unauthenticated);
@@ -50,11 +66,14 @@ class AuthNotifier extends Notifier<AuthState> {
         final session = data.session;
         if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed) {
           if (session != null) {
+            final user = session.user;
             state = AuthState(
               status: AuthStatus.authenticated,
               user: UserModel(
-                id: session.user.id,
-                email: session.user.email ?? '',
+                id: user.id,
+                email: user.email,
+                phone: user.phone,
+                displayName: user.userMetadata?['display_name'] as String?,
                 role: 'USER',
                 createdAt: DateTime.now(),
               ),
@@ -80,10 +99,20 @@ class AuthNotifier extends Notifier<AuthState> {
       }
       state = AuthState(
         status: AuthStatus.authenticated,
-        user: UserModel(id: u.id, email: u.email ?? '', role: 'USER', createdAt: DateTime.now()),
+        user: UserModel(
+          id: u.id,
+          email: u.email,
+          phone: u.phone,
+          displayName: u.userMetadata?['display_name'] as String?,
+          role: 'USER',
+          createdAt: DateTime.now(),
+        ),
       );
     } on AuthException catch (e) {
       state = AuthState(status: AuthStatus.unauthenticated, error: e.message);
+    } catch (_) {
+      // Supabase not initialized — use dev data
+      state = AuthState(status: AuthStatus.authenticated, user: DevData.user);
     }
   }
 
@@ -98,12 +127,93 @@ class AuthNotifier extends Notifier<AuthState> {
       }
       state = AuthState(
         status: AuthStatus.authenticated,
-        user: UserModel(id: u.id, email: u.email ?? '', role: 'USER', createdAt: DateTime.now()),
+        user: UserModel(
+          id: u.id,
+          email: u.email,
+          phone: u.phone,
+          displayName: u.userMetadata?['display_name'] as String?,
+          role: 'USER',
+          createdAt: DateTime.now(),
+        ),
       );
     } on AuthException catch (e) {
       state = AuthState(status: AuthStatus.unauthenticated, error: e.message);
+    } catch (_) {
+      // Supabase not initialized — use dev data
+      state = AuthState(status: AuthStatus.authenticated, user: DevData.user);
     }
   }
+
+  // ─── Phone Authentication ───────────────────────────────────────────────
+
+  Future<void> signInWithPhone(String phone) async {
+    state = const AuthState(status: AuthStatus.loading);
+    try {
+      await _client.auth.signInWithOtp(phone: phone);
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        needsOtpVerification: true,
+        pendingPhone: phone,
+      );
+    } on AuthException catch (e) {
+      state = AuthState(status: AuthStatus.unauthenticated, error: e.message);
+    } catch (_) {
+      // Supabase not initialized — use dev data
+      state = AuthState(status: AuthStatus.authenticated, user: DevData.user);
+    }
+  }
+
+  Future<void> verifyOtp(String phone, String otp) async {
+    state = const AuthState(status: AuthStatus.loading);
+    try {
+      final res = await _client.auth.verifyOTP(
+        phone: phone,
+        token: otp,
+        type: OtpType.sms,
+      );
+      final u = res.user;
+      if (u == null) {
+        state = const AuthState(status: AuthStatus.unauthenticated, error: 'Invalid OTP. Please try again.');
+        return;
+      }
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        user: UserModel(
+          id: u.id,
+          email: u.email,
+          phone: u.phone,
+          displayName: u.userMetadata?['display_name'] as String?,
+          role: 'USER',
+          createdAt: DateTime.now(),
+        ),
+      );
+    } on AuthException catch (e) {
+      state = AuthState(status: AuthStatus.unauthenticated, error: e.message);
+    } catch (_) {
+      state = AuthState(status: AuthStatus.authenticated, user: DevData.user);
+    }
+  }
+
+  Future<void> signUpWithPhone(String phone, String password) async {
+    state = const AuthState(status: AuthStatus.loading);
+    try {
+      await _client.auth.signUp(
+        phone: phone,
+        password: password,
+      );
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        needsOtpVerification: true,
+        pendingPhone: phone,
+      );
+    } on AuthException catch (e) {
+      state = AuthState(status: AuthStatus.unauthenticated, error: e.message);
+    } catch (_) {
+      state = AuthState(status: AuthStatus.authenticated, user: DevData.user);
+    }
+  }
+
+  // ─── OAuth ──────────────────────────────────────────────────────────────
 
   Future<void> signInWithGoogle() async {
     await _client.auth.signInWithOAuth(OAuthProvider.google,
@@ -135,6 +245,8 @@ class AuthNotifier extends Notifier<AuthState> {
       user: UserModel(
         id: current.id,
         email: current.email,
+        phone: current.phone,
+        displayName: current.displayName,
         role: current.role,
         avatarUrl: avatarUrl,
         createdAt: current.createdAt,
