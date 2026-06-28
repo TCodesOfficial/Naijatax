@@ -49,11 +49,8 @@ class AuthNotifier extends Notifier<AuthState> {
         );
       }
     } catch (_) {
-      // Supabase not initialized — use dev data for offline/demo mode
-      return AuthState(
-        status: AuthStatus.authenticated,
-        user: DevData.user,
-      );
+      // Supabase not initialized — running in offline/demo mode
+      return const AuthState(status: AuthStatus.unauthenticated);
     }
     _listenToAuthChanges();
     return const AuthState(status: AuthStatus.unauthenticated);

@@ -127,7 +127,12 @@ class _AnimatedButtonState extends State<AnimatedButton> with SingleTickerProvid
           widget.icon!,
           const SizedBox(width: 8),
         ],
-        Text(widget.text),
+        Flexible(
+          child: Text(
+            widget.text,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

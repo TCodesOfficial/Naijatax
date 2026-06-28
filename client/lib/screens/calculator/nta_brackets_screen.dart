@@ -195,7 +195,14 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: theme.textTheme.bodySmall),
+          Flexible(
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(
             value,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -326,10 +333,11 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
                             child: Text(
                               _bands[idx].label.replaceAll('Next ', '').replaceAll('Above ', ''),
                               style: theme.textTheme.labelSmall?.copyWith(fontSize: 9),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           );
                         },
-                        reservedSize: 36,
+                        reservedSize: 40,
                       ),
                     ),
                     leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),

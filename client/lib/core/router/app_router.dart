@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../screens/ai_chat/chat_screen.dart';
 import '../../screens/assessment_form_screen.dart';
 import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/register_screen_fixed.dart';
 import '../../screens/calculator/nta_brackets_screen.dart';
 import '../../screens/dashboard/analytics_history_screen.dart';
 import '../../screens/dashboard_screen.dart';
@@ -17,8 +16,8 @@ import '../../screens/documents/documents_vault_screen.dart';
 import '../../screens/educational/tax_education_screen.dart';
 import '../../screens/forum/topic_detail_screen.dart';
 import '../../screens/forum/topic_list_screen.dart';
-import '../../screens/landing/web_landing_screen.dart';
 import '../../screens/landing/mobile_landing_screen.dart';
+import '../../screens/landing/web_landing_screen.dart';
 import '../../screens/news/latest_news_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/profile/profile_screen.dart';
@@ -31,10 +30,7 @@ import '../constants/app_constants.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-bool get _isMobile {
-  if (kIsWeb) return false;
-  return Platform.isAndroid || Platform.isIOS;
-}
+bool get _isNativePlatform => !kIsWeb;
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -46,27 +42,39 @@ final routerProvider = Provider<GoRouter>((ref) {
       final prefs = await SharedPreferences.getInstance();
       final hasOnboarded = prefs.getBool(AppConstants.onboardedKey) ?? false;
       final location = state.matchedLocation;
+      final isAuthenticatedLike =
+          authState.isAuthenticated || authState.isGuest;
+
       final isAuthRoute = location == '/login' || location == '/register';
       final isOnboarding = location == '/onboarding';
       final isLanding = location == '/landing';
 
-      // ── Mobile platforms (Android, iOS, Mac, Windows) ────────────────
-      // If user has onboarded or is authenticated, skip landing + onboarding
-      if (_isMobile) {
-        if ((hasOnboarded || authState.isAuthenticated) && (isLanding || isOnboarding)) {
-          return '/dashboard';
-        }
+      // ── RULE 1: Authenticated/guest users on auth routes → skip away ─────
+      if (isAuthenticatedLike && isAuthRoute) {
+        return hasOnboarded ? '/dashboard' : '/onboarding';
+      }
+      // ── RULE 2: Already completed onboarding → skip landing/onboarding ─
+      if (hasOnboarded && (isLanding || isOnboarding)) {
+        return '/dashboard';
       }
 
-      // ── Web ─────────────────────────────────────────────────────────
-      // If authenticated and hasn't onboarded, force onboarding
-      if (authState.isAuthenticated && !hasOnboarded && !isOnboarding) {
+      // ── RULE 3: Authenticated/guest but not onboarded → force onboarding ──
+      // (only when not already on onboarding, auth routes, or landing)
+      if (isAuthenticatedLike &&
+          !hasOnboarded &&
+          !isOnboarding &&
+          !isAuthRoute &&
+          !isLanding) {
         return '/onboarding';
       }
 
-      // If authenticated and trying to visit auth pages, go to dashboard
-      if (authState.isAuthenticated && isAuthRoute) {
-        return '/dashboard';
+      // ── RULE 4: Native returning users → skip landing to login ──────
+      // If user has onboarded before but session expired, go straight to login
+      if (_isNativePlatform &&
+          !isAuthenticatedLike &&
+          hasOnboarded &&
+          isLanding) {
+        return '/login';
       }
 
       return null;
@@ -74,7 +82,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/landing',
-        builder: (context, state) => _isMobile
+        builder: (context, state) => _isNativePlatform
             ? const MobileLandingScreen()
             : const WebLandingScreen(),
       ),
@@ -85,7 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        builder: (context, state) => const RegisterScreenFixed(),
       ),
 
       // Adaptive Shell with 5 bottom nav tabs

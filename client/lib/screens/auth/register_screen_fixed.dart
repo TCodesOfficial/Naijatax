@@ -10,17 +10,19 @@ import '../../widgets/animated_button.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/custom_text_field.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreenFixed extends ConsumerStatefulWidget {
+  const RegisterScreenFixed({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreenFixed> createState() =>
+      _RegisterScreenFixedState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenFixedState extends ConsumerState<RegisterScreenFixed> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
 
@@ -32,6 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _phoneController.dispose();
     _otpController.dispose();
     super.dispose();
@@ -39,9 +42,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submitEmail() async {
     if (_formKey.currentState?.validate() ?? false) {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Passwords do not match'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        return;
+      }
       ref
           .read(authProvider.notifier)
-          .signInWithEmail(
+          .signUpWithEmail(
             _emailController.text.trim(),
             _passwordController.text,
           );
@@ -56,7 +68,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       return;
     }
-    await ref.read(authProvider.notifier).signInWithPhone(phone);
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Passwords do not match'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    await ref
+        .read(authProvider.notifier)
+        .signUpWithPhone(phone, _passwordController.text);
   }
 
   void _verifyOtp() async {
@@ -66,6 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       return;
     }
+
     await ref
         .read(authProvider.notifier)
         .verifyOtp(_pendingPhone!, _otpController.text.trim());
@@ -75,22 +100,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.status == AuthStatus.authenticated ||
-          next.status == AuthStatus.guest) {
+      if (next.status == AuthStatus.authenticated) {
         final router = GoRouter.of(context);
         SharedPreferences.getInstance().then((prefs) {
           if (!mounted) return;
           final hasOnboarded =
               prefs.getBool(AppConstants.onboardedKey) ?? false;
-          if (!hasOnboarded && next.status == AuthStatus.authenticated) {
-            router.go('/onboarding');
-          } else {
-            router.go('/dashboard');
-          }
+          router.go(hasOnboarded ? '/dashboard' : '/onboarding');
         });
       } else if (next.needsOtpVerification) {
         setState(() {
@@ -138,7 +159,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildDesktopLayout(ThemeData theme, AuthState authState) {
     return Row(
       children: [
-        // Left panel — branding
         Expanded(
           flex: 5,
           child: Container(
@@ -171,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Sign in to access your personalized\ntax tools and insights.',
+                      'Master the 2025 Nigeria Tax Act Reforms.\nCalculate, learn, and stay compliant.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: Colors.white.withValues(alpha: 0.85),
@@ -184,7 +204,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
-        // Right panel — form
         Expanded(
           flex: 4,
           child: Center(
@@ -233,7 +252,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         child: Stack(
           children: [
-            // Form content (painted first, hit-tested last)
             Padding(
               padding: const EdgeInsets.all(28.0),
               child: SingleChildScrollView(
@@ -244,7 +262,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 8),
-                    // Brand header
                     Text(
                       AppConstants.appName,
                       textAlign: TextAlign.center,
@@ -256,7 +273,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Sign in to access personalized tax tools and insights.',
+                      'Create your account to start tracking taxes.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -264,7 +281,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Toggle between Email and Phone
                     Container(
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerLow,
@@ -336,7 +352,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 20),
 
                     if (!_isPhoneMode) ...[
-                      // Email input
                       CustomTextField(
                         controller: _emailController,
                         label: 'Email Address',
@@ -348,8 +363,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : null,
                       ),
                       const SizedBox(height: 14),
-
-                      // Password input
                       CustomTextField(
                         controller: _passwordController,
                         label: 'Password',
@@ -361,36 +374,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? 'Password must be at least 6 characters'
                             : null,
                       ),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Forgot?',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 14),
+                      CustomTextField(
+                        controller: _confirmPasswordController,
+                        label: 'Confirm Password',
+                        hintText:
+                            '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                        validator: (v) =>
+                            v == null ? 'Confirm password is required' : null,
                       ),
-                      const SizedBox(height: 4),
-
-                      // Sign In button
+                      const SizedBox(height: 20),
                       AnimatedButton(
                         onPressed: _submitEmail,
-                        text: 'Sign In',
+                        text: 'Sign Up',
                         isLoading: authState.status == AuthStatus.loading,
                         icon: const Icon(Icons.arrow_forward, size: 18),
                       ),
                     ] else ...[
                       if (!_otpSent) ...[
-                        // Phone input with shared label
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -443,9 +446,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 14),
+                        CustomTextField(
+                          controller: _passwordController,
+                          label: 'Password',
+                          hintText:
+                              '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                          obscureText: true,
+                          prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                          validator: (v) => v == null || v.length < 6
+                              ? 'Password must be at least 6 characters'
+                              : null,
+                        ),
+                        const SizedBox(height: 14),
+                        CustomTextField(
+                          controller: _confirmPasswordController,
+                          label: 'Confirm Password',
+                          hintText:
+                              '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                          obscureText: true,
+                          prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                          validator: (v) =>
+                              v == null ? 'Confirm password is required' : null,
+                        ),
                         const SizedBox(height: 20),
-
-                        // Send OTP button
                         AnimatedButton(
                           onPressed: _submitPhone,
                           text: 'Send OTP',
@@ -461,8 +485,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // OTP input
                         CustomTextField(
                           controller: _otpController,
                           label: 'OTP Code',
@@ -472,11 +494,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           prefixIcon: const Icon(Icons.pin_outlined, size: 20),
                         ),
                         const SizedBox(height: 20),
-
-                        // Verify OTP button
                         AnimatedButton(
                           onPressed: _verifyOtp,
-                          text: 'Verify & Sign In',
+                          text: 'Verify & Create Account',
                           isLoading: authState.status == AuthStatus.loading,
                           icon: const Icon(Icons.check_circle, size: 18),
                         ),
@@ -494,7 +514,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Divider
                     Row(
                       children: [
                         const Expanded(child: Divider()),
@@ -513,43 +532,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Social logins
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _socialButton(theme, Icons.g_mobiledata, 'Google', () {
-                          ref.read(authProvider.notifier).signInWithGoogle();
-                        }),
+                        _socialButton(
+                          theme,
+                          Icons.g_mobiledata,
+                          'Google',
+                          () => ref
+                              .read(authProvider.notifier)
+                              .signInWithGoogle(),
+                        ),
                         const SizedBox(width: 12),
-                        _socialButton(theme, Icons.apple, 'Apple', () {
-                          ref.read(authProvider.notifier).signInWithApple();
-                        }),
+                        _socialButton(
+                          theme,
+                          Icons.apple,
+                          'Apple',
+                          () =>
+                              ref.read(authProvider.notifier).signInWithApple(),
+                        ),
                         const SizedBox(width: 12),
-                        _socialButton(theme, Icons.facebook, 'Facebook', () {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                        _socialButton(
+                          theme,
+                          Icons.facebook,
+                          'Facebook',
+                          () => ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Facebook login coming soon'),
                             ),
-                          );
-                        }),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
 
-                    // Sign up link
                     Wrap(
                       alignment: WrapAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          "Already have an account? ",
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => context.go('/register'),
+                          onTap: () => context.go('/login'),
                           child: Text(
-                            'Sign Up',
+                            'Sign In',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.secondary,
                               fontWeight: FontWeight.w600,
@@ -563,7 +592,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
 
-            // Guest badge (painted second, hit-tested first — on top)
             Positioned(
               top: 16,
               right: 20,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/animated_button.dart';
@@ -48,7 +50,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
         return;
       }
-      ref.read(authProvider.notifier).signUpWithEmail(
+      ref
+          .read(authProvider.notifier)
+          .signUpWithEmail(
             _emailController.text.trim(),
             _passwordController.text,
           );
@@ -72,10 +76,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
       return;
     }
-    await ref.read(authProvider.notifier).signUpWithPhone(
-          phone,
-          _passwordController.text,
-        );
+
+    await ref
+        .read(authProvider.notifier)
+        .signUpWithPhone(phone, _passwordController.text);
   }
 
   void _verifyOtp() async {
@@ -85,22 +89,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
       return;
     }
-    await ref.read(authProvider.notifier).verifyOtp(
-          _pendingPhone!,
-          _otpController.text.trim(),
-        );
+
+    await ref
+        .read(authProvider.notifier)
+        .verifyOtp(_pendingPhone!, _otpController.text.trim());
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
-        context.go('/dashboard');
+        final router = GoRouter.of(context);
+        SharedPreferences.getInstance().then((prefs) {
+          if (!mounted) return;
+          final hasOnboarded =
+              prefs.getBool(AppConstants.onboardedKey) ?? false;
+          router.go(hasOnboarded ? '/dashboard' : '/onboarding');
+        });
       } else if (next.needsOtpVerification) {
         setState(() {
           _otpSent = true;
@@ -114,7 +125,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
       } else if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: theme.colorScheme.error),
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: theme.colorScheme.error,
+          ),
         );
       }
     });
@@ -134,7 +148,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ],
           ),
         ),
-        child: isDesktop ? _buildDesktopLayout(theme, authState) : _buildMobileLayout(theme, authState),
+        child: isDesktop
+            ? _buildDesktopLayout(theme, authState)
+            : _buildMobileLayout(theme, authState),
       ),
     );
   }
@@ -142,7 +158,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget _buildDesktopLayout(ThemeData theme, AuthState authState) {
     return Row(
       children: [
-        // Left panel — branding
         Expanded(
           flex: 5,
           child: Container(
@@ -188,7 +203,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ),
         ),
-        // Right panel — form
         Expanded(
           flex: 4,
           child: Center(
@@ -237,329 +251,387 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         child: Stack(
           children: [
-            // Guest badge
-            Positioned(
-              top: 16,
-              right: 20,
-              child: GestureDetector(
-                onTap: () {
-                  ref.read(authProvider.notifier).continueAsGuest();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Guest',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_outward,
-                        size: 14,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
             Padding(
               padding: const EdgeInsets.all(28.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8),
-                  // Brand header
-                  Text(
-                    AppConstants.appName,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.primary,
+              child: SingleChildScrollView(
+                primary: false,
+                physics: const ClampingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8),
+                    Text(
+                      AppConstants.appName,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Create your account to start tracking taxes.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create your account to start tracking taxes.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                  // Toggle between Email and Phone
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() {
-                              _isPhoneMode = false;
-                              _otpSent = false;
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: !_isPhoneMode ? theme.colorScheme.primary : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Email',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _isPhoneMode = false;
+                                _otpSent = false;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
                                   color: !_isPhoneMode
-                                      ? theme.colorScheme.onPrimary
-                                      : theme.colorScheme.onSurfaceVariant,
+                                      ? theme.colorScheme.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Email',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: !_isPhoneMode
+                                        ? theme.colorScheme.onPrimary
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() {
-                              _isPhoneMode = true;
-                              _otpSent = false;
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _isPhoneMode ? theme.colorScheme.primary : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Phone',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _isPhoneMode = true;
+                                _otpSent = false;
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
                                   color: _isPhoneMode
-                                      ? theme.colorScheme.onPrimary
-                                      : theme.colorScheme.onSurfaceVariant,
+                                      ? theme.colorScheme.primary
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Phone',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: _isPhoneMode
+                                        ? theme.colorScheme.onPrimary
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    if (!_isPhoneMode) ...[
+                      CustomTextField(
+                        controller: _emailController,
+                        label: 'Email Address',
+                        hintText: 'you@example.com',
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Icons.mail_outlined, size: 20),
+                        validator: (v) => v == null || !v.contains('@')
+                            ? 'Enter a valid email'
+                            : null,
+                      ),
+                      const SizedBox(height: 14),
+                      CustomTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        hintText:
+                            '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                        validator: (v) => v == null || v.length < 6
+                            ? 'Password must be at least 6 characters'
+                            : null,
+                      ),
+                      const SizedBox(height: 14),
+                      CustomTextField(
+                        controller: _confirmPasswordController,
+                        label: 'Confirm Password',
+                        hintText:
+                            '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                        validator: (v) =>
+                            v == null ? 'Confirm password is required' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      AnimatedButton(
+                        onPressed: _submitEmail,
+                        text: 'Sign Up',
+                        isLoading: authState.status == AuthStatus.loading,
+                        icon: const Icon(Icons.arrow_forward, size: 18),
+                      ),
+                    ] else ...[
+                      if (!_otpSent) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Phone Number',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: theme.colorScheme.outlineVariant,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    color:
+                                        theme.colorScheme.surfaceContainerLow,
+                                  ),
+                                  child: Text(
+                                    '+234',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _phoneController,
+                                    keyboardType: TextInputType.phone,
+                                    style: theme.textTheme.bodyMedium,
+                                    decoration: const InputDecoration(
+                                      hintText: '8012345678',
+                                    ),
+                                    validator: (v) => v == null || v.length < 10
+                                        ? 'Enter a valid phone number'
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        CustomTextField(
+                          controller: _passwordController,
+                          label: 'Password',
+                          hintText:
+                              '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                          obscureText: true,
+                          prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                          validator: (v) => v == null || v.length < 6
+                              ? 'Password must be at least 6 characters'
+                              : null,
+                        ),
+                        const SizedBox(height: 14),
+                        CustomTextField(
+                          controller: _confirmPasswordController,
+                          label: 'Confirm Password',
+                          hintText:
+                              '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
+                          obscureText: true,
+                          prefixIcon: const Icon(Icons.lock_outlined, size: 20),
+                          validator: (v) =>
+                              v == null ? 'Confirm password is required' : null,
+                        ),
+                        const SizedBox(height: 20),
+                        AnimatedButton(
+                          onPressed: _submitPhone,
+                          text: 'Send OTP',
+                          isLoading: authState.status == AuthStatus.loading,
+                          icon: const Icon(Icons.send, size: 18),
+                        ),
+                      ] else ...[
+                        Text(
+                          'Enter the 6-digit code sent to $_pendingPhone',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        CustomTextField(
+                          controller: _otpController,
+                          label: 'OTP Code',
+                          hintText: '000000',
+                          keyboardType: TextInputType.number,
+                          maxLength: 6,
+                          prefixIcon: const Icon(Icons.pin_outlined, size: 20),
+                        ),
+                        const SizedBox(height: 20),
+                        AnimatedButton(
+                          onPressed: _verifyOtp,
+                          text: 'Verify & Create Account',
+                          isLoading: authState.status == AuthStatus.loading,
+                          icon: const Icon(Icons.check_circle, size: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _otpSent = false;
+                            });
+                          },
+                          child: const Text('Change phone number'),
+                        ),
+                      ],
+                    ],
+
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Or continue with',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _socialButton(
+                          theme,
+                          Icons.g_mobiledata,
+                          'Google',
+                          () => ref
+                              .read(authProvider.notifier)
+                              .signInWithGoogle(),
+                        ),
+                        const SizedBox(width: 12),
+                        _socialButton(
+                          theme,
+                          Icons.apple,
+                          'Apple',
+                          () =>
+                              ref.read(authProvider.notifier).signInWithApple(),
+                        ),
+                        const SizedBox(width: 12),
+                        _socialButton(
+                          theme,
+                          Icons.facebook,
+                          'Facebook',
+                          () => ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Facebook login coming soon'),
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                  if (!_isPhoneMode) ...[
-                    CustomTextField(
-                      controller: _emailController,
-                      label: 'Email Address',
-                      hintText: 'you@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: const Icon(Icons.mail_outlined, size: 20),
-                      validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      hintText: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
-                      obscureText: true,
-                      prefixIcon: const Icon(Icons.lock_outlined, size: 20),
-                      validator: (v) => v == null || v.length < 6 ? 'Password must be at least 6 characters' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _confirmPasswordController,
-                      label: 'Confirm Password',
-                      hintText: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
-                      obscureText: true,
-                      prefixIcon: const Icon(Icons.lock_outlined, size: 20),
-                      validator: (v) => v == null ? 'Confirm password is required' : null,
-                    ),
-                    const SizedBox(height: 24),
-                    AnimatedButton(
-                      onPressed: _submitEmail,
-                      text: 'Sign Up',
-                      isLoading: authState.status == AuthStatus.loading,
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                    ),
-                  ] else ...[
-                    if (!_otpSent) ...[
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: theme.colorScheme.outlineVariant),
-                              borderRadius: BorderRadius.circular(12),
-                              color: theme.colorScheme.surfaceContainerLow,
-                            ),
-                            child: Text(
-                              '+234',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _phoneController,
-                              label: 'Phone Number',
-                              hintText: '8012345678',
-                              keyboardType: TextInputType.phone,
-                              prefixIcon: const Icon(Icons.phone_outlined, size: 20),
-                              validator: (v) => v == null || v.length < 10
-                                  ? 'Enter a valid phone number'
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hintText: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
-                        obscureText: true,
-                        prefixIcon: const Icon(Icons.lock_outlined, size: 20),
-                        validator: (v) => v == null || v.length < 6 ? 'Password must be at least 6 characters' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        controller: _confirmPasswordController,
-                        label: 'Confirm Password',
-                        hintText: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022',
-                        obscureText: true,
-                        prefixIcon: const Icon(Icons.lock_outlined, size: 20),
-                        validator: (v) => v == null ? 'Confirm password is required' : null,
-                      ),
-                      const SizedBox(height: 24),
-                      AnimatedButton(
-                        onPressed: _submitPhone,
-                        text: 'Send OTP',
-                        isLoading: authState.status == AuthStatus.loading,
-                        icon: const Icon(Icons.send, size: 18),
-                      ),
-                    ] else ...[
-                      Text(
-                        'Enter the 6-digit code sent to $_pendingPhone',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextField(
-                        controller: _otpController,
-                        label: 'OTP Code',
-                        hintText: '000000',
-                        keyboardType: TextInputType.number,
-                        maxLength: 6,
-                        prefixIcon: const Icon(Icons.pin_outlined, size: 20),
-                      ),
-                      const SizedBox(height: 24),
-                      AnimatedButton(
-                        onPressed: _verifyOtp,
-                        text: 'Verify & Create Account',
-                        isLoading: authState.status == AuthStatus.loading,
-                        icon: const Icon(Icons.check_circle, size: 18),
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _otpSent = false;
-                          });
-                        },
-                        child: const Text('Change phone number'),
-                      ),
-                    ],
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // Divider
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Or continue with',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Social logins
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _socialButton(theme, Icons.g_mobiledata, 'Google', () {
-                        ref.read(authProvider.notifier).signInWithGoogle();
-                      }),
-                      const SizedBox(width: 12),
-                      _socialButton(theme, Icons.apple, 'Apple', () {
-                        ref.read(authProvider.notifier).signInWithApple();
-                      }),
-                      const SizedBox(width: 12),
-                      _socialButton(theme, Icons.facebook, 'Facebook', () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Facebook login coming soon')),
-                        );
-                      }),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Sign in link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Already have an account? ",
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => context.go('/login'),
-                        child: Text(
-                          'Sign In',
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.secondary,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.go('/login'),
+                          child: Text(
+                            'Sign In',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 16,
+              right: 20,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(authProvider.notifier).continueAsGuest();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Guest',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_outward,
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -568,7 +640,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _socialButton(ThemeData theme, IconData icon, String label, VoidCallback onPressed) {
+  Widget _socialButton(
+    ThemeData theme,
+    IconData icon,
+    String label,
+    VoidCallback onPressed,
+  ) {
     return Container(
       width: 56,
       height: 48,

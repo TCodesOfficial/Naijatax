@@ -146,15 +146,19 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnimatedButton(
-                    onPressed: _restartQuiz,
-                    text: 'Play Again',
+                  Flexible(
+                    child: AnimatedButton(
+                      onPressed: _restartQuiz,
+                      text: 'Play Again',
+                    ),
                   ),
                   const SizedBox(width: 16),
-                  AnimatedButton(
-                    onPressed: () => context.go('/quiz/history'),
-                    text: 'View History',
-                    isOutlined: true,
+                  Flexible(
+                    child: AnimatedButton(
+                      onPressed: () => context.go('/quiz/history'),
+                      text: 'View History',
+                      isOutlined: true,
+                    ),
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 
 class AppConstants {
@@ -9,7 +10,11 @@ class AppConstants {
     const defined = String.fromEnvironment('API_BASE_URL');
     if (defined.isNotEmpty) return defined;
     // Fallback: platform-specific default for local development
-    if (kIsWeb || Platform.isIOS || Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+    if (kIsWeb ||
+        Platform.isIOS ||
+        Platform.isMacOS ||
+        Platform.isWindows ||
+        Platform.isLinux) {
       return 'http://localhost:3000/api/v1';
     }
     return 'http://10.0.2.2:3000/api/v1'; // Android emulator
@@ -17,25 +22,27 @@ class AppConstants {
 
   // ── Supabase (injected at build time) ─────────────────────────────────
   static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const String supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+  );
 
   // ── Hive Box Names (not sensitive — keep as constants) ────────────────
-  static const String taxProfileBox   = 'tax_profiles';
-  static const String articlesBox     = 'tax_articles';
-  static const String settingsBox     = 'app_settings';
+  static const String taxProfileBox = 'tax_profiles';
+  static const String articlesBox = 'tax_articles';
+  static const String settingsBox = 'app_settings';
 
   // ── SharedPreferences Keys (not sensitive) ────────────────────────────
-  static const String themeKey        = 'is_dark_mode';
-  static const String biometricKey    = 'biometric_enabled';
-  static const String onboardedKey    = 'has_onboarded';
+  static const String themeKey = 'is_dark_mode';
+  static const String biometricKey = 'biometric_enabled';
+  static const String onboardedKey = 'has_onboarded';
 
   // ── App Metadata (not sensitive) ──────────────────────────────────────
-  static const String appName         = 'NaijaTax Enlighten';
-  static const String appShortName    = 'NaijaTax';
-  static const String appVersion      = '1.0.0';
+  static const String appName = 'NaijaTax Enlighten';
+  static const String appShortName = 'NaijaTax';
+  static const String appVersion = '1.0.0';
 
   // ── Layout Breakpoints (not sensitive) ────────────────────────────────
-  static const double mobileBreakpoint  = 600;
-  static const double tabletBreakpoint  = 900;
+  static const double mobileBreakpoint = 600;
+  static const double tabletBreakpoint = 900;
   static const double desktopBreakpoint = 1280;
 }

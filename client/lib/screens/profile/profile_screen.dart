@@ -382,7 +382,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   title: Row(
                     children: [
-                      const Text('Privacy & Security'),
+                      const Flexible(
+                        child: Text(
+                          'Privacy & Security',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       _comingSoonBadge(theme),
                     ],

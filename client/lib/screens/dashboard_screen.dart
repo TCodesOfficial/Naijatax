@@ -545,6 +545,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 SizedBox(height: verticalGap),
                 Text(
                   cat.amount,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: amountSize,
                     fontWeight: FontWeight.w800,
@@ -758,12 +760,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Recent News: NTA 2025',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurface,
+            Flexible(
+              child: Text(
+                'Recent News: NTA 2025',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             TextButton(
