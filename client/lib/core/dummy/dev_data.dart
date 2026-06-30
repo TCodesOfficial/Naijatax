@@ -1,8 +1,11 @@
+import 'package:flutter/material.dart';
+
 import '../../models/user_model.dart';
 import '../../models/tax_profile.dart';
 import '../../models/article_model.dart';
 import '../../models/forum_model.dart';
 import '../../models/quiz_model.dart';
+import '../../models/learn_section.dart';
 
 class DevData {
   DevData._();
@@ -234,4 +237,93 @@ class DevData {
 
   /// Relief: rent relief as percentage of max relief (₦200,000 is the cap)
   static double get reliefRatio => taxProfile.rentRelief / 200000;
+
+  // ── Learn Sections (NTA 2025 Reform Content) ──────────────────────────
+  static final learnSections = [
+    LearnSection(
+      title: 'Overview of the NTA 2025',
+      icon: Icons.gavel_outlined,
+      summary:
+          'The 2025 Nigeria Tax Act (NTA) is a landmark legislation signed into law by President Bola Ahmed Tinubu in June 2025, effective January 1, 2026. It fundamentally restructures Nigeria\'s fiscal framework with three core goals: relief for low-income earners, administrative efficiency, and simplified business compliance.',
+      highlights: [
+        'FIRS transitions into the Nigeria Revenue Service (NRS) as the modernized single collector for all federal revenues',
+        'Personal income tax threshold raised to ₦800,000 annually, exempting minimum wage earners from PAYE',
+        'Small businesses with turnover below ₦100 million are completely exempt from Company Income Tax',
+        'New progressive tax bands replace the old system for individual taxpayers',
+        'Enhanced digital filing portal for streamlined tax compliance',
+      ],
+    ),
+    LearnSection(
+      title: 'PAYE Brackets & Income Tax',
+      icon: Icons.receipt_long_outlined,
+      summary:
+          'Under the new progressive tax bands, personal income tax is calculated annually. The system provides significant relief for low and middle-income earners while maintaining a fair top marginal rate for high earners.',
+      highlights: [
+        'First ₦800,000: Exempt (0% rate) — up from ₦300,000 under the old system',
+        'Next ₦3,000,000: Taxed at 15%',
+        'Next ₦3,000,000: Taxed at 20%',
+        'Next ₦14,000,000: Taxed at 22%',
+        'Above ₦20,800,000: Top rate of 25%',
+        'Mandatory 8% employee pension contribution (tax-deductible)',
+        'Rent relief: 20% of rent paid, capped at ₦500,000 per year',
+      ],
+      linkRoute: '/calculator/nta-brackets',
+      linkLabel: 'View Tax Brackets',
+    ),
+    LearnSection(
+      title: 'VAT Changes & Categories',
+      icon: Icons.shopping_cart_outlined,
+      summary:
+          'The standard VAT rate remains at 7.5%, but the reforms clarify the scope of VAT application, especially for digital services. Essential goods and services are zero-rated or exempt to protect low-income households.',
+      highlights: [
+        'Standard rate: 7.5% on standard-rated goods and services',
+        'Zero-rated (0%): Basic food items (bread, rice, fresh produce), exported goods, solar panels, educational textbooks',
+        'Exempt: School tuition, medical services, residential rent, public transport, financial services',
+        'Digital services: Clear scope for VAT on electronic and digital services provided in Nigeria',
+        '50+ items classified under the new VAT framework',
+      ],
+      linkRoute: '/calculator',
+      linkLabel: 'Check VAT Items',
+    ),
+    LearnSection(
+      title: 'Company Income Tax (CIT)',
+      icon: Icons.business_outlined,
+      summary:
+          'The reforms provide complete tax relief to micro and small businesses to foster economic growth. The CIT structure is now tiered based on company size, protecting over 90% of registered SMEs in Nigeria.',
+      highlights: [
+        'Small companies (turnover ≤ ₦100M, assets ≤ ₦250M): Completely exempt from CIT',
+        'Medium companies (turnover ₦100M–₦500M): Reduced rate of 20%',
+        'Large companies (turnover > ₦500M): Standard rate of 30%',
+        'Exemption covers over 90% of registered SMEs in Nigeria',
+        'Fixed assets threshold: ₦250 million net book value',
+      ],
+    ),
+    LearnSection(
+      title: 'Tax Filing & Compliance',
+      icon: Icons.assignment_outlined,
+      summary:
+          'The new reforms introduce a revamped digital filing portal and updated compliance deadlines. The Nigeria Revenue Service (NRS) provides modernized tools for seamless tax filing.',
+      highlights: [
+        'New FIRS/NRS online tax filing portal with enhanced features',
+        'Extended compliance deadline for individual taxpayers under the NTA 2025 framework',
+        'Digital-first approach: File returns, track refunds, and manage compliance online',
+        'Penalties for non-compliance updated to reflect new thresholds',
+        'Tax clearance certificates now issued digitally',
+      ],
+    ),
+    LearnSection(
+      title: 'Key Contacts & Resources',
+      icon: Icons.contact_phone_outlined,
+      summary:
+          'Access official resources and get help with your tax questions. Our AI Assistant is trained on the NTA 2025 reforms and can answer common tax questions instantly.',
+      highlights: [
+        'Nigeria Revenue Service (NRS): Official successor to FIRS for federal tax collection',
+        'AI Tax Assistant: Ask questions about NTA 2025 reforms anytime (in-app)',
+        'Community Forum: Discuss tax topics with other taxpayers and experts',
+        'Tax Practitioners: Consult a certified professional for complex tax matters',
+      ],
+      linkRoute: '/chat',
+      linkLabel: 'Ask AI Assistant',
+    ),
+  ];
 }

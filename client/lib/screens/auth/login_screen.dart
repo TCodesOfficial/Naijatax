@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
@@ -79,20 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isDesktop = screenWidth >= 900;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.status == AuthStatus.authenticated ||
-          next.status == AuthStatus.guest) {
-        final router = GoRouter.of(context);
-        SharedPreferences.getInstance().then((prefs) {
-          if (!mounted) return;
-          final hasOnboarded =
-              prefs.getBool(AppConstants.onboardedKey) ?? false;
-          if (!hasOnboarded && next.status == AuthStatus.authenticated) {
-            router.go('/onboarding');
-          } else {
-            router.go('/dashboard');
-          }
-        });
-      } else if (next.needsOtpVerification) {
+      if (next.needsOtpVerification) {
         setState(() {
           _otpSent = true;
           _pendingPhone = next.pendingPhone;

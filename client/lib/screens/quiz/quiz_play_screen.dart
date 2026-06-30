@@ -155,7 +155,7 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
                   const SizedBox(width: 16),
                   Flexible(
                     child: AnimatedButton(
-                      onPressed: () => context.go('/quiz/history'),
+                      onPressed: () => context.go('/learn/quiz/history'),
                       text: 'View History',
                       isOutlined: true,
                     ),

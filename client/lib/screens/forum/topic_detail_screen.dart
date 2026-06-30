@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../providers/forum_provider.dart';
 import '../../widgets/animated_button.dart';
@@ -20,7 +21,9 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(forumProvider.notifier).fetchTopicDetail(widget.topicId));
+    Future.microtask(
+      () => ref.read(forumProvider.notifier).fetchTopicDetail(widget.topicId),
+    );
   }
 
   @override
@@ -37,7 +40,10 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
           title: const Text('Account Required'),
           content: const Text('You must log in to submit a reply.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -76,118 +82,153 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
       body: forumState.isLoading && topic == null
           ? const Center(child: CircularProgressIndicator())
           : topic == null
-              ? const Center(child: Text('Discussion not found.'))
-              : Column(
-                  children: [
-                    // ─── Topic Header Card ──────────────────────────────────
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.all(16),
-                        children: [
-                          Card(
+          ? const Center(child: Text('Discussion not found.'))
+          : Column(
+              children: [
+                // ─── Topic Header Card ──────────────────────────────────
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                topic.title,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Asked by ${topic.user.email.split('@').first}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const Divider(height: 24),
+                              Text(
+                                topic.content,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Replies (${topic.replies?.length ?? 0})',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ─── Replies List ────────────────────────────────
+                      if (topic.replies == null || topic.replies!.isEmpty)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24.0),
+                            child: Text(
+                              'No replies yet. Be the first to answer!',
+                            ),
+                          ),
+                        )
+                      else
+                        ...topic.replies!.map((reply) {
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 10),
                             child: Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(12.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    topic.title,
-                                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          reply.user.email.split('@').first,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                      if (reply.isAccepted)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE2FBE9),
+                                            borderRadius: BorderRadius.circular(
+                                              100,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Best Answer',
+                                            style: TextStyle(
+                                              color: Color(0xFF15803D),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 6),
                                   Text(
-                                    'Asked by ${topic.user.email.split('@').first}',
-                                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                    reply.content,
+                                    style: const TextStyle(fontSize: 14),
                                   ),
-                                  const Divider(height: 24),
-                                  Text(topic.content, style: theme.textTheme.bodyMedium),
                                 ],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Replies (${topic.replies?.length ?? 0})',
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // ─── Replies List ────────────────────────────────
-                          if (topic.replies == null || topic.replies!.isEmpty)
-                            const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 24.0),
-                                child: Text('No replies yet. Be the first to answer!'),
-                              ),
-                            )
-                          else
-                            ...topic.replies!.map((reply) {
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            reply.user.email.split('@').first,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                          ),
-                                          if (reply.isAccepted)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFE2FBE9),
-                                                borderRadius: BorderRadius.circular(100),
-                                              ),
-                                              child: const Text(
-                                                'Best Answer',
-                                                style: TextStyle(color: Color(0xFF15803D), fontSize: 10, fontWeight: FontWeight.bold),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(reply.content, style: const TextStyle(fontSize: 14)),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                        ],
-                      ),
-                    ),
-
-                    // ─── Input Answer Box ──────────────────────────────────
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _replyController,
-                              decoration: const InputDecoration(
-                                hintText: 'Share your tax knowledge...',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          AnimatedButton(
-                            onPressed: () => _submitReply(authState),
-                            text: 'Reply',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                          );
+                        }),
+                    ],
+                  ),
                 ),
+
+                // ─── Input Answer Box ──────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    border: Border(
+                      top: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _replyController,
+                          decoration: const InputDecoration(
+                            hintText: 'Share your tax knowledge...',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      AnimatedButton(
+                        onPressed: () => _submitReply(authState),
+                        text: 'Reply',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }

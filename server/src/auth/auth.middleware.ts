@@ -70,7 +70,7 @@ export function optionalAuth(req: AuthenticatedRequest, res: Response, next: Nex
     next();
   } catch (err) {
     // Even if token is expired/invalid, let guest proceed (or force login based on preference, but here we fall back to guest)
-    req.user = undefined // for the errors from the user not being resolvedcorrectly;
+    req.user = undefined;
     next();
   }
 }

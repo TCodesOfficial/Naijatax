@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 import 'app_logo.dart';
@@ -37,27 +38,37 @@ class AdaptiveScaffold extends ConsumerWidget {
 
     final authState = ref.watch(authProvider);
     final isGuest = authState.isGuest;
+
     final displayName = authState.user != null
-        ? (authState.user!.displayName ?? authState.user!.email?.split('@').first ?? 'User')
+        ? (authState.user!.displayName ??
+              authState.user!.email?.split('@').first ??
+              'User')
         : 'Guest';
 
     return Scaffold(
       body: Row(
         children: [
-          if (isDesktop) _buildSidebar(context, ref, theme, authState, isGuest, displayName),
+          if (isDesktop)
+            _buildSidebar(context, ref, theme, authState, isGuest, displayName),
           Expanded(
             child: Column(
               children: [
-                _buildAppBar(context, ref, theme, authState, isGuest, displayName, size.width),
+                _buildAppBar(
+                  context,
+                  ref,
+                  theme,
+                  authState,
+                  isGuest,
+                  displayName,
+                  size.width,
+                ),
                 Expanded(child: navigationShell),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: !isDesktop
-          ? _buildBottomNav(context, theme)
-          : null,
+      bottomNavigationBar: !isDesktop ? _buildBottomNav(context, theme) : null,
     );
   }
 
@@ -71,6 +82,9 @@ class AdaptiveScaffold extends ConsumerWidget {
     String displayName,
     double screenWidth,
   ) {
+    final avatarUrl = authState.user?.avatarUrl;
+    final hasAvatar = avatarUrl != null && avatarUrl.trim().isNotEmpty;
+
     final isVerySmall = screenWidth < 360;
     final isDesktop = screenWidth >= AppConstants.tabletBreakpoint;
     return AppBar(
@@ -117,10 +131,10 @@ class AdaptiveScaffold extends ConsumerWidget {
                   child: CircleAvatar(
                     radius: 16,
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: authState.user?.avatarUrl != null
-                        ? CachedNetworkImageProvider(authState.user!.avatarUrl!)
+                    backgroundImage: hasAvatar
+                        ? CachedNetworkImageProvider(avatarUrl)
                         : null,
-                    child: authState.user?.avatarUrl == null
+                    child: !hasAvatar
                         ? Icon(
                             Icons.person,
                             size: 18,
@@ -143,6 +157,9 @@ class AdaptiveScaffold extends ConsumerWidget {
     bool isGuest,
     String displayName,
   ) {
+    final avatarUrl = authState.user?.avatarUrl;
+    final hasAvatar = avatarUrl != null && avatarUrl.trim().isNotEmpty;
+
     return Container(
       width: 240,
       decoration: BoxDecoration(
@@ -181,11 +198,54 @@ class AdaptiveScaffold extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
-                _sidebarItem(context, theme, 'Home', Icons.home_outlined, Icons.home, 0),
-                _sidebarItem(context, theme, 'Calculator', Icons.calculate_outlined, Icons.calculate, 1),
-                _sidebarItem(context, theme, 'AI Assistant', Icons.smart_toy_outlined, Icons.smart_toy, 2),
-                _sidebarItem(context, theme, 'Community', Icons.groups_outlined, Icons.groups, 3),
-                _sidebarItem(context, theme, 'Profile', Icons.person_outlined, Icons.person, 4),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'Home',
+                  Icons.home_outlined,
+                  Icons.home,
+                  0,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'Calculator',
+                  Icons.calculate_outlined,
+                  Icons.calculate,
+                  1,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'AI Assistant',
+                  Icons.smart_toy_outlined,
+                  Icons.smart_toy,
+                  2,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'Community',
+                  Icons.groups_outlined,
+                  Icons.groups,
+                  3,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'Profile',
+                  Icons.person_outlined,
+                  Icons.person,
+                  4,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'Learn',
+                  Icons.menu_book_outlined,
+                  Icons.menu_book,
+                  5,
+                ),
               ],
             ),
           ),
@@ -202,10 +262,10 @@ class AdaptiveScaffold extends ConsumerWidget {
                   CircleAvatar(
                     radius: 18,
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: authState.user?.avatarUrl != null
-                        ? CachedNetworkImageProvider(authState.user!.avatarUrl!)
+                    backgroundImage: hasAvatar
+                        ? CachedNetworkImageProvider(avatarUrl)
                         : null,
-                    child: authState.user?.avatarUrl == null
+                    child: !hasAvatar
                         ? Icon(
                             Icons.person,
                             size: 18,
@@ -310,10 +370,7 @@ class AdaptiveScaffold extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          top: BorderSide(
-            color: theme.colorScheme.outlineVariant,
-            width: 1,
-          ),
+          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
         ),
         boxShadow: [
           BoxShadow(
@@ -324,46 +381,63 @@ class AdaptiveScaffold extends ConsumerWidget {
         ],
       ),
       child: SafeArea(
-        child: GNav(
-          selectedIndex: navigationShell.currentIndex,
-          onTabChange: (index) => _onTap(context, index),
-          gap: 8,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          tabBorderRadius: 20,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          backgroundColor: Colors.transparent,
-          activeColor: theme.colorScheme.onSecondaryContainer,
-          color: theme.colorScheme.onSurfaceVariant,
-          tabBackgroundColor: theme.colorScheme.secondaryContainer,
-          iconSize: 22,
-          textStyle: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSecondaryContainer,
+        child: Padding(
+          // Add breathing room around the bottom nav so the selected tab
+          // doesn't look jammed against the screen edge.
+          padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+          child: GNav(
+            selectedIndex: navigationShell.currentIndex >= 5
+                ? 0
+                : navigationShell.currentIndex,
+            onTabChange: (index) => _onTap(context, index),
+            gap: 6,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            tabBorderRadius: 20,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            backgroundColor: Colors.transparent,
+            activeColor: theme.colorScheme.onSecondaryContainer,
+            color: theme.colorScheme.onSurfaceVariant,
+            tabBackgroundColor: theme.colorScheme.secondaryContainer,
+            iconSize: 20,
+            textStyle: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSecondaryContainer,
+            ),
+            tabs: [
+              GButton(
+                icon: navigationShell.currentIndex == 0
+                    ? Icons.home
+                    : Icons.home_outlined,
+                text: 'Home',
+              ),
+              GButton(
+                icon: navigationShell.currentIndex == 1
+                    ? Icons.calculate
+                    : Icons.calculate_outlined,
+                text: 'Calculator',
+              ),
+              GButton(
+                icon: navigationShell.currentIndex == 2
+                    ? Icons.smart_toy
+                    : Icons.smart_toy_outlined,
+                text: 'Assistant',
+              ),
+              GButton(
+                icon: navigationShell.currentIndex == 3
+                    ? Icons.groups
+                    : Icons.groups_outlined,
+                text: 'Community',
+              ),
+              GButton(
+                icon: navigationShell.currentIndex == 4
+                    ? Icons.person
+                    : Icons.person_outline,
+                text: 'Profile',
+              ),
+            ],
           ),
-          tabs: [
-            GButton(
-              icon: navigationShell.currentIndex == 0 ? Icons.home : Icons.home_outlined,
-              text: 'Home',
-            ),
-            GButton(
-              icon: navigationShell.currentIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
-              text: 'Calculator',
-            ),
-            GButton(
-              icon: navigationShell.currentIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
-              text: 'Assistant',
-            ),
-            GButton(
-              icon: navigationShell.currentIndex == 3 ? Icons.groups : Icons.groups_outlined,
-              text: 'Community',
-            ),
-            GButton(
-              icon: navigationShell.currentIndex == 4 ? Icons.person : Icons.person_outline,
-              text: 'Profile',
-            ),
-          ],
         ),
       ),
     );

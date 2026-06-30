@@ -18,6 +18,7 @@ import '../../screens/forum/topic_detail_screen.dart';
 import '../../screens/forum/topic_list_screen.dart';
 import '../../screens/landing/mobile_landing_screen.dart';
 import '../../screens/landing/web_landing_screen.dart';
+import '../../screens/learn/tax_reform_screen.dart';
 import '../../screens/news/latest_news_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/profile/profile_screen.dart';
@@ -44,6 +45,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.matchedLocation;
       final isAuthenticatedLike =
           authState.isAuthenticated || authState.isGuest;
+      final isGuest = authState.isGuest;
 
       final isAuthRoute = location == '/login' || location == '/register';
       final isOnboarding = location == '/onboarding';
@@ -51,6 +53,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // ── RULE 1: Authenticated/guest users on auth routes → skip away ─────
       if (isAuthenticatedLike && isAuthRoute) {
+        // Guests skip onboarding entirely — go straight to dashboard
+        if (isGuest) return '/dashboard';
         return hasOnboarded ? '/dashboard' : '/onboarding';
       }
       // ── RULE 2: Already completed onboarding → skip landing/onboarding ─
@@ -58,9 +62,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/dashboard';
       }
 
-      // ── RULE 3: Authenticated/guest but not onboarded → force onboarding ──
-      // (only when not already on onboarding, auth routes, or landing)
+      // ── RULE 3: Authenticated but not onboarded → force onboarding ──────
+      // Guests are excluded — they skip onboarding and go to dashboard
       if (isAuthenticatedLike &&
+          !isGuest &&
           !hasOnboarded &&
           !isOnboarding &&
           !isAuthRoute &&
@@ -96,7 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegisterScreenFixed(),
       ),
 
-      // Adaptive Shell with 5 bottom nav tabs
+      // Adaptive Shell with 6 branches (5 bottom nav + 1 desktop-only)
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AdaptiveScaffold(
@@ -127,10 +132,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                 icon: Icon(Icons.person_outline),
                 selectedIcon: Icon(Icons.person),
               ),
+              AdaptiveScaffoldDestination(
+                label: 'Learn',
+                icon: Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(Icons.menu_book),
+              ),
             ],
           );
         },
         branches: [
+          // Branch 0: Home
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -154,6 +165,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
+          // Branch 1: Calculator
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -169,6 +181,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
+          // Branch 2: AI Assistant
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -178,6 +191,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
+          // Branch 3: Community (Forum only)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -193,19 +207,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
-              GoRoute(
-                path: '/quiz',
-                builder: (context, state) => const QuizPlayScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'history',
-                    builder: (context, state) => const QuizHistoryScreen(),
-                  ),
-                ],
-              ),
             ],
           ),
 
+          // Branch 4: Profile
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -218,11 +223,35 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'documents',
-                    builder: (context, state) => const DocumentsVaultScreen(),
+                    builder: (context, state) =>
+                        const DocumentsVaultScreen(),
                   ),
                   GoRoute(
                     path: 'verify',
                     builder: (context, state) => const VerifyAccountScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Branch 5: Learn (desktop sidebar only, no bottom nav button)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/learn',
+                builder: (context, state) => const TaxReformScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'quiz',
+                    builder: (context, state) => const QuizPlayScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'history',
+                        builder: (context, state) =>
+                            const QuizHistoryScreen(),
+                      ),
+                    ],
                   ),
                 ],
               ),
