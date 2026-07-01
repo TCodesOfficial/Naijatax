@@ -265,16 +265,18 @@ class TaxReformScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900 ? 2 : 1;
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 12,
-          childAspectRatio: crossAxisCount == 2 ? 2.2 : 2.8,
+        final isWide = constraints.maxWidth > 900;
+        final itemWidth = isWide
+            ? (constraints.maxWidth - 16) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: 16,
+          runSpacing: 12,
           children: sections
-              .map((s) => _buildAccordion(context, theme, s))
+              .map((s) => SizedBox(
+                    width: itemWidth,
+                    child: _buildAccordion(context, theme, s),
+                  ))
               .toList(),
         );
       },

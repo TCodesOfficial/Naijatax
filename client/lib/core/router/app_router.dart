@@ -57,8 +57,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (isGuest) return '/dashboard';
         return hasOnboarded ? '/dashboard' : '/onboarding';
       }
-      // ── RULE 2: Already completed onboarding → skip landing/onboarding ─
-      if (hasOnboarded && (isLanding || isOnboarding)) {
+      // ── RULE 2: Already completed onboarding or guest → skip landing/onboarding ─
+      if ((hasOnboarded || isGuest) && (isLanding || isOnboarding)) {
         return '/dashboard';
       }
 

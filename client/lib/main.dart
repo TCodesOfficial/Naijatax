@@ -9,7 +9,7 @@ import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  
   // Initialize Offline Caching
   await StorageService.init();
 

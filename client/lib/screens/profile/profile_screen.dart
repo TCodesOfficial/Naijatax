@@ -192,8 +192,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 : null,
                             child: authState.user?.avatarUrl == null
                                 ? Icon(
-                                    Icons.person,
-                                    size: 40,
+                                    Icons.account_circle_outlined,
+                                    size: 44,
                                     color: theme.colorScheme.primary,
                                   )
                                 : null,

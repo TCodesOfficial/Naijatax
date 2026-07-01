@@ -180,7 +180,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: CircularProgressIndicator(
               value: ratio,
               strokeWidth: 10,
-              backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              backgroundColor: theme.colorScheme.outlineVariant,
               valueColor: AlwaysStoppedAnimation<Color>(
                 theme.colorScheme.primary,
               ),
@@ -493,7 +493,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         amount: AppFormatter.naira(computedTax),
         subtitle: 'of ${AppFormatter.nairaCompact(annualGross)} gross',
         color: theme.colorScheme.primary,
-        bgColor: theme.colorScheme.primaryContainer,
+        bgColor: theme.colorScheme.primary.withValues(alpha: 0.12),
         icon: Icons.receipt_long_outlined,
         route: '/calculator',
       ),
@@ -504,7 +504,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         amount: AppFormatter.naira(vatPayable),
         subtitle: 'monthly on spending',
         color: theme.colorScheme.secondary,
-        bgColor: theme.colorScheme.secondaryContainer,
+        bgColor: theme.colorScheme.secondary.withValues(alpha: 0.12),
         icon: Icons.shopping_cart_outlined,
         route: '/calculator',
       ),
@@ -515,7 +515,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         amount: AppFormatter.naira(0),
         subtitle: 'below \u20A650M threshold',
         color: theme.colorScheme.tertiary,
-        bgColor: theme.colorScheme.tertiaryFixedDim,
+        bgColor: theme.colorScheme.tertiary.withValues(alpha: 0.12),
         icon: Icons.business_outlined,
         route: '/calculator',
       ),
@@ -797,6 +797,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             getTitlesWidget: (value, meta) {
                               final idx = value.toInt();
                               if (idx < state.data.length) {
+                                if (isMobile && idx % 2 != 0 && idx != state.data.length - 1) {
+                                  return const SizedBox.shrink();
+                                }
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Text(
@@ -809,7 +812,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               }
                               return const SizedBox.shrink();
                             },
-                            reservedSize: 32,
+                            reservedSize: isMobile ? 36 : 32,
                           ),
                         ),
                         leftTitles: AxisTitles(

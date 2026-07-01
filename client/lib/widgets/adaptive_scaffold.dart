@@ -120,8 +120,8 @@ class AdaptiveScaffold extends ConsumerWidget {
                     radius: 16,
                     backgroundColor: theme.colorScheme.primaryContainer,
                     child: Icon(
-                      Icons.person,
-                      size: 18,
+                      Icons.account_circle_outlined,
+                      size: 20,
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -136,8 +136,8 @@ class AdaptiveScaffold extends ConsumerWidget {
                         : null,
                     child: !hasAvatar
                         ? Icon(
-                            Icons.person,
-                            size: 18,
+                            Icons.account_circle_outlined,
+                            size: 20,
                             color: theme.colorScheme.primary,
                           )
                         : null,
@@ -267,8 +267,8 @@ class AdaptiveScaffold extends ConsumerWidget {
                         : null,
                     child: !hasAvatar
                         ? Icon(
-                            Icons.person,
-                            size: 18,
+                            Icons.account_circle_outlined,
+                            size: 20,
                             color: theme.colorScheme.primary,
                           )
                         : null,
