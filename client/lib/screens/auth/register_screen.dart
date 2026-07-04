@@ -10,15 +10,15 @@ import '../../widgets/animated_button.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/custom_text_field.dart';
 
-class RegisterScreenFixed extends ConsumerStatefulWidget {
-  const RegisterScreenFixed({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<RegisterScreenFixed> createState() =>
-      _RegisterScreenFixedState();
+  ConsumerState<RegisterScreen> createState() =>
+      _RegisterScreenState();
 }
 
-class _RegisterScreenFixedState extends ConsumerState<RegisterScreenFixed> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();

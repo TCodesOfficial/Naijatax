@@ -16,6 +16,10 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(10, 'GEMINI_API_KEY is required. Get one from https://aistudio.google.com/apikey')
     .describe('Gemini API key for AI chatbot and bank statement parsing'),
   API_PREFIX: z.string().default('/api/v1'),
+  CORS_ORIGINS: z.string().default('*')
+    .describe('Comma-separated list of allowed CORS origins, or * for all'),
+  NEWS_RSS_FEED: z.string().optional()
+    .describe('RSS feed URL for Nigerian tax news (defaults to Nairametrics)'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -45,4 +49,7 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const env = parsed.data;
+export const env = {
+  ...parsed.data,
+  CORS_ORIGINS: parsed.data.CORS_ORIGINS.split(',').map((s: string) => s.trim()),
+} as Omit<typeof parsed.data, 'CORS_ORIGINS'> & { CORS_ORIGINS: string[] };

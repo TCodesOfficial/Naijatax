@@ -15,7 +15,7 @@ export function errorHandler(
 ) {
   let statusCode = err.statusCode ?? 500;
   let message = err.message ?? 'Internal Server Error';
-  let details: any = undefined;
+  let details: string | Array<{ field: string; message: string }> | undefined = undefined;
 
   if (err instanceof ZodError) {
     statusCode = 400;

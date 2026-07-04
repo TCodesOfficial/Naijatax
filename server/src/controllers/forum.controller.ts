@@ -20,8 +20,12 @@ const replySchema = z.object({
   content: z.string().min(2, 'Reply must be at least 2 characters long'),
 });
 
+const tagQuerySchema = z.object({
+  tag: z.string().max(50).optional(),
+});
+
 export const getTopics = asyncHandler(async (req: Request, res: Response) => {
-  const tag = req.query.tag as string | undefined;
+  const { tag } = tagQuerySchema.parse(req.query);
   const topics = await getForumTopics(tag);
   successResponse(res, topics);
 });

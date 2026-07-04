@@ -129,4 +129,10 @@ class ApiService {
     final res = await _dio.get('/news/metrics');
     return res.data['data'] as Map<String, dynamic>;
   }
+
+  // ── User Profile ──────────────────────────────────────────────────────
+  Future<Map<String, dynamic>> updateAvatar(String avatarUrl) async {
+    final res = await _dio.patch('/users/avatar', data: {'avatarUrl': avatarUrl});
+    return res.data['data'] as Map<String, dynamic>;
+  }
 }

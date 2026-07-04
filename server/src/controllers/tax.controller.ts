@@ -35,14 +35,18 @@ export const parseStatement = asyncHandler(async (req: Request, res: Response) =
     const data = await pdfParse(req.file.buffer);
     const parsedData = await parseStatementText(data.text);
     successResponse(res, parsedData);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Bank Statement Parse Error:', error);
-    errorResponse(res, 'STATEMENT_PARSING_FAILED', 'Unable to analyze statement format: ' + error.message, 500);
+    errorResponse(res, 'STATEMENT_PARSING_FAILED', 'Unable to analyze the uploaded statement. Please ensure it is a valid bank statement PDF.', 500);
   }
 });
 
+const searchQuerySchema = z.object({
+  q: z.string().max(100).optional(),
+});
+
 export const searchVat = asyncHandler(async (req: Request, res: Response) => {
-  const query = req.query.q as string | undefined;
-  const items = await searchVatItems(query);
+  const { q } = searchQuerySchema.parse(req.query);
+  const items = await searchVatItems(q);
   successResponse(res, items);
 });

@@ -1,13 +1,14 @@
 import Parser from 'rss-parser';
 import { prisma } from '../config/database.js';
+import { env } from '../config/env.js';
 
 const parser = new Parser();
 
 // Public RSS Feeds related to Nigerian business/finance news (Nairametrics is a top tax/finance source)
-const FINANCIAL_RSS_FEED = 'https://nairametrics.com/category/taxation/feed/';
+const FINANCIAL_RSS_FEED = env.NEWS_RSS_FEED || 'https://nairametrics.com/category/taxation/feed/';
 
 export async function syncTaxNews() {
-  console.log('🔄 Syncing tax news from RSS feed...');
+  if (env.NODE_ENV === 'development') console.log('🔄 Syncing tax news from RSS feed...');
   try {
     const feed = await parser.parseURL(FINANCIAL_RSS_FEED);
     let count = 0;
@@ -34,7 +35,7 @@ export async function syncTaxNews() {
         count++;
       }
     }
-    console.log(`✅ RSS sync complete. Ingested ${count} new articles.`);
+    if (env.NODE_ENV === 'development') console.log(`✅ RSS sync complete. Ingested ${count} new articles.`);
     return { success: true, newArticlesCount: count };
   } catch (error) {
     console.warn('⚠️ Unable to sync news from RSS feed, falling back to database cache.', error);

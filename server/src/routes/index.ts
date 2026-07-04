@@ -4,6 +4,7 @@ import aiRoutes from './ai.routes.js';
 import forumRoutes from './forum.routes.js';
 import quizRoutes from './quiz.routes.js';
 import newsRoutes from './news.routes.js';
+import userRoutes from './user.routes.js';
 
 const router = Router();
 
@@ -23,5 +24,6 @@ router.use('/ai', aiRoutes);
 router.use('/forum', forumRoutes);
 router.use('/quiz', quizRoutes);
 router.use('/news', newsRoutes);
+router.use('/users', userRoutes);
 
 export default router;

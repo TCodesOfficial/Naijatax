@@ -98,7 +98,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreenFixed(),
+        builder: (context, state) => const RegisterScreen(),
       ),
 
       // Adaptive Shell with 6 branches (5 bottom nav + 1 desktop-only)

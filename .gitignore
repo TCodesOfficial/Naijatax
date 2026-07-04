@@ -27,7 +27,6 @@ server/dist/
 server/build/
 server/.env
 server/.env.local
-server/.env.example
 
 # Prisma 7 Custom Generated Client files 
 # (These are generated dynamically using 'npx prisma generate')

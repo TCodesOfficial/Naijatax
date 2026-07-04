@@ -473,7 +473,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   // ─── Tax Category Results ──────────────────────────────────────────────
   Widget _buildTaxCategoryResults(ThemeData theme, TaxState taxState, bool isMobile) {
-    final p = DevData.taxProfile;
+    final p = taxState.profile!;
     final annualGross = p.annualGross;
     final computedTax = p.computedTax;
     final netIncome = p.netIncome;
@@ -774,7 +774,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: BarChart(
                     BarChartData(
                       alignment: BarChartAlignment.spaceAround,
-                      maxY: state.data.map((d) => d.value).reduce((a, b) => a > b ? a : b) * 1.2,
+                      maxY: state.data.isEmpty ? 10.0 : state.data.map((d) => d.value).reduce((a, b) => a > b ? a : b) * 1.2,
                       barTouchData: BarTouchData(
                         touchTooltipData: BarTouchTooltipData(
                           getTooltipItem: (group, groupIdx, rod, rodIdx) {

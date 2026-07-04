@@ -8,11 +8,18 @@ export interface DecodedUser {
   role: string;
 }
 
+interface JwtPayload {
+  sub?: string;
+  id?: string;
+  email?: string;
+  role?: string;
+}
+
 function decodeToken(token: string): DecodedUser {
-  const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as any;
+  const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
   return {
-    id: decoded.sub || decoded.id,
-    email: decoded.email,
+    id: decoded.sub || decoded.id || '',
+    email: decoded.email || '',
     role: decoded.role || 'USER',
   };
 }
@@ -36,6 +43,16 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
       error: { code: 'INVALID_TOKEN', message: 'Your session has expired or is invalid. Please log in again.' },
     });
   }
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.user || req.user.role !== 'ADMIN') {
+    return res.status(403).json({
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required.' },
+    });
+  }
+  next();
 }
 
 export function optionalAuth(req: Request, res: Response, next: NextFunction) {

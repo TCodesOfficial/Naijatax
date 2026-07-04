@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/dummy/dev_data.dart';
 import '../models/user_model.dart';
 import '../core/constants/app_constants.dart';
+import '../services/api_service.dart';
 
 enum AuthStatus { loading, authenticated, guest, unauthenticated }
 
@@ -43,6 +44,7 @@ class AuthNotifier extends Notifier<AuthState> {
             email: user.email,
             phone: user.phone,
             displayName: user.userMetadata?['display_name'] as String?,
+            avatarUrl: user.userMetadata?['avatar_url'] as String?,
             role: 'USER',
             createdAt: DateTime.now(),
           ),
@@ -71,6 +73,7 @@ class AuthNotifier extends Notifier<AuthState> {
                 email: user.email,
                 phone: user.phone,
                 displayName: user.userMetadata?['display_name'] as String?,
+                avatarUrl: user.userMetadata?['avatar_url'] as String?,
                 role: 'USER',
                 createdAt: DateTime.now(),
               ),
@@ -101,6 +104,7 @@ class AuthNotifier extends Notifier<AuthState> {
           email: u.email,
           phone: u.phone,
           displayName: u.userMetadata?['display_name'] as String?,
+          avatarUrl: u.userMetadata?['avatar_url'] as String?,
           role: 'USER',
           createdAt: DateTime.now(),
         ),
@@ -119,7 +123,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final res = await _client.auth.signUp(email: email, password: password);
       final u = res.user;
       if (u == null) {
-        state = const AuthState(status: AuthStatus.unauthenticated, error: 'Check your email to confirm your account.');
+        state = AuthState(status: AuthStatus.unauthenticated, error: 'Check your email to confirm your account.');
         return;
       }
       state = AuthState(
@@ -129,6 +133,7 @@ class AuthNotifier extends Notifier<AuthState> {
           email: u.email,
           phone: u.phone,
           displayName: u.userMetadata?['display_name'] as String?,
+          avatarUrl: u.userMetadata?['avatar_url'] as String?,
           role: 'USER',
           createdAt: DateTime.now(),
         ),
@@ -180,6 +185,7 @@ class AuthNotifier extends Notifier<AuthState> {
           email: u.email,
           phone: u.phone,
           displayName: u.userMetadata?['display_name'] as String?,
+          avatarUrl: u.userMetadata?['avatar_url'] as String?,
           role: 'USER',
           createdAt: DateTime.now(),
         ),
@@ -234,7 +240,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
-  void updateAvatar(String avatarUrl) {
+  Future<void> updateAvatar(String avatarUrl) async {
     final current = state.user;
     if (current == null) return;
     state = AuthState(
@@ -249,6 +255,12 @@ class AuthNotifier extends Notifier<AuthState> {
         createdAt: current.createdAt,
       ),
     );
+    try {
+      await ApiService.instance.updateAvatar(avatarUrl);
+      await _client.auth.updateUser(UserAttributes(data: {'avatar_url': avatarUrl}));
+    } catch (_) {
+      // Server/metadata persist failed — local state already updated
+    }
   }
 }
 
