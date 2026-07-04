@@ -95,7 +95,7 @@ You are an expert financial document parser. Your job is to analyze the extracte
 Analyze the transactions, deposits, and transfers to extract:
 1. Inferred monthly income: Average monthly salary, income deposits, or inflows.
 2. Annual rent paid: Look for rent payments, housing allowance transfers, or accommodation transactions.
-3. Annual pension paid: Look for pension contributions or retirement fund transactions (voluntary/mandatory).
+3. Annual pension contribution rate: Look for pension contributions or retirement fund transactions (voluntary/mandatory). Return as a decimal (e.g., 0.08 for 8%).
 4. Business turnover: If the account appears to show business trading inflows, calculate the sum of business revenue.
 5. Business assets: Look for capital expenditure transactions, vehicle purchases, land purchase transactions, or asset values.
 
@@ -103,7 +103,7 @@ Provide the response strictly as a JSON object, with the following keys. Do not 
 JSON keys:
 - monthlyIncome: number (0 if not found)
 - rentPaid: number (0 if not found)
-- pensionPaid: number (0 if not found, or calculate 8% of income if pension indicators exist)
+- pensionRate: number (0 if not found, or 0.08 if pension indicators exist)
 - turnover: number (0 if not found, represents business revenue)
 - assets: number (0 if not found, represents business assets value)
 - explanation: string (short, 2-sentence summary of what transactions were identified)

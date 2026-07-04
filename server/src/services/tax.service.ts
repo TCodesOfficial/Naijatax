@@ -117,13 +117,13 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
   };
 }
 
-export async function saveTaxProfile(userId: string, result: TaxAssessmentResult, pensionRate: number) {
+export async function saveTaxProfile(userId: string, result: TaxAssessmentResult, pensionRate: number, rentPaid: number) {
   return await prisma.taxProfile.create({
     data: {
       userId,
       monthlyIncome: result.monthlyIncome,
       annualGross: result.annualGross,
-      rentPaid: result.rentRelief,
+      rentPaid,
       pensionRate,
       computedTax: result.computedTax,
       netIncome: result.netIncome,

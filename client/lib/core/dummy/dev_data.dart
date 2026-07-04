@@ -164,13 +164,13 @@ class DevData {
   ];
 
   // ── Quiz Questions ──────────────────────────────────────────────────────
-  static final quizQuestions = [
+static final quizQuestions = [
     QuizQuestion(
       id: 'q-001',
       question: 'What is the minimum taxable income threshold under NTA 2025?',
       options: ['₦300,000', '₦500,000', '₦800,000', '₦1,000,000'],
-      correctIndex: 0,
-      explanation: 'The first ₦300,000 of taxable income is taxed at 7% under the new progressive brackets.',
+      correctIndex: 2,
+      explanation: 'The first ₦800,000 of annual income is completely exempt from PAYE tax under the 2025 Nigeria Tax Act.',
     ),
     QuizQuestion(
       id: 'q-002',

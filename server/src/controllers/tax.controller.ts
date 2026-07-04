@@ -20,7 +20,7 @@ export const calculateTax = asyncHandler(async (req: Request, res: Response) => 
   const result = calculateUnifiedTax(parsedBody);
 
   if (req.user) {
-    await saveTaxProfile(req.user.id, result, parsedBody.pensionRate);
+    await saveTaxProfile(req.user.id, result, parsedBody.pensionRate, parsedBody.rentPaid);
   }
 
   successResponse(res, result);

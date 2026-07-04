@@ -8,7 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../screens/ai_chat/chat_screen.dart';
 import '../../screens/assessment_form_screen.dart';
 import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/register_screen_fixed.dart';
+import '../../screens/auth/register_screen.dart';
 import '../../screens/calculator/nta_brackets_screen.dart';
 import '../../screens/dashboard/analytics_history_screen.dart';
 import '../../screens/dashboard_screen.dart';

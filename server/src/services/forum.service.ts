@@ -4,7 +4,7 @@ const USER_SELECT = { id: true, email: true } as const;
 
 export async function getForumTopics(tag?: string) {
   return await prisma.forumTopic.findMany({
-    where: tag ? { tags: { string_contains: tag } } : undefined,
+    where: tag ? { tags: { array_contains: tag } } : undefined,
     include: {
       user: { select: USER_SELECT },
       _count: { select: { replies: true } }
