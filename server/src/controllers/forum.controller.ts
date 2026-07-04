@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { z } from 'zod';
 import {
   getForumTopics,
@@ -8,7 +8,7 @@ import {
   acceptForumReply,
 } from '../services/forum.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { AuthenticatedRequest } from '../auth/auth.middleware.js';
+import { successResponse, errorResponse } from '../utils/response.js';
 
 const topicSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters long'),
@@ -20,84 +20,37 @@ const replySchema = z.object({
   content: z.string().min(2, 'Reply must be at least 2 characters long'),
 });
 
-export const getTopics = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getTopics = asyncHandler(async (req: Request, res: Response) => {
   const tag = req.query.tag as string | undefined;
   const topics = await getForumTopics(tag);
-
-  res.status(200).json({
-    success: true,
-    data: topics,
-  });
+  successResponse(res, topics);
 });
 
-export const getTopicDetail = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getTopicDetail = asyncHandler(async (req: Request, res: Response) => {
   const topic = await getForumTopicDetail(req.params.id);
-
   if (!topic) {
-    return res.status(404).json({
-      success: false,
-      error: { code: 'NOT_FOUND', message: 'Topic not found' },
-    });
+    return errorResponse(res, 'NOT_FOUND', 'Topic not found', 404);
   }
-
-  res.status(200).json({
-    success: true,
-    data: topic,
-  });
+  successResponse(res, topic);
 });
 
-export const createTopic = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'You must log in to create topics.' },
-    });
-  }
-
+export const createTopic = asyncHandler(async (req: Request, res: Response) => {
   const { title, content, tags } = topicSchema.parse(req.body);
-  const topic = await createForumTopic(req.user.id, title, content, tags);
-
-  res.status(201).json({
-    success: true,
-    data: topic,
-  });
+  const topic = await createForumTopic(req.user!.id, title, content, tags);
+  successResponse(res, topic, 201);
 });
 
-export const createReply = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'You must log in to reply.' },
-    });
-  }
-
+export const createReply = asyncHandler(async (req: Request, res: Response) => {
   const { content } = replySchema.parse(req.body);
-  const reply = await createForumReply(req.user.id, req.params.id, content);
-
-  res.status(201).json({
-    success: true,
-    data: reply,
-  });
+  const reply = await createForumReply(req.user!.id, req.params.id, content);
+  successResponse(res, reply, 201);
 });
 
-export const acceptReply = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
-    });
-  }
-
+export const acceptReply = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const reply = await acceptForumReply(req.user.id, req.params.id);
-    res.status(200).json({
-      success: true,
-      data: reply,
-    });
+    const reply = await acceptForumReply(req.user!.id, req.params.id);
+    successResponse(res, reply);
   } catch (error: any) {
-    res.status(403).json({
-      success: false,
-      error: { code: 'FORBIDDEN', message: error.message },
-    });
+    errorResponse(res, 'FORBIDDEN', error.message, 403);
   }
 });

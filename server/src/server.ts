@@ -12,7 +12,7 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: env.NODE_ENV === 'production'
-    ? ['https://naijatax.app']          // replace with your deployed domain
+    ? ['https://naijatax.app']
     : ['http://localhost:3000', 'http://localhost:5000', 'http://localhost:5173', 'http://localhost:8080'],
   credentials: true,
 }));
@@ -30,11 +30,13 @@ app.use((_req, res) => {
   });
 });
 
+
 // ─── Global Error Handler ────────────────────────────────────────────────────
 app.use(errorHandler);
 
+
 // ─── Server Bootstrap ────────────────────────────────────────────────────────
-async function bootstrap() {
+async function runApp() {
   try {
     // Verify DB connection on startup
     await prisma.$connect();
@@ -52,4 +54,4 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+runApp();

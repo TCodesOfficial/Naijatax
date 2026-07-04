@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
-import { Prisma } from '../generated/prisma/client.js';
+import { Prisma } from '@prisma/client';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -17,7 +17,6 @@ export function errorHandler(
   let message = err.message ?? 'Internal Server Error';
   let details: any = undefined;
 
-  // Handle Zod Validation Errors
   if (err instanceof ZodError) {
     statusCode = 400;
     message = 'Validation failed';
@@ -27,26 +26,22 @@ export function errorHandler(
     }));
   }
 
-  // Handle Prisma Database Errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2002') {
-      // Unique constraint violation
       statusCode = 409;
       message = 'Conflict: Unique constraint failed';
-      const target = err.meta?.target as string[] | undefined;
+      const target = (err.meta?.target as string[]) ?? undefined;
       details = target ? `Unique field failed: ${target.join(', ')}` : undefined;
     } else if (err.code === 'P2025') {
-      // Record not found
       statusCode = 404;
       message = 'Record not found';
     }
   }
 
-  // Log server-side errors
   if (statusCode === 500) {
-    console.error('💥 Unexpected Server Error:', err);
+    console.error('Unexpected Server Error:', err);
   } else {
-    console.warn(`⚠️ API Warning [${statusCode}]: ${message}`, details || '');
+    console.warn(`API Warning [${statusCode}]: ${message}`, details || '');
   }
 
   res.status(statusCode).json({

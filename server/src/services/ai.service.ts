@@ -1,47 +1,15 @@
 import OpenAI from 'openai';
 import { prisma } from '../config/database.js';
 import { env } from '../config/env.js';
+import { NIGERIAN_TAX_CONTEXT } from '../config/prompts.js';
 
 const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+  apiKey: env.GEMINI_API_KEY,
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
 });
 
-// Detailed system prompt containing NTA 2025 knowledge base
-const NIGERIAN_TAX_CONTEXT = `
-You are the NaijaTax Enlighten AI Assistant, a specialized expert on Nigerian taxation, specifically trained on the 2025 Nigeria Tax Act (NTA) reforms. Your purpose is to educate citizens, answer tax-related questions factually, and provide helpful guidance in a friendly, conversational manner.
-
-Key Nigerian Tax Knowledge for the 2025 reforms:
-1. Personal Income Tax (PAYE):
-   - Exemption Threshold: Anyone earning ₦800,000 or less annually is completely exempt from PAYE.
-   - Progressive Annual Tax Bands:
-     - Up to ₦800,000: 0% (Exempt)
-     - Next ₦3,000,000 (from ₦800,001 to ₦3,800,000): 15%
-     - Next ₦3,000,000 (from ₦3,800,001 to ₦6,800,000): 20%
-     - Next ₦14,000,000 (from ₦6,800,001 to ₦20,800,000): 22%
-     - Above ₦20,800,000: 25%
-   - Deductions: Mandatory pension (default 8% of gross salary) and rent relief (20% of rent paid, capped at ₦500,000 per year) are tax-deductible.
-   - Minimum Wage: Set at ₦70,000 monthly (₦840,000 annually), meaning standard minimum wage earners are mostly exempt or pay negligible tax.
-
-2. Company Income Tax (CIT):
-   - Small Businesses (Turnover <= ₦100 million AND assets <= ₦250 million) are 100% exempt from CIT.
-   - Medium Businesses (Turnover ₦100 million to ₦500 million) pay 20% CIT.
-   - Large Businesses (Turnover > ₦500 million) pay 30% CIT.
-
-3. Value Added Tax (VAT) categories (Standard Rate: 7.5%):
-   - Zero-Rated (0% VAT): Basic local food items, local bread, fresh produce, locally manufactured animal feeds, solar panels, exported goods/services, residential electricity, and educational textbooks.
-   - Exempt: Commercial passenger public transport, school tuition fees, residential housing rent, commercial land purchase, medical consultations, surgical operations, prescription drugs, and savings account interest.
-   - Standard (7.5% VAT): Laptops, smartphones, imported clothing, hotel lodging, restaurants, data plans, airtime, cars, legal fees.
-
-4. Administrative Changes:
-   - The Nigeria Revenue Service (NRS) replaces the Federal Inland Revenue Service (FIRS) as the single tax collector.
-
-Instructions:
-- Address users politely. Use Nigerian currency (Naira ₦) for all values.
-- Keep answers factual. If you do not know the answer, do not make up tax details. Politely refer them to a tax practitioner.
-- Remind users that your advice is for educational purposes and does not constitute official legal advice.
-`;
-export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation' ) {
-  if (sessionId) { 
+export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
+  if (sessionId) {
     const session = await prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
       include: { messages: { orderBy: { createdAt: 'asc' } } }
@@ -49,76 +17,76 @@ export async function getOrCreateChatSession(userId: string, sessionId?: string,
     if (session) return session;
   }
 
-  // Create a new session
   return await prisma.chatSession.create({
-    data: {
-      userId,
-      title,
-    },
+    data: { userId, title },
     include: { messages: true }
   });
 }
 
+export async function getSessions(userId: string) {
+  return await prisma.chatSession.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+  });
+}
+
+export async function getSessionDetail(sessionId: string, userId: string) {
+  const session = await prisma.chatSession.findUnique({
+    where: { id: sessionId },
+    include: { messages: { orderBy: { createdAt: 'asc' } } },
+  });
+
+  if (!session || session.userId !== userId) return null;
+  return session;
+}
+
+export async function deleteSession(sessionId: string, userId: string) {
+  const session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
+
+  if (!session || session.userId !== userId) return false;
+
+  await prisma.chatSession.delete({ where: { id: sessionId } });
+  return true;
+}
+
 export async function sendChatMessage(userId: string, content: string, sessionId?: string) {
-  // 1. Fetch or create chat session
   const session = await getOrCreateChatSession(userId, sessionId, content.substring(0, 40));
-  
-  // 2. Fetch last 20 messages in this session
+
   const history = await prisma.chatMessage.findMany({
     where: { sessionId: session.id },
     orderBy: { createdAt: 'asc' },
     take: 20
   });
 
-  // 3. Save User Message
   await prisma.chatMessage.create({
-    data: {
-      sessionId: session.id,
-      role: 'user',
-      content
-    }
+    data: { sessionId: session.id, role: 'user', content }
   });
 
-  // 4. Format prompt messages for OpenAI
-  const messages:{
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-  }[] = [
+  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
     { role: 'system', content: NIGERIAN_TAX_CONTEXT },
-    ...history.map((msg: { role: any; content: any; }) => ({ role: msg.role, content: msg.content })),
+    ...history.map((msg) => ({ role: msg.role as 'user' | 'assistant', content: msg.content })),
     { role: 'user', content }
   ];
 
-  // 5. Query OpenAI
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gemini-2.0-flash',
     messages,
-    temperature: 0.3, // keeps the model factual
+    temperature: 0.3,
     max_tokens: 1000,
   });
 
   const responseContent = completion.choices[0]?.message?.content || 'I apologize, I am unable to process your request at this time.';
 
-  // 6. Save AI Response
   const aiMessage = await prisma.chatMessage.create({
-    data: {
-      sessionId: session.id,
-      role: 'assistant',
-      content: responseContent
-    }
+    data: { sessionId: session.id, role: 'assistant', content: responseContent }
   });
 
-  // 7. Update Session timestamp
   await prisma.chatSession.update({
     where: { id: session.id },
     data: { updatedAt: new Date() }
   });
 
-  return {
-    sessionId: session.id,
-    sessionTitle: session.title,
-    message: aiMessage
-  };
+  return { sessionId: session.id, sessionTitle: session.title, message: aiMessage };
 }
 
 export async function parseStatementText(text: string) {
@@ -147,9 +115,9 @@ ${text.substring(0, 10000)}
 `;
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gemini-2.0-flash',
     messages: [{ role: 'user', content: parsePrompt }],
-    temperature: 0.1, // low temperature for precise parsing
+    temperature: 0.1,
     response_format: { type: 'json_object' }
   });
 

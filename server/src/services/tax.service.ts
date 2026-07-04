@@ -1,3 +1,5 @@
+import { prisma } from '../config/database.js';
+
 export interface TaxAssessmentInput {
   monthlyIncome: number;
   rentPaid?: number;
@@ -17,7 +19,7 @@ export interface TaxAssessmentResult {
   netIncome: number;
   isExempt: boolean;
   citExemption: string;
-  savings: number; // Compared to the previous tax act
+  savings: number;
   breakdown: Array<{
     bracket: string;
     rate: number;
@@ -30,18 +32,14 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
   const isMonthly = input.isMonthly ?? true;
   const monthlyIncome = isMonthly ? input.monthlyIncome : input.monthlyIncome / 12;
   const annualGross = monthlyIncome * 12;
-  
-  const pensionRate = input.pensionRate ?? 0.08; // default 8% mandatory pension
+
+  const pensionRate = input.pensionRate ?? 0.08;
   const rentPaid = input.rentPaid ?? 0;
-  
-  // 1. Calculate Deductions
+
   const pensionDeduction = annualGross * pensionRate;
-  // Rent relief under NTA 2025: 20% of rent paid, capped at ₦500,000/year
   const rentRelief = Math.min(rentPaid * 0.20, 500000);
-  
   const taxableIncome = Math.max(0, annualGross - pensionDeduction - rentRelief);
 
-  // 2. Progressive brackets under NTA 2025 Reforms
   const brackets = [
     { limit: 800000, rate: 0.0, label: 'Exempt (First ₦800k)' },
     { limit: 3000000, rate: 0.15, label: 'First ₦3M @ 15%' },
@@ -52,9 +50,7 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
 
   let remainingIncome = taxableIncome;
   let computedTax = 0;
-  const breakdown = [];
-
-  // If gross is below the exemption threshold (₦800k), they are completely exempt
+  const breakdown: TaxAssessmentResult['breakdown'] = [];
   const isExempt = annualGross <= 800000;
 
   if (!isExempt) {
@@ -63,33 +59,22 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
       const taxableAmount = Math.min(remainingIncome, bracket.limit);
       const taxForBracket = taxableAmount * bracket.rate;
       computedTax += taxForBracket;
-      
+
       if (taxableAmount > 0) {
-        breakdown.push({
-          bracket: bracket.label,
-          rate: bracket.rate,
-          taxableAmount,
-          tax: taxForBracket
-        });
+        breakdown.push({ bracket: bracket.label, rate: bracket.rate, taxableAmount, tax: taxForBracket });
       }
       remainingIncome -= taxableAmount;
     }
   } else {
-    breakdown.push({
-      bracket: 'Exempt (Income below ₦800k)',
-      rate: 0.0,
-      taxableAmount: annualGross,
-      tax: 0.0
-    });
+    breakdown.push({ bracket: 'Exempt (Income below ₦800k)', rate: 0.0, taxableAmount: annualGross, tax: 0.0 });
   }
 
   const netIncome = annualGross - computedTax - pensionDeduction;
 
-  // 3. Compute Tax under Old Pre-2025 Tax Act (for comparative savings analytics)
-  // Consolidation Relief Allowance (CRA): max(200k, 1% of gross) + 20% of gross
+  // Old Pre-2025 Tax Act (for comparative savings analytics)
   const oldCRA = Math.max(200000, annualGross * 0.01) + (annualGross * 0.20);
   const oldTaxableIncome = Math.max(0, annualGross - oldCRA - pensionDeduction);
-  
+
   const oldBands = [
     { limit: 300000, rate: 0.07 },
     { limit: 300000, rate: 0.11 },
@@ -109,10 +94,9 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
     oldRemaining -= amt;
   }
 
-  // Savings equals the older tax burden minus the modern reformed tax
   const savings = Math.max(0, oldTax - computedTax);
 
-  // 4. Evaluate CIT Exemption Status (Company Income Tax)
+  // CIT Exemption Status
   const turnover = input.turnover ?? 0;
   const assets = input.assets ?? 0;
   let citExemption = 'N/A (No business details provided)';
@@ -128,16 +112,35 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
   }
 
   return {
-    monthlyIncome,
-    annualGross,
-    pensionDeduction,
-    rentRelief,
-    taxableIncome,
-    computedTax,
-    netIncome,
-    isExempt,
-    citExemption,
-    savings,
-    breakdown
+    monthlyIncome, annualGross, pensionDeduction, rentRelief, taxableIncome,
+    computedTax, netIncome, isExempt, citExemption, savings, breakdown
   };
+}
+
+export async function saveTaxProfile(userId: string, result: TaxAssessmentResult, pensionRate: number) {
+  return await prisma.taxProfile.create({
+    data: {
+      userId,
+      monthlyIncome: result.monthlyIncome,
+      annualGross: result.annualGross,
+      rentPaid: result.rentRelief,
+      pensionRate,
+      computedTax: result.computedTax,
+      netIncome: result.netIncome,
+      isExempt: result.isExempt,
+      citExemption: result.citExemption,
+    },
+  });
+}
+
+export async function searchVatItems(query?: string) {
+  return await prisma.vatItem.findMany({
+    where: query ? {
+      OR: [
+        { name: { contains: query, mode: 'insensitive' } },
+        { category: { contains: query, mode: 'insensitive' } },
+      ],
+    } : undefined,
+    take: 20,
+  });
 }

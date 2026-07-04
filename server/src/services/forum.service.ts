@@ -1,19 +1,13 @@
 import { prisma } from '../config/database.js';
 
+const USER_SELECT = { id: true, email: true } as const;
+
 export async function getForumTopics(tag?: string) {
   return await prisma.forumTopic.findMany({
-    where: tag ? {
-      tags: {
-        string_contains: tag
-      }
-    } : undefined,
+    where: tag ? { tags: { string_contains: tag } } : undefined,
     include: {
-      user: {
-        select: { id: true, email: true }
-      },
-      _count: {
-        select: { replies: true }
-      }
+      user: { select: USER_SELECT },
+      _count: { select: { replies: true } }
     },
     orderBy: { createdAt: 'desc' }
   });
@@ -23,18 +17,10 @@ export async function getForumTopicDetail(topicId: string) {
   return await prisma.forumTopic.findUnique({
     where: { id: topicId },
     include: {
-      user: {
-        select: { id: true, email: true }
-      },
-      _count: {
-        select: { replies: true }
-      },
+      user: { select: USER_SELECT },
+      _count: { select: { replies: true } },
       replies: {
-        include: {
-          user: {
-            select: { id: true, email: true }
-          }
-        },
+        include: { user: { select: USER_SELECT } },
         orderBy: { createdAt: 'asc' }
       }
     }
@@ -43,22 +29,13 @@ export async function getForumTopicDetail(topicId: string) {
 
 export async function createForumTopic(userId: string, title: string, content: string, tags: string[]) {
   return await prisma.forumTopic.create({
-    data: {
-      userId,
-      title,
-      content,
-      tags
-    }
+    data: { userId, title, content, tags }
   });
 }
 
 export async function createForumReply(userId: string, topicId: string, content: string) {
   return await prisma.forumReply.create({
-    data: {
-      userId,
-      topicId,
-      content
-    }
+    data: { userId, topicId, content }
   });
 }
 
@@ -73,7 +50,6 @@ export async function acceptForumReply(userId: string, replyId: string) {
     throw new Error('Unauthorized: Only the topic creator can accept this reply');
   }
 
-  // Mark this reply as accepted
   return await prisma.forumReply.update({
     where: { id: replyId },
     data: { isAccepted: true }

@@ -1,104 +1,43 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import { prisma } from '../config/database.js';
-import { sendChatMessage } from '../services/ai.service.js';
+import {
+  getSessions,
+  getSessionDetail,
+  deleteSession,
+  sendChatMessage,
+} from '../services/ai.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { AuthenticatedRequest } from '../auth/auth.middleware.js';
+import { successResponse, errorResponse } from '../utils/response.js';
+import { Request } from 'express';
 
 const messageSchema = z.object({
   content: z.string().min(1, 'Message content cannot be empty'),
   sessionId: z.string().optional(),
 });
 
-export const sendMessage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Chat sessions require user login.'},
-    });
-  }
-
+export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   const { content, sessionId } = messageSchema.parse(req.body);
-  const result = await sendChatMessage(req.user.id, content, sessionId);
-
-  res.status(200).json({
-    success: true,
-    data: result,
-  });
+  const result = await sendChatMessage(req.user!.id, content, sessionId);
+  successResponse(res, result);
 });
 
-export const getSessions = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
-    });
-  }
-
-  const sessions = await prisma.chatSession.findMany({
-    where: { userId: req.user.id },
-    orderBy: { updatedAt: 'desc' },
-  });
-
-  res.status(200).json({
-    success: true,
-    data: sessions,
-  });
+export const getSessionsList = asyncHandler(async (req: Request, res: Response) => {
+  const sessions = await getSessions(req.user!.id);
+  successResponse(res, sessions);
 });
 
-export const getSessionDetail = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
-    });
+export const getSessionDetailHandler = asyncHandler(async (req: Request, res: Response) => {
+  const session = await getSessionDetail(req.params.id, req.user!.id);
+  if (!session) {
+    return errorResponse(res, 'NOT_FOUND', 'Session not found', 404);
   }
-
-  const session = await prisma.chatSession.findUnique({
-    where: { id: req.params.id },
-    include: {
-      messages: { orderBy: { createdAt: 'asc' } },
-    },
-  });
-
-  if (!session || session.userId !== req.user.id) {
-    return res.status(404).json({
-      success: false,
-      error: { code: 'NOT_FOUND', message: 'Session not found' },
-    });
-  }
-
-  res.status(200).json({
-    success: true,
-    data: session,
-  });
+  successResponse(res, session);
 });
 
-export const deleteSession = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
-    });
+export const deleteSessionHandler = asyncHandler(async (req: Request, res: Response) => {
+  const deleted = await deleteSession(req.params.id, req.user!.id);
+  if (!deleted) {
+    return errorResponse(res, 'NOT_FOUND', 'Session not found', 404);
   }
-
-  const session = await prisma.chatSession.findUnique({
-    where: { id: req.params.id },
-  });
-
-  if (!session || session.userId !== req.user.id) {
-    return res.status(404).json({
-      success: false,
-      error: { code: 'NOT_FOUND', message: 'Session not found' },
-    });
-  }
-
-  await prisma.chatSession.delete({
-    where: { id: req.params.id },
-  });
-
-  res.status(200).json({
-    success: true,
-    message: 'Session deleted successfully',
-  });
+  successResponse(res, { message: 'Session deleted successfully' });
 });

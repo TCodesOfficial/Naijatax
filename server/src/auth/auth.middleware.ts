@@ -8,69 +8,48 @@ export interface DecodedUser {
   role: string;
 }
 
-// Extend Express Request type locally in this file
-export interface AuthenticatedRequest extends Request {
-  user?: DecodedUser;
+function decodeToken(token: string): DecodedUser {
+  const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as any;
+  return {
+    id: decoded.sub || decoded.id,
+    email: decoded.email,
+    role: decoded.role || 'USER',
+  };
 }
 
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        message: 'Access token required. Please log in or sign up.',
-      },
+      error: { code: 'UNAUTHORIZED', message: 'Access token required. Please log in or sign up.' },
     });
   }
-
-  const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as any;
-    
-    // Supabase standard JWT claims: 'sub' contains the user UUID, 'email' contains the user email
-    req.user = {
-      id: decoded.sub || decoded.id,
-      email: decoded.email,
-      role: decoded.role || 'USER',
-    };
+    req.user = decodeToken(authHeader.split(' ')[1]);
     next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({
       success: false,
-      error: {
-        code: 'INVALID_TOKEN',
-        message: 'Your session has expired or is invalid. Please log in again.',
-      },
+      error: { code: 'INVALID_TOKEN', message: 'Your session has expired or is invalid. Please log in again.' },
     });
   }
 }
 
-export function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function optionalAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Proceed as Guest
     req.user = undefined;
     return next();
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as any;
-    req.user = {
-      id: decoded.sub || decoded.id,
-      email: decoded.email,
-      role: decoded.role || 'USER',
-    };
-    next();
-  } catch (err) {
-    // Even if token is expired/invalid, let guest proceed (or force login based on preference, but here we fall back to guest)
+    req.user = decodeToken(authHeader.split(' ')[1]);
+  } catch {
     req.user = undefined;
-    next();
   }
+  next();
 }
