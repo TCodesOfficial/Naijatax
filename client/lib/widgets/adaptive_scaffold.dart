@@ -390,8 +390,8 @@ class AdaptiveScaffold extends ConsumerWidget {
                 ? 0
                 : navigationShell.currentIndex,
             onTabChange: (index) => _onTap(context, index),
-            gap: 6,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            gap: 3,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
             tabBorderRadius: 20,
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
@@ -399,9 +399,9 @@ class AdaptiveScaffold extends ConsumerWidget {
             activeColor: theme.colorScheme.onSecondaryContainer,
             color: theme.colorScheme.onSurfaceVariant,
             tabBackgroundColor: theme.colorScheme.secondaryContainer,
-            iconSize: 20,
+            iconSize: 17,
             textStyle: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSecondaryContainer,
             ),

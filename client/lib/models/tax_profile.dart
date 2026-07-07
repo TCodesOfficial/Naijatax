@@ -1,3 +1,10 @@
+double _parseNum(dynamic value) {
+  if (value == null) return 0;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
+}
+
 class TaxBreakdown {
   final String bracket;
   final double rate;
@@ -12,10 +19,10 @@ class TaxBreakdown {
   });
 
   factory TaxBreakdown.fromJson(Map<String, dynamic> json) => TaxBreakdown(
-        bracket: json['bracket'] as String,
-        rate: (json['rate'] as num).toDouble(),
-        taxableAmount: (json['taxableAmount'] as num).toDouble(),
-        tax: (json['tax'] as num).toDouble(),
+        bracket: (json['bracket'] as String?) ?? '',
+        rate: _parseNum(json['rate']),
+        taxableAmount: _parseNum(json['taxableAmount']),
+        tax: _parseNum(json['tax']),
       );
 }
 
@@ -47,19 +54,24 @@ class TaxProfile {
   });
 
   factory TaxProfile.fromJson(Map<String, dynamic> json) => TaxProfile(
-        monthlyIncome: (json['monthlyIncome'] as num).toDouble(),
-        annualGross: (json['annualGross'] as num).toDouble(),
-        pensionDeduction: (json['pensionDeduction'] as num).toDouble(),
-        rentRelief: (json['rentRelief'] as num).toDouble(),
-        taxableIncome: (json['taxableIncome'] as num).toDouble(),
-        computedTax: (json['computedTax'] as num).toDouble(),
-        netIncome: (json['netIncome'] as num).toDouble(),
-        isExempt: json['isExempt'] as bool,
-        citExemption: json['citExemption'] as String,
-        savings: (json['savings'] as num).toDouble(),
-        breakdown: (json['breakdown'] as List)
-            .map((e) => TaxBreakdown.fromJson(e as Map<String, dynamic>))
-            .toList(),
+        monthlyIncome: _parseNum(json['monthlyIncome']),
+        annualGross: _parseNum(json['annualGross']),
+        pensionDeduction: _parseNum(json['pensionDeduction']) != 0
+            ? _parseNum(json['pensionDeduction'])
+            : _parseNum(json['pensionRate']),
+        rentRelief: _parseNum(json['rentRelief']) != 0
+            ? _parseNum(json['rentRelief'])
+            : _parseNum(json['rentPaid']),
+        taxableIncome: _parseNum(json['taxableIncome']),
+        computedTax: _parseNum(json['computedTax']),
+        netIncome: _parseNum(json['netIncome']),
+        isExempt: json['isExempt'] as bool? ?? false,
+        citExemption: (json['citExemption'] as String?) ?? 'N/A',
+        savings: _parseNum(json['savings']),
+        breakdown: (json['breakdown'] as List?)
+                ?.map((e) => TaxBreakdown.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
 
   /// Effective tax rate as a percentage

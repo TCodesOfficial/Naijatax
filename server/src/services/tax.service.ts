@@ -133,6 +133,13 @@ export async function saveTaxProfile(userId: string, result: TaxAssessmentResult
   });
 }
 
+export async function getLatestTaxProfile(userId: string) {
+  return await prisma.taxProfile.findFirst({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function searchVatItems(query?: string) {
   return await prisma.vatItem.findMany({
     where: query ? {

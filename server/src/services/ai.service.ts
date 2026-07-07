@@ -1,12 +1,97 @@
-import OpenAI from 'openai';
 import { prisma } from '../config/database.js';
 import { env } from '../config/env.js';
 import { NIGERIAN_TAX_CONTEXT } from '../config/prompts.js';
 
-const openai = new OpenAI({
-  apiKey: env.GEMINI_API_KEY,
-  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-});
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: { text: string }[];
+}
+
+async function callGemini(
+  messages: GeminiMessage[],
+  systemInstruction?: string,
+  options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string } = {},
+  maxRetries = 3,
+): Promise<string> {
+  const body: Record<string, unknown> = {
+    contents: messages,
+    generationConfig: {
+      temperature: options.temperature ?? 0.3,
+      maxOutputTokens: options.maxOutputTokens ?? 1000,
+      ...(options.responseMimeType ? { responseMimeType: options.responseMimeType } : {}),
+    },
+  };
+
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(GEMINI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': env.GEMINI_API_KEY,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.text();
+        const isRateLimited = res.status === 429;
+
+        if (isRateLimited && attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        if (isRateLimited) {
+          return 'AI is busy processing other requests. Please try again in a moment.';
+        }
+
+        throw new Error(`Gemini API error ${res.status}: ${errorBody}`);
+      }
+
+      const data = await res.json() as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+      };
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      return text || 'I apologize, I am unable to process your request at this time.';
+    } catch (error: unknown) {
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  return 'I apologize, I am unable to process your request at this time.';
+}
+
+function toGeminiMessages(
+  history: { role: string; content: string }[],
+  currentMessage: string,
+): GeminiMessage[] {
+  const messages: GeminiMessage[] = [];
+
+  for (const msg of history) {
+    messages.push({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    });
+  }
+
+  messages.push({ role: 'user', parts: [{ text: currentMessage }] });
+
+  return messages;
+}
 
 export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
   if (sessionId) {
@@ -54,28 +139,24 @@ export async function sendChatMessage(userId: string, content: string, sessionId
 
   const history = await prisma.chatMessage.findMany({
     where: { sessionId: session.id },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
     take: 20
   });
+  history.reverse();
 
   await prisma.chatMessage.create({
     data: { sessionId: session.id, role: 'user', content }
   });
 
-  const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-    { role: 'system', content: NIGERIAN_TAX_CONTEXT },
-    ...history.map((msg) => ({ role: msg.role as 'user' | 'assistant', content: msg.content })),
-    { role: 'user', content }
-  ];
+  const geminiMessages = toGeminiMessages(
+    history.map((msg) => ({ role: msg.role, content: msg.content })),
+    content,
+  );
 
-  const completion = await openai.chat.completions.create({
-    model: 'gemini-2.0-flash',
-    messages,
+  const responseContent = await callGemini(geminiMessages, NIGERIAN_TAX_CONTEXT, {
     temperature: 0.3,
-    max_tokens: 1000,
+    maxOutputTokens: 1000,
   });
-
-  const responseContent = completion.choices[0]?.message?.content || 'I apologize, I am unable to process your request at this time.';
 
   const aiMessage = await prisma.chatMessage.create({
     data: { sessionId: session.id, role: 'assistant', content: responseContent }
@@ -114,13 +195,10 @@ ${text.substring(0, 10000)}
 --------------------
 `;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gemini-2.0-flash',
-    messages: [{ role: 'user', content: parsePrompt }],
-    temperature: 0.1,
-    response_format: { type: 'json_object' }
-  });
-
-  const jsonStr = completion.choices[0]?.message?.content || '{}';
+  const jsonStr = await callGemini(
+    [{ role: 'user', parts: [{ text: parsePrompt }] }],
+    undefined,
+    { temperature: 0.1, responseMimeType: 'application/json' },
+  );
   return JSON.parse(jsonStr);
 }

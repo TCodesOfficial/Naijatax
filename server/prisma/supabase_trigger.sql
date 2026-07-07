@@ -4,9 +4,21 @@ RETURNS trigger
 SECURITY DEFINER SET search_path = public
 LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO public.users (id, email, role, "createdAt", "updatedAt")
-  VALUES (new.id, new.email, 'USER', now(), now())
-  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.users (id, email, phone, "display_name", "avatar_url", role, "createdAt", "updatedAt")
+  VALUES (
+    new.id,
+    new.email,
+    new.phone,
+    COALESCE(new.raw_user_meta_data ->> 'display_name', new.raw_user_meta_data ->> 'name'),
+    COALESCE(new.raw_user_meta_data ->> 'avatar_url', new.raw_user_meta_data ->> 'picture'),
+    'USER',
+    now(),
+    now()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    phone = COALESCE(EXCLUDED.phone, public.users.phone),
+    "display_name" = COALESCE(EXCLUDED."display_name", public.users."display_name"),
+    "avatar_url" = COALESCE(EXCLUDED."avatar_url", public.users."avatar_url");
   RETURN new;
 END;
 $$;

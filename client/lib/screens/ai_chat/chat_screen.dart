@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -67,10 +68,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       Future.microtask(_scrollToBottom);
     } catch (e) {
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
+      String errorMsg;
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        if (statusCode == 401) {
+          errorMsg = 'Session expired. Please log in again.';
+        } else if (statusCode == 429) {
+          errorMsg = 'AI is busy. Please try again in a moment.';
+        } else if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
+          errorMsg = 'Server is taking too long to respond. Try again.';
+        } else if (e.type == DioExceptionType.connectionError) {
+          errorMsg = 'Cannot reach the server. Check your connection.';
+        } else {
+          errorMsg = 'Something went wrong. Please try again.';
+        }
+      } else {
+        errorMsg = 'Sorry, I couldn\'t process your request. Please try again.';
+      }
       setState(() {
         _messages.add({
           'role': 'assistant',
-          'content': 'Sorry, I couldn\'t process your request. Check your server connection.',
+          'content': errorMsg,
           'time': replyTime,
         });
         _isLoading = false;
@@ -114,6 +133,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
                       width: 8,
@@ -124,9 +144,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      'Assistant Online',
-                      style: theme.textTheme.labelSmall?.copyWith(color: const Color(0xFF15803D)),
+                    Flexible(
+                      child: Text(
+                        'Assistant Online',
+                        style: theme.textTheme.labelSmall?.copyWith(color: const Color(0xFF15803D)),
+                      ),
                     ),
                   ],
                 ),

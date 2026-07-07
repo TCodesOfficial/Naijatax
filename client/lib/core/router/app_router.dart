@@ -34,12 +34,14 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 bool get _isNativePlatform => !kIsWeb;
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final authNotifier = ref.read(authProvider.notifier);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/landing',
+    refreshListenable: authNotifier.refreshNotifier,
     redirect: (context, state) async {
+      final authState = ref.read(authProvider);
       final prefs = await SharedPreferences.getInstance();
       final hasOnboarded = prefs.getBool(AppConstants.onboardedKey) ?? false;
       final location = state.matchedLocation;
@@ -223,8 +225,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'documents',
-                    builder: (context, state) =>
-                        const DocumentsVaultScreen(),
+                    builder: (context, state) => const DocumentsVaultScreen(),
                   ),
                   GoRoute(
                     path: 'verify',
@@ -248,8 +249,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'history',
-                        builder: (context, state) =>
-                            const QuizHistoryScreen(),
+                        builder: (context, state) => const QuizHistoryScreen(),
                       ),
                     ],
                   ),

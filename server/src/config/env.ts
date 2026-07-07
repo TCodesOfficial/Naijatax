@@ -11,8 +11,8 @@ const envSchema = z.object({
     .describe('PostgreSQL connection string for Supabase (postgresql://...)'),
   DIRECT_URL: z.string().optional()
     .describe('Direct PostgreSQL connection string for Prisma migrations (bypasses connection pooler)'),
-  SUPABASE_JWT_SECRET: z.string().min(10, 'SUPABASE_JWT_SECRET is required. Find it in your Supabase dashboard under Settings > API > JWT Secret.')
-    .describe('Supabase JWT secret for verifying authentication tokens'),
+  SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL (e.g. https://xxx.supabase.co)')
+    .describe('Supabase project URL for fetching JWT signing keys'),
   GEMINI_API_KEY: z.string().min(10, 'GEMINI_API_KEY is required. Get one from https://aistudio.google.com/apikey')
     .describe('Gemini API key for AI chatbot and bank statement parsing'),
   API_PREFIX: z.string().default('/api/v1'),
@@ -43,7 +43,7 @@ if (!parsed.success) {
   console.error('');
   console.error('  Required variables:');
   console.error('    DATABASE_URL       - postgresql://user:pass@host:port/db');
-  console.error('    SUPABASE_JWT_SECRET - From Supabase Dashboard > Settings > API');
+  console.error('    SUPABASE_URL        - https://your-project.supabase.co');
   console.error('    GEMINI_API_KEY     - From https://aistudio.google.com/apikey');
   console.error('');
   process.exit(1);

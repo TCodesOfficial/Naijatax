@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
@@ -78,7 +79,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isDesktop = screenWidth >= 900;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.needsOtpVerification) {
+      if (next.status == AuthStatus.authenticated) {
+        final router = GoRouter.of(context);
+        SharedPreferences.getInstance().then((prefs) {
+          if (!mounted) return;
+          final hasOnboarded =
+              prefs.getBool(AppConstants.onboardedKey) ?? false;
+          router.go(hasOnboarded ? '/dashboard' : '/onboarding');
+        });
+      } else if (next.needsOtpVerification) {
         setState(() {
           _otpSent = true;
           _pendingPhone = next.pendingPhone;
@@ -217,19 +226,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
-        child: Stack(
-          children: [
-            // Form content (painted first, hit-tested last)
-            Padding(
-              padding: const EdgeInsets.all(28.0),
-              child: SingleChildScrollView(
-                primary: false,
-                physics: const ClampingScrollPhysics(),
-                child: Column(
+        child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(authProvider.notifier).continueAsGuest();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Guest',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_outward,
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     // Brand header
                     Text(
                       AppConstants.appName,
@@ -240,7 +282,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       'Sign in to access personalized tax tools and insights.',
                       textAlign: TextAlign.center,
@@ -248,7 +290,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
 
                     // Toggle between Email and Phone
                     Container(
@@ -319,7 +361,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
 
                     if (!_isPhoneMode) ...[
                       // Email input
@@ -333,7 +375,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? 'Enter a valid email'
                             : null,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
 
                       // Password input
                       CustomTextField(
@@ -429,7 +471,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
 
                         // Send OTP button
                         AnimatedButton(
@@ -446,7 +488,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
 
                         // OTP input
                         CustomTextField(
@@ -457,7 +499,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           maxLength: 6,
                           prefixIcon: const Icon(Icons.pin_outlined, size: 20),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
 
                         // Verify OTP button
                         AnimatedButton(
@@ -478,7 +520,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ],
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // Divider
                     Row(
@@ -497,7 +539,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Expanded(child: Divider()),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // Social logins
                     Row(
@@ -512,15 +554,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         }),
                         const SizedBox(width: 12),
                         _socialButton(theme, Icons.facebook, 'Facebook', () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Facebook login coming soon'),
-                            ),
-                          );
+                          ref.read(authProvider.notifier).signInWithFacebook();
                         }),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
 
                     // Sign up link
                     Wrap(
@@ -547,56 +585,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
               ),
-            ),
-
-            // Guest badge (painted second, hit-tested first — on top)
-            Positioned(
-              top: 16,
-              right: 20,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    ref.read(authProvider.notifier).continueAsGuest();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Guest',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_outward,
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _socialButton(

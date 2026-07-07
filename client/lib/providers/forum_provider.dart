@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/dummy/dev_data.dart';
 import '../models/forum_model.dart';
 import '../services/api_service.dart';
 
@@ -41,7 +40,7 @@ class ForumNotifier extends Notifier<ForumState> {
       final topics = data.map((e) => ForumTopic.fromJson(e as Map<String, dynamic>)).toList();
       state = state.copyWith(isLoading: false, topics: topics);
     } catch (e) {
-      state = state.copyWith(isLoading: false, topics: DevData.topics);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -52,8 +51,7 @@ class ForumNotifier extends Notifier<ForumState> {
       final topic = ForumTopic.fromJson(data);
       state = state.copyWith(isLoading: false, selectedTopic: topic);
     } catch (e) {
-      final devTopic = DevData.topics.where((t) => t.id == id).firstOrNull;
-      state = state.copyWith(isLoading: false, selectedTopic: devTopic);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 

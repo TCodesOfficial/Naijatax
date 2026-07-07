@@ -6,28 +6,44 @@ class InflationService {
       'https://api.worldbank.org/v2/country/NGA/indicator/FP.CPI.TOTL.ZG';
 
   static final _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 15),
-    receiveTimeout: const Duration(seconds: 20),
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
     headers: {'Accept': 'application/json'},
   ));
 
   static Future<List<InflationData>> fetchInflation({int years = 10}) async {
     final endYear = DateTime.now().year;
     final startYear = endYear - years + 1;
-    final url = '$_baseUrl?format=json&per_page=$years&date=$startYear:$endYear';
+    final url =
+        '$_baseUrl?format=json&per_page=${years * 3}&date=$startYear:$endYear';
 
-    final response = await _dio.get(url);
-    final parsed = response.data;
+    // Retry up to 3 times with 2s delay
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        final response = await _dio.get(url);
+        final parsed = response.data;
 
-    if (parsed is List && parsed.length >= 2) {
-      final dataList = parsed[1];
-      if (dataList is List) {
-        final items = dataList
-            .map((e) => InflationData.fromJson(e as Map<String, dynamic>))
-            .where((d) => d.value > 0)
-            .toList()
-          ..sort((a, b) => a.year.compareTo(b.year));
-        return items;
+        if (parsed is List && parsed.length >= 2) {
+          final dataList = parsed[1];
+          if (dataList is List) {
+            final items = dataList
+                .map((e) => InflationData.fromJson(e as Map<String, dynamic>))
+                .where((d) => d.value > 0)
+                .toList()
+              ..sort((a, b) => a.year.compareTo(b.year));
+            if (items.length > years) {
+              return items.sublist(items.length - years);
+            }
+            return items;
+          }
+        }
+        return [];
+      } on DioException {
+        if (attempt < 2) {
+          await Future.delayed(const Duration(seconds: 2));
+          continue;
+        }
+        rethrow;
       }
     }
     return [];

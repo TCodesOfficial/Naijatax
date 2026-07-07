@@ -11,7 +11,7 @@ class ApiService {
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.apiBaseUrl,
       connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 60),
       headers: {'Content-Type': 'application/json'},
     ));
 
@@ -27,12 +27,9 @@ class ApiService {
         handler.next(options);
       },
       onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          // Token expired or invalid — sign out
-          try {
-            await Supabase.instance.client.auth.signOut();
-          } catch (_) {}
-        }
+        // Pass 401 errors through — Supabase handles session expiry
+        // via onAuthStateChange. Auto-signing out here destroys the
+        // user's session when the server JWT secret is misconfigured.
         handler.next(error);
       },
     ));
@@ -44,6 +41,11 @@ class ApiService {
   Future<Map<String, dynamic>> calculateTax(Map<String, dynamic> body) async {
     final res = await _dio.post('/tax/calculate', data: body);
     return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>?> getLatestTaxProfile() async {
+    final res = await _dio.get('/tax/profiles/latest');
+    return res.data['data'] as Map<String, dynamic>?;
   }
 
   Future<Map<String, dynamic>> parseStatement(MultipartFile file) async {

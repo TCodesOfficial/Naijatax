@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 
 export interface AppError extends Error {
   statusCode?: number;
+  status?: number;
   code?: string;
 }
 
@@ -13,7 +14,7 @@ export function errorHandler(
   res: Response,
   next: NextFunction
 ) {
-  let statusCode = err.statusCode ?? 500;
+  let statusCode = err.statusCode ?? err.status ?? 500;
   let message = err.message ?? 'Internal Server Error';
   let details: string | Array<{ field: string; message: string }> | undefined = undefined;
 

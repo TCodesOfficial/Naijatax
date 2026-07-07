@@ -22,12 +22,11 @@ class AssessmentFormScreen extends ConsumerStatefulWidget {
 class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _incomeController = TextEditingController(text: '250000');
-  final _rentController = TextEditingController(text: '0');
-  final _pensionController =
-      TextEditingController(text: '8'); // represented in %
-  final _turnoverController = TextEditingController(text: '0');
-  final _assetsController = TextEditingController(text: '0');
+  final _incomeController = TextEditingController();
+  final _rentController = TextEditingController();
+  final _pensionController = TextEditingController(text: '8');
+  final _turnoverController = TextEditingController();
+  final _assetsController = TextEditingController();
 
   bool _isUploading = false;
   String? _uploadError;
@@ -47,11 +46,11 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
 
   void _calculate() {
     if (_formKey.currentState?.validate() ?? false) {
-      final monthlyIncome = double.tryParse(_incomeController.text) ?? 0;
-      final rentPaid = double.tryParse(_rentController.text) ?? 0;
+      final monthlyIncome = double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
+      final rentPaid = double.tryParse(_rentController.text.replaceAll(',', '')) ?? 0;
       final pensionRate = (double.tryParse(_pensionController.text) ?? 8) / 100;
-      final turnover = double.tryParse(_turnoverController.text) ?? 0;
-      final assets = double.tryParse(_assetsController.text) ?? 0;
+      final turnover = double.tryParse(_turnoverController.text.replaceAll(',', '')) ?? 0;
+      final assets = double.tryParse(_assetsController.text.replaceAll(',', '')) ?? 0;
 
       ref.read(taxProvider.notifier).calculate(
             monthlyIncome: monthlyIncome,
@@ -147,20 +146,30 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                     CustomTextField(
                       controller: _incomeController,
                       label: 'Monthly Gross Income (₦)',
+                      hintText: 'e.g. 250,000',
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      useThousandsSeparator: true,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Income is required';
+                        if (double.tryParse(v.replaceAll(',', '')) == null) return 'Enter a valid number';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _rentController,
                       label: 'Rent Paid Annually (₦)',
+                      hintText: 'e.g. 500,000',
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      useThousandsSeparator: true,
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _pensionController,
                       label: 'Pension Contribution Rate (%)',
+                      hintText: 'e.g. 8',
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                     ),
@@ -168,15 +177,19 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                     CustomTextField(
                       controller: _turnoverController,
                       label: 'Business Turnover / Revenue (₦) - Optional',
+                      hintText: 'e.g. 10,000,000',
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      useThousandsSeparator: true,
                     ),
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: _assetsController,
                       label: 'Business Net Assets (₦) - Optional',
+                      hintText: 'e.g. 5,000,000',
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      useThousandsSeparator: true,
                     ),
                     const SizedBox(height: 20),
                     Row(

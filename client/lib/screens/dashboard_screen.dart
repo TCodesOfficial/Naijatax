@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../core/dummy/dev_data.dart';
 import '../core/utils/app_formatter.dart';
 import '../models/tax_profile.dart';
 import '../models/article_model.dart';
@@ -27,6 +26,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ref.read(articlesProvider.notifier).fetchArticles();
       ref.read(articlesProvider.notifier).fetchMetrics();
       ref.read(inflationProvider.notifier).fetch();
+
+      final auth = ref.read(authProvider);
+      if (auth.status == AuthStatus.authenticated) {
+        ref.read(taxProvider.notifier).fetchFromServer();
+      }
+    });
+
+    ref.listen(authProvider, (prev, next) {
+      if (next.status == AuthStatus.authenticated &&
+          (prev == null || prev.status != AuthStatus.authenticated)) {
+        ref.read(taxProvider.notifier).fetchFromServer();
+      }
     });
   }
 
@@ -479,11 +490,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final netIncome = p.netIncome;
     final pension = p.pensionDeduction;
     final rentRelief = p.rentRelief;
-    final vatPayable = DevData.vatPayable;
-    final payeRate = DevData.payeRate;
-    final netRatio = DevData.netIncomeRatio;
-    final pensionRatio = DevData.pensionRatio;
-    final reliefRatio = DevData.reliefRatio;
+    final vatPayable = p.monthlyIncome * 0.40 * 0.075;
+    final payeRate = annualGross > 0 ? computedTax / annualGross : 0.0;
+    final netRatio = annualGross > 0 ? netIncome / annualGross : 0.0;
+    final pensionRatio = annualGross > 0 ? pension / annualGross : 0.0;
+    final reliefRatio = rentRelief / 200000;
+    final vatMaxRef = 50000.0;
+    final citRatio = p.citExemption == 'EXEMPT' ? 0.0 : 0.75;
+
+    String citStatus;
+    String citPercent;
+    if (p.citExemption.startsWith('EXEMPT')) {
+      citStatus = 'Exempt';
+      citPercent = '0%';
+    } else if (p.citExemption.startsWith('TAXABLE_20')) {
+      citStatus = '20% Rate';
+      citPercent = '20%';
+    } else if (p.citExemption.startsWith('TAXABLE_30')) {
+      citStatus = '30% Rate';
+      citPercent = '30%';
+    } else {
+      citStatus = 'No data';
+      citPercent = '0%';
+    }
 
     final categories = [
       _TaxCategory(
@@ -499,7 +528,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       _TaxCategory(
         label: 'VAT',
-        ratio: (vatPayable / DevData.vatMaxRef).clamp(0.0, 1.0),
+        ratio: (vatPayable / vatMaxRef).clamp(0.0, 1.0),
         percentage: '7.5%',
         amount: AppFormatter.naira(vatPayable),
         subtitle: 'monthly on spending',
@@ -510,10 +539,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       _TaxCategory(
         label: 'CIT',
-        ratio: DevData.citRatio,
-        percentage: p.citExemption == 'EXEMPT' ? 'Exempt' : '75%',
+        ratio: citRatio,
+        percentage: citPercent,
         amount: AppFormatter.naira(0),
-        subtitle: 'below \u20A650M threshold',
+        subtitle: citStatus,
         color: theme.colorScheme.tertiary,
         bgColor: theme.colorScheme.tertiary.withValues(alpha: 0.12),
         icon: Icons.business_outlined,

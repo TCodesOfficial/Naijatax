@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/dummy/dev_data.dart';
 import '../models/article_model.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -39,10 +38,9 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
     final List<TaxArticle> cachedList = cached != null
         ? cached.map((e) => TaxArticle.fromJson(e)).toList()
         : [];
-    // If no cached data, use dev data so dashboard always has content
+    // If no cached data, return empty state
     return ArticlesState(
-      articles: cachedList.isNotEmpty ? cachedList : DevData.articles,
-      metrics: DevData.metrics,
+      articles: cachedList,
     );
   }
 
@@ -57,10 +55,8 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
       
       state = state.copyWith(isLoading: false, articles: list);
     } catch (e) {
-      // API unavailable — use dev data
-      final devArticles = DevData.articles;
-      await StorageService.saveArticles(devArticles.map((a) => a.toJson()).toList());
-      state = state.copyWith(isLoading: false, articles: devArticles);
+      // API unavailable — keep existing data
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -69,8 +65,7 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
       final metricsData = await ApiService.instance.getEconomicMetrics();
       state = state.copyWith(metrics: metricsData);
     } catch (_) {
-      // API unavailable — use dev data
-      state = state.copyWith(metrics: DevData.metrics);
+      // API unavailable — keep existing metrics
     }
   }
 }

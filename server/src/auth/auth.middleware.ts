@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 import { env } from '../config/env.js';
 
 export interface DecodedUser {
@@ -8,23 +8,34 @@ export interface DecodedUser {
   role: string;
 }
 
-interface JwtPayload {
-  sub?: string;
-  id?: string;
-  email?: string;
-  role?: string;
+let _publicKey: CryptoKey | null = null;
+
+async function getPublicKey(): Promise<CryptoKey> {
+  if (_publicKey) return _publicKey;
+
+  const jwksUrl = `${env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`;
+  const res = await fetch(jwksUrl);
+  if (!res.ok) throw new Error(`Failed to fetch JWKS: ${res.status}`);
+  const jwks = await res.json() as { keys: jose.JWK[] };
+  const jwk = jwks.keys[0];
+  _publicKey = (await jose.importJWK(jwk, jwk.alg)) as CryptoKey;
+  return _publicKey;
 }
 
-function decodeToken(token: string): DecodedUser {
-  const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
+async function decodeToken(token: string): Promise<DecodedUser> {
+  const publicKey = await getPublicKey();
+  const { payload } = await jose.jwtVerify(token, publicKey, {
+    algorithms: ['ES256'],
+  });
+  const p = payload as Record<string, unknown>;
   return {
-    id: decoded.sub || decoded.id || '',
-    email: decoded.email || '',
-    role: decoded.role || 'USER',
+    id: (p.sub as string) || '',
+    email: (p.email as string) || '',
+    role: (p.role as string) || 'USER',
   };
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -35,7 +46,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 
   try {
-    req.user = decodeToken(authHeader.split(' ')[1]);
+    req.user = await decodeToken(authHeader.split(' ')[1]);
     next();
   } catch {
     return res.status(401).json({
@@ -55,7 +66,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-export function optionalAuth(req: Request, res: Response, next: NextFunction) {
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -64,7 +75,7 @@ export function optionalAuth(req: Request, res: Response, next: NextFunction) {
   }
 
   try {
-    req.user = decodeToken(authHeader.split(' ')[1]);
+    req.user = await decodeToken(authHeader.split(' ')[1]);
   } catch {
     req.user = undefined;
   }

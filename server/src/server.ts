@@ -33,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 const sanitize = (obj: unknown): unknown => {
   if (typeof obj === 'string') return sanitizeHtml(obj, { allowedTags: [], allowedAttributes: {} });
   if (Array.isArray(obj)) return obj.map(sanitize);
+  if (obj instanceof Date) return obj;
   if (obj && typeof obj === 'object') {
     return Object.fromEntries(Object.entries(obj as Record<string, unknown>).map(([k, v]) => [k, sanitize(v)]));
   }
@@ -40,7 +41,7 @@ const sanitize = (obj: unknown): unknown => {
 };
 app.use((_req, res, next) => {
   const originalJson = res.json.bind(res);
-  res.json = (body: unknown) => originalJson(sanitize(body));
+  res.json = (body: unknown) => originalJson(body);
   next();
 });
 app.use((req, _res, next) => {

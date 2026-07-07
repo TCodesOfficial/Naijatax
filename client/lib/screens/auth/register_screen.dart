@@ -20,6 +20,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -32,6 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
+    _displayNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -56,6 +58,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           .signUpWithEmail(
             _emailController.text.trim(),
             _passwordController.text,
+            displayName: _displayNameController.text.trim().isNotEmpty
+                ? _displayNameController.text.trim()
+                : null,
           );
     }
   }
@@ -233,6 +238,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildFormCard(ThemeData theme, AuthState authState) {
+    if (authState.status == AuthStatus.awaitingConfirmation) {
+      return _buildEmailVerificationCard(theme, authState);
+    }
+
     return Form(
       key: _formKey,
       child: Container(
@@ -250,18 +259,52 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(28.0),
-              child: SingleChildScrollView(
-                primary: false,
-                physics: const ClampingScrollPhysics(),
-                child: Column(
+        child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(authProvider.notifier).continueAsGuest();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Guest',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_outward,
+                                size: 14,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       AppConstants.appName,
                       textAlign: TextAlign.center,
@@ -271,7 +314,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       'Create your account to start tracking taxes.',
                       textAlign: TextAlign.center,
@@ -279,7 +322,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
 
                     Container(
                       decoration: BoxDecoration(
@@ -349,9 +392,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
 
                     if (!_isPhoneMode) ...[
+                      CustomTextField(
+                        controller: _displayNameController,
+                        label: 'Username',
+                        hintText: 'johndoe',
+                        keyboardType: TextInputType.name,
+                        prefixIcon: const Icon(Icons.person_outlined, size: 20),
+                      ),
+                      const SizedBox(height: 10),
                       CustomTextField(
                         controller: _emailController,
                         label: 'Email Address',
@@ -362,7 +413,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ? 'Enter a valid email'
                             : null,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
                       CustomTextField(
                         controller: _passwordController,
                         label: 'Password',
@@ -374,7 +425,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ? 'Password must be at least 6 characters'
                             : null,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
                       CustomTextField(
                         controller: _confirmPasswordController,
                         label: 'Confirm Password',
@@ -385,7 +436,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         validator: (v) =>
                             v == null ? 'Confirm password is required' : null,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 14),
                       AnimatedButton(
                         onPressed: _submitEmail,
                         text: 'Sign Up',
@@ -446,7 +497,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 10),
                         CustomTextField(
                           controller: _passwordController,
                           label: 'Password',
@@ -458,7 +509,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ? 'Password must be at least 6 characters'
                               : null,
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 10),
                         CustomTextField(
                           controller: _confirmPasswordController,
                           label: 'Confirm Password',
@@ -469,7 +520,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           validator: (v) =>
                               v == null ? 'Confirm password is required' : null,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
                         AnimatedButton(
                           onPressed: _submitPhone,
                           text: 'Send OTP',
@@ -484,7 +535,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 10),
                         CustomTextField(
                           controller: _otpController,
                           label: 'OTP Code',
@@ -493,7 +544,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           maxLength: 6,
                           prefixIcon: const Icon(Icons.pin_outlined, size: 20),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
                         AnimatedButton(
                           onPressed: _verifyOtp,
                           text: 'Verify & Create Account',
@@ -512,7 +563,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ],
                     ],
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     Row(
                       children: [
@@ -530,7 +581,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         const Expanded(child: Divider()),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -556,15 +607,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           theme,
                           Icons.facebook,
                           'Facebook',
-                          () => ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Facebook login coming soon'),
-                            ),
-                          ),
+                          () => ref
+                              .read(authProvider.notifier)
+                              .signInWithFacebook(),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
 
                     Wrap(
                       alignment: WrapAlignment.center,
@@ -590,49 +639,125 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ],
                 ),
               ),
-            ),
+        ),
+      );
+  }
 
-            Positioned(
-              top: 16,
-              right: 20,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    ref.read(authProvider.notifier).continueAsGuest();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Guest',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.arrow_outward,
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ],
+  Widget _buildEmailVerificationCard(ThemeData theme, AuthState authState) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.mark_email_read_outlined,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Check Your Email',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'We sent a verification link to',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              authState.pendingEmail ?? '',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Click the link in your email to verify\nyour account and continue.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: AnimatedButton(
+                onPressed: null,
+                text: 'Waiting for you...',
+                isLoading: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Didn't get the email?",
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            GestureDetector(
+              onTap: () => ref.read(authProvider.notifier).resendConfirmation(),
+              child: Text(
+                'Resend Email',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () => context.go('/login'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.arrow_back,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Back to Sign In',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ],

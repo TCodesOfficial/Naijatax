@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/dummy/dev_data.dart';
 import '../models/tax_profile.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -32,13 +31,27 @@ class TaxState {
 class TaxNotifier extends Notifier<TaxState> {
   @override
   TaxState build() {
-    // Load cached profile for offline display
     final cached = StorageService.getLatestTaxProfile();
     if (cached != null) {
       return TaxState(status: TaxStatus.loaded, profile: TaxProfile.fromJson(cached));
     }
-    // No cached data — load dev data so dashboard always has content
-    return TaxState(status: TaxStatus.loaded, profile: DevData.taxProfile);
+    return const TaxState();
+  }
+
+  Future<void> fetchFromServer() async {
+    state = state.copyWith(status: TaxStatus.loading, error: null);
+    try {
+      final data = await ApiService.instance.getLatestTaxProfile();
+      if (data != null) {
+        final profile = TaxProfile.fromJson(data);
+        await StorageService.saveTaxProfile(data);
+        state = state.copyWith(status: TaxStatus.loaded, profile: profile);
+      } else {
+        state = state.copyWith(status: TaxStatus.idle);
+      }
+    } catch (e) {
+      state = state.copyWith(status: TaxStatus.error, error: e.toString());
+    }
   }
 
   Future<void> calculate({
@@ -63,26 +76,7 @@ class TaxNotifier extends Notifier<TaxState> {
       await StorageService.saveTaxProfile(data);
       state = state.copyWith(status: TaxStatus.loaded, profile: profile);
     } catch (e) {
-      // API unavailable — use dev data
-      await StorageService.saveTaxProfile({
-        'monthlyIncome': DevData.taxProfile.monthlyIncome,
-        'annualGross': DevData.taxProfile.annualGross,
-        'pensionDeduction': DevData.taxProfile.pensionDeduction,
-        'rentRelief': DevData.taxProfile.rentRelief,
-        'taxableIncome': DevData.taxProfile.taxableIncome,
-        'computedTax': DevData.taxProfile.computedTax,
-        'netIncome': DevData.taxProfile.netIncome,
-        'isExempt': DevData.taxProfile.isExempt,
-        'citExemption': DevData.taxProfile.citExemption,
-        'savings': DevData.taxProfile.savings,
-        'breakdown': DevData.taxProfile.breakdown.map((b) => {
-          'bracket': b.bracket,
-          'rate': b.rate,
-          'taxableAmount': b.taxableAmount,
-          'tax': b.tax,
-        }).toList(),
-      });
-      state = state.copyWith(status: TaxStatus.loaded, profile: DevData.taxProfile);
+      state = state.copyWith(status: TaxStatus.error, error: e.toString());
     }
   }
 

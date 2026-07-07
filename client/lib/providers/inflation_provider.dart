@@ -15,16 +15,30 @@ class InflationState {
 }
 
 class InflationNotifier extends Notifier<InflationState> {
+  static List<InflationData>? _cachedData;
+
   @override
-  InflationState build() => const InflationState();
+  InflationState build() {
+    if (_cachedData != null && _cachedData!.isNotEmpty) {
+      return InflationState(data: _cachedData!);
+    }
+    return const InflationState();
+  }
 
   Future<void> fetch() async {
     state = const InflationState(isLoading: true);
     try {
       final data = await InflationService.fetchInflation(years: 10);
+      if (data.isNotEmpty) {
+        _cachedData = data;
+      }
       state = InflationState(data: data);
     } catch (e) {
-      state = InflationState(error: e.toString());
+      if (_cachedData != null && _cachedData!.isNotEmpty) {
+        state = InflationState(data: _cachedData!);
+      } else {
+        state = InflationState(error: e.toString());
+      }
     }
   }
 

@@ -89,10 +89,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: const Text('Choose from Gallery'),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
     );
 
     if (source == null || !mounted) return;
@@ -341,16 +341,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
         // ─── Privacy & Security (with accent bar) ───────────────────────
         Card(
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Column(
-              children: [
-                if (_biometricHardwareAvailable && authState.user != null)
-                  SwitchListTile(
+          child: Material(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Column(
+                children: [
+                  if (_biometricHardwareAvailable && authState.user != null)
+                    SwitchListTile(
                     title: const Text('Biometric Authentication'),
                     value: _biometricEnabled,
                     secondary: Container(
@@ -403,7 +405,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
                   },
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

@@ -26,6 +26,9 @@ class AppConstants {
     'SUPABASE_ANON_KEY',
   );
 
+  // ── Google Sign-In (injected at build time) ──────────────────────────
+  static const String googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+
   // ── Hive Box Names (not sensitive — keep as constants) ────────────────
   static const String taxProfileBox = 'tax_profiles';
   static const String articlesBox = 'tax_articles';
