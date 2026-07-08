@@ -13,7 +13,7 @@ async function callGemini(
   messages: GeminiMessage[],
   systemInstruction?: string,
   options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string } = {},
-  maxRetries = 3,
+  maxRetries = 1,
 ): Promise<string> {
   const body: Record<string, unknown> = {
     contents: messages,
@@ -140,7 +140,7 @@ export async function sendChatMessage(userId: string, content: string, sessionId
   const history = await prisma.chatMessage.findMany({
     where: { sessionId: session.id },
     orderBy: { createdAt: 'desc' },
-    take: 20
+    take: 5
   });
   history.reverse();
 
@@ -158,8 +158,14 @@ export async function sendChatMessage(userId: string, content: string, sessionId
     maxOutputTokens: 1000,
   });
 
+  const isBusy = responseContent.includes('busy processing') || responseContent.includes('unable to process');
+
   const aiMessage = await prisma.chatMessage.create({
-    data: { sessionId: session.id, role: 'assistant', content: responseContent }
+    data: {
+      sessionId: session.id,
+      role: 'assistant',
+      content: isBusy ? 'I apologize, the AI service is temporarily busy. Please try again in a moment.' : responseContent,
+    }
   });
 
   await prisma.chatSession.update({

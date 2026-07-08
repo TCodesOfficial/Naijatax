@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
+import '../../widgets/user_avatar.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -59,12 +60,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final res = await ApiService.instance.sendChatMessage(msg, sessionId: _sessionId);
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
+      final content = res['message']['content'] as String;
+      final isBusy = content.contains('busy processing') || content.contains('unable to process');
       setState(() {
         _sessionId = res['sessionId'] as String?;
-        final content = res['message']['content'] as String;
-        _messages.add({'role': 'assistant', 'content': content, 'time': replyTime});
+        if (!isBusy) {
+          _messages.add({'role': 'assistant', 'content': content, 'time': replyTime});
+        }
         _isLoading = false;
       });
+      if (isBusy && mounted) {
+        final busyTheme = Theme.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(content),
+            backgroundColor: busyTheme.colorScheme.errorContainer,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: busyTheme.colorScheme.onErrorContainer,
+              onPressed: () => _sendMessage(text: msg),
+            ),
+          ),
+        );
+      }
       Future.microtask(_scrollToBottom);
     } catch (e) {
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
@@ -118,10 +136,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
+              color: theme.colorScheme.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
-            child: Icon(Icons.psychology, size: 18, color: theme.colorScheme.primary),
+            child: Icon(Icons.smart_toy, size: 20, color: theme.colorScheme.primary),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -185,7 +207,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               itemBuilder: (context, idx) {
                 final msg = _messages[idx];
                 final isUser = msg['role'] == 'user';
-                return _chatBubble(theme, isUser, msg['content'] ?? '', msg['time'] ?? '');
+                return _chatBubble(
+                  theme, isUser, msg['content'] ?? '', msg['time'] ?? '',
+                  avatarUrl: isUser ? authState.user?.avatarUrl : null,
+                );
               },
             ),
     );
@@ -200,8 +225,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 children: [
                   CircleAvatar(
                     radius: 12,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Icon(Icons.psychology, size: 14, color: theme.colorScheme.primary),
+                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    child: Icon(Icons.smart_toy, size: 16, color: theme.colorScheme.primary),
                   ),
                   const SizedBox(width: 8),
                   _typingDots(theme),
@@ -312,8 +337,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(Icons.psychology, size: 18, color: theme.colorScheme.primary),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+              child: Icon(Icons.smart_toy, size: 20, color: theme.colorScheme.primary),
             ),
             const SizedBox(width: 8),
             Flexible(
@@ -348,7 +373,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _chatBubble(ThemeData theme, bool isUser, String text, String time) {
+  Widget _chatBubble(ThemeData theme, bool isUser, String text, String time, {String? avatarUrl}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -358,8 +383,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (!isUser) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Icon(Icons.psychology, size: 18, color: theme.colorScheme.primary),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+              child: Icon(Icons.smart_toy, size: 20, color: theme.colorScheme.primary),
             ),
             const SizedBox(width: 8),
           ],
@@ -403,10 +428,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           if (isUser) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
+            UserAvatar(
+              avatarUrl: avatarUrl,
               radius: 16,
+              fallbackIcon: Icons.person,
+              iconSize: 18,
               backgroundColor: theme.colorScheme.outlineVariant,
-              child: Icon(Icons.person, size: 18, color: theme.colorScheme.onSurfaceVariant),
+              iconColor: theme.colorScheme.onSurfaceVariant,
             ),
           ],
         ],

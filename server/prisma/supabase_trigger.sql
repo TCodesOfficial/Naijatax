@@ -4,13 +4,14 @@ RETURNS trigger
 SECURITY DEFINER SET search_path = public
 LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO public.users (id, email, phone, "display_name", "avatar_url", role, "createdAt", "updatedAt")
+  INSERT INTO public.users (id, email, phone, "display_name", "avatar_url", onboarded, role, "createdAt", "updatedAt")
   VALUES (
     new.id,
     new.email,
     new.phone,
     COALESCE(new.raw_user_meta_data ->> 'display_name', new.raw_user_meta_data ->> 'name'),
     COALESCE(new.raw_user_meta_data ->> 'avatar_url', new.raw_user_meta_data ->> 'picture'),
+    false,
     'USER',
     now(),
     now()

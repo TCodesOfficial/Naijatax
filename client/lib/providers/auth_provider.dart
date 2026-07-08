@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_constants.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
+import '../services/storage_service.dart';
 
 enum AuthStatus {
   loading,
@@ -50,6 +51,28 @@ class AuthNotifier extends Notifier<AuthState> {
     _routerRefreshNotifier.notify();
   }
 
+  UserModel _userFromSession(User u, {bool onboarded = false}) {
+    return UserModel(
+      id: u.id,
+      email: u.email,
+      phone: u.phone,
+      displayName: u.userMetadata?['display_name'] as String?,
+      avatarUrl: u.userMetadata?['avatar_url'] as String?,
+      role: 'USER',
+      onboarded: onboarded,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  Future<bool> _fetchOnboarded() async {
+    try {
+      final data = await ApiService.instance.getOnboardedStatus();
+      return data['onboarded'] as bool? ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   AuthState build() {
     try {
@@ -57,21 +80,25 @@ class AuthNotifier extends Notifier<AuthState> {
       if (session != null) {
         _listenToAuthChanges();
         final user = session.user;
-        return AuthState(
+        final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
+        final initialState = AuthState(
           status: AuthStatus.authenticated,
-          user: UserModel(
-            id: user.id,
-            email: user.email,
-            phone: user.phone,
-            displayName: user.userMetadata?['display_name'] as String?,
-            avatarUrl: user.userMetadata?['avatar_url'] as String?,
-            role: 'USER',
-            createdAt: DateTime.now(),
-          ),
+          user: _userFromSession(user, onboarded: cachedOnboarded),
         );
+        Future.microtask(() async {
+          final onboarded = await _fetchOnboarded();
+          await StorageService.setSetting('onboarded', onboarded);
+          final currentUser = state.user;
+          if (currentUser != null && currentUser.id == user.id && currentUser.onboarded != onboarded) {
+            _emit(AuthState(
+              status: state.status,
+              user: _userFromSession(user, onboarded: onboarded),
+            ));
+          }
+        });
+        return initialState;
       }
     } catch (_) {
-      // Supabase not initialized — running in offline/demo mode
       return const AuthState(status: AuthStatus.unauthenticated);
     }
     _listenToAuthChanges();
@@ -80,29 +107,24 @@ class AuthNotifier extends Notifier<AuthState> {
 
   void _listenToAuthChanges() {
     try {
-      _client.auth.onAuthStateChange.listen((data) {
+      _client.auth.onAuthStateChange.listen((data) async {
         final event = data.event;
         final session = data.session;
         if (event == AuthChangeEvent.signedIn ||
             event == AuthChangeEvent.tokenRefreshed) {
           if (session != null) {
             final user = session.user;
+            final onboarded = await _fetchOnboarded();
+            await StorageService.setSetting('onboarded', onboarded);
             _emit(
               AuthState(
                 status: AuthStatus.authenticated,
-                user: UserModel(
-                  id: user.id,
-                  email: user.email,
-                  phone: user.phone,
-                  displayName: user.userMetadata?['display_name'] as String?,
-                  avatarUrl: user.userMetadata?['avatar_url'] as String?,
-                  role: 'USER',
-                  createdAt: DateTime.now(),
-                ),
+                user: _userFromSession(user, onboarded: onboarded),
               ),
             );
           }
         } else if (event == AuthChangeEvent.signedOut) {
+          await StorageService.setSetting('onboarded', false);
           _emit(const AuthState(status: AuthStatus.unauthenticated));
         }
       });
@@ -128,18 +150,11 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return;
       }
+      final onboarded = await _fetchOnboarded();
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: UserModel(
-            id: u.id,
-            email: u.email,
-            phone: u.phone,
-            displayName: u.userMetadata?['display_name'] as String?,
-            avatarUrl: u.userMetadata?['avatar_url'] as String?,
-            role: 'USER',
-            createdAt: DateTime.now(),
-          ),
+          user: _userFromSession(u, onboarded: onboarded),
         ),
       );
     } on AuthException catch (e) {
@@ -185,18 +200,11 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return;
       }
+      final onboarded = await _fetchOnboarded();
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: UserModel(
-            id: u.id,
-            email: u.email,
-            phone: u.phone,
-            displayName: u.userMetadata?['display_name'] as String?,
-            avatarUrl: u.userMetadata?['avatar_url'] as String?,
-            role: 'USER',
-            createdAt: DateTime.now(),
-          ),
+          user: _userFromSession(u, onboarded: onboarded),
         ),
       );
     } on AuthException catch (e) {
@@ -275,18 +283,11 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return;
       }
+      final onboarded = await _fetchOnboarded();
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: UserModel(
-            id: u.id,
-            email: u.email,
-            phone: u.phone,
-            displayName: u.userMetadata?['display_name'] as String?,
-            avatarUrl: u.userMetadata?['avatar_url'] as String?,
-            role: 'USER',
-            createdAt: DateTime.now(),
-          ),
+          user: _userFromSession(u, onboarded: onboarded),
         ),
       );
     } on AuthException catch (e) {
@@ -375,7 +376,32 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await _client.auth.signOut();
+    await StorageService.setSetting('onboarded', false);
     _emit(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
+  Future<void> completeOnboarding() async {
+    final current = state.user;
+    if (current == null) return;
+    try {
+      await ApiService.instance.completeOnboarding();
+    } catch (_) {
+      // Server update failed — still update local state so user can proceed
+    }
+    await StorageService.setSetting('onboarded', true);
+    _emit(AuthState(
+      status: state.status,
+      user: UserModel(
+        id: current.id,
+        email: current.email,
+        phone: current.phone,
+        displayName: current.displayName,
+        role: current.role,
+        avatarUrl: current.avatarUrl,
+        onboarded: true,
+        createdAt: current.createdAt,
+      ),
+    ));
   }
 
   Future<void> updateAvatar(String avatarUrl) async {
@@ -391,6 +417,7 @@ class AuthNotifier extends Notifier<AuthState> {
           displayName: current.displayName,
           role: current.role,
           avatarUrl: avatarUrl,
+          onboarded: current.onboarded,
           createdAt: current.createdAt,
         ),
       ),
@@ -403,6 +430,10 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (_) {
       // Server/metadata persist failed — local state already updated
     }
+  }
+
+  Future<void> deleteAvatar() async {
+    await updateAvatar('');
   }
 }
 

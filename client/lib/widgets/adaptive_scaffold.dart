@@ -1,4 +1,3 @@
-import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 import 'app_logo.dart';
+import 'user_avatar.dart';
 
 class AdaptiveScaffoldDestination {
   final String label;
@@ -83,7 +83,6 @@ class AdaptiveScaffold extends ConsumerWidget {
     double screenWidth,
   ) {
     final avatarUrl = authState.user?.avatarUrl;
-    final hasAvatar = avatarUrl != null && avatarUrl.trim().isNotEmpty;
 
     final isVerySmall = screenWidth < 360;
     final isDesktop = screenWidth >= AppConstants.tabletBreakpoint;
@@ -128,19 +127,11 @@ class AdaptiveScaffold extends ConsumerWidget {
                 )
               : GestureDetector(
                   onTap: () => context.go('/profile'),
-                  child: CircleAvatar(
+                  child: UserAvatar(
+                    avatarUrl: avatarUrl,
                     radius: 16,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: hasAvatar
-                        ? CachedNetworkImageProvider(avatarUrl)
-                        : null,
-                    child: !hasAvatar
-                        ? Icon(
-                            Icons.account_circle_outlined,
-                            size: 20,
-                            color: theme.colorScheme.primary,
-                          )
-                        : null,
+                    fallbackIcon: Icons.account_circle_outlined,
+                    iconSize: 20,
                   ),
                 ),
         ),
@@ -158,7 +149,6 @@ class AdaptiveScaffold extends ConsumerWidget {
     String displayName,
   ) {
     final avatarUrl = authState.user?.avatarUrl;
-    final hasAvatar = avatarUrl != null && avatarUrl.trim().isNotEmpty;
 
     return Container(
       width: 240,
@@ -259,19 +249,11 @@ class AdaptiveScaffold extends ConsumerWidget {
               onTap: () => context.go('/profile'),
               child: Row(
                 children: [
-                  CircleAvatar(
+                  UserAvatar(
+                    avatarUrl: avatarUrl,
                     radius: 18,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: hasAvatar
-                        ? CachedNetworkImageProvider(avatarUrl)
-                        : null,
-                    child: !hasAvatar
-                        ? Icon(
-                            Icons.account_circle_outlined,
-                            size: 20,
-                            color: theme.colorScheme.primary,
-                          )
-                        : null,
+                    fallbackIcon: Icons.account_circle_outlined,
+                    iconSize: 20,
                   ),
                   const SizedBox(width: 12),
                   Expanded(

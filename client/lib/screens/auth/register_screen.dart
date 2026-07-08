@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
@@ -112,12 +111,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
         final router = GoRouter.of(context);
-        SharedPreferences.getInstance().then((prefs) {
-          if (!mounted) return;
-          final hasOnboarded =
-              prefs.getBool(AppConstants.onboardedKey) ?? false;
-          router.go(hasOnboarded ? '/dashboard' : '/onboarding');
-        });
+        if (!mounted) return;
+        final hasOnboarded = next.user?.onboarded ?? false;
+        router.go(hasOnboarded ? '/dashboard' : '/onboarding');
       } else if (next.needsOtpVerification) {
         setState(() {
           _otpSent = true;

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -10,7 +11,7 @@ class PdfService {
   static final _naira =
       NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
 
-  static Future<void> exportTaxReport(TaxProfile profile) async {
+  static Future<Uint8List> generateTaxReportBytes(TaxProfile profile) async {
     final doc = pw.Document();
     final font = await PdfGoogleFonts.interRegular();
     final boldFont = await PdfGoogleFonts.interBold();
@@ -123,7 +124,12 @@ class PdfService {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (format) async => doc.save());
+    return doc.save();
+  }
+
+  static Future<void> exportTaxReport(TaxProfile profile) async {
+    final bytes = await generateTaxReportBytes(profile);
+    await Printing.sharePdf(bytes: bytes, filename: 'Tax_Report.pdf');
   }
 
   static pw.Widget _summaryRow(String label, String value, pw.Font boldFont,

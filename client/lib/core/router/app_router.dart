@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../screens/ai_chat/chat_screen.dart';
@@ -27,7 +26,6 @@ import '../../screens/quiz/quiz_history_screen.dart';
 import '../../screens/quiz/quiz_play_screen.dart';
 import '../../screens/support/support_center_screen.dart';
 import '../../widgets/adaptive_scaffold.dart';
-import '../constants/app_constants.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -42,8 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: authNotifier.refreshNotifier,
     redirect: (context, state) async {
       final authState = ref.read(authProvider);
-      final prefs = await SharedPreferences.getInstance();
-      final hasOnboarded = prefs.getBool(AppConstants.onboardedKey) ?? false;
+      final hasOnboarded = authState.user?.onboarded ?? false;
       final location = state.matchedLocation;
       final isAuthenticatedLike =
           authState.isAuthenticated || authState.isGuest;
@@ -52,6 +49,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = location == '/login' || location == '/register';
       final isOnboarding = location == '/onboarding';
       final isLanding = location == '/landing';
+
+      // ── LOADING: Don't redirect while auth state is resolving ──────────
+      if (authState.status == AuthStatus.loading) return null;
 
       // ── RULE 1: Authenticated/guest users on auth routes → skip away ─────
       if (isAuthenticatedLike && isAuthRoute) {
@@ -82,6 +82,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           hasOnboarded &&
           isLanding) {
         return '/login';
+      }
+
+      // ── RULE 5: Unauthenticated on protected route → login/landing ──
+      // After signOut or session expiry, redirect away from protected screens
+      if (!isAuthenticatedLike && !isOnboarding && !isAuthRoute && !isLanding) {
+        return _isNativePlatform ? '/login' : '/landing';
       }
 
       return null;

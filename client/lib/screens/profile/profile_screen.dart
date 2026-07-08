@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
+import '../../widgets/user_avatar.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -144,6 +144,63 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  Future<void> _deleteAvatar() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Photo'),
+        content: const Text('Are you sure you want to remove your profile photo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFB91C1C)),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isUploading = true);
+    try {
+      final client = Supabase.instance.client;
+      final userId = ref.read(authProvider).user?.id;
+      if (userId != null) {
+        final files = await client.storage.from('avatars').list(path: userId);
+        if (files.isNotEmpty) {
+          final paths = files.map((f) => '$userId/${f.name}').toList();
+          await client.storage.from('avatars').remove(paths);
+        }
+      }
+
+      ref.read(authProvider.notifier).deleteAvatar();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile photo removed'), backgroundColor: Colors.green),
+        );
+      }
+    } on StorageException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: ${e.message}'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -184,19 +241,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       Stack(
                         children: [
-                          CircleAvatar(
+                          UserAvatar(
+                            avatarUrl: authState.user?.avatarUrl,
                             radius: 40,
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            backgroundImage: authState.user?.avatarUrl != null
-                                ? CachedNetworkImageProvider(authState.user!.avatarUrl!)
-                                : null,
-                            child: authState.user?.avatarUrl == null
-                                ? Icon(
-                                    Icons.account_circle_outlined,
-                                    size: 44,
-                                    color: theme.colorScheme.primary,
-                                  )
-                                : null,
+                            fallbackIcon: Icons.account_circle_outlined,
+                            iconSize: 44,
                           ),
                           if (_isUploading)
                             const Positioned.fill(
@@ -212,7 +261,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ),
                               ),
                             ),
-                          Positioned(
+                           Positioned(
                             bottom: 0,
                             right: 0,
                             child: GestureDetector(
@@ -231,6 +280,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                             ),
                           ),
+                          if (authState.user?.avatarUrl != null && authState.user!.avatarUrl!.trim().isNotEmpty)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _isUploading ? null : _deleteAvatar,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.errorContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 14,
+                                    color: theme.colorScheme.onErrorContainer,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(width: 20),

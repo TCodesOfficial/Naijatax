@@ -69,7 +69,7 @@ class TaxProfile {
         citExemption: (json['citExemption'] as String?) ?? 'N/A',
         savings: _parseNum(json['savings']),
         breakdown: (json['breakdown'] as List?)
-                ?.map((e) => TaxBreakdown.fromJson(e as Map<String, dynamic>))
+                ?.map((e) => TaxBreakdown.fromJson(Map<String, dynamic>.from(e as Map)))
                 .toList() ??
             [],
       );

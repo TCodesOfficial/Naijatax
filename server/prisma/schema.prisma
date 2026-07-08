@@ -13,6 +13,7 @@ model User {
   phone        String?       @unique // Phone number for phone-based auth
   displayName  String?       @map("display_name") // User's display name
   avatarUrl    String?       @map("avatar_url") // User's profile photo URL
+  onboarded    Boolean       @default(false) // Whether user has completed onboarding
   role         String        @default("USER") // USER or ADMIN
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

@@ -10,6 +10,7 @@ import '../providers/auth_provider.dart';
 import '../providers/tax_provider.dart';
 import '../providers/article_provider.dart';
 import '../providers/inflation_provider.dart';
+import '../services/pdf_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -32,17 +33,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref.read(taxProvider.notifier).fetchFromServer();
       }
     });
+  }
 
-    ref.listen(authProvider, (prev, next) {
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.status == AuthStatus.authenticated &&
           (prev == null || prev.status != AuthStatus.authenticated)) {
         ref.read(taxProvider.notifier).fetchFromServer();
       }
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
@@ -145,13 +145,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Your Tax at a Glance',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Your Tax at a Glance',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.picture_as_pdf_outlined, size: 22),
+                        tooltip: 'Download Tax Report',
+                        onPressed: () => PdfService.exportTaxReport(profile),
+                      ),
+                    ],
                   ),
                   SizedBox(height: isMobile ? 16 : 24),
                   isMobile
@@ -496,23 +508,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final pensionRatio = annualGross > 0 ? pension / annualGross : 0.0;
     final reliefRatio = rentRelief / 200000;
     final vatMaxRef = 50000.0;
-    final citRatio = p.citExemption == 'EXEMPT' ? 0.0 : 0.75;
 
-    String citStatus;
-    String citPercent;
-    if (p.citExemption.startsWith('EXEMPT')) {
-      citStatus = 'Exempt';
-      citPercent = '0%';
-    } else if (p.citExemption.startsWith('TAXABLE_20')) {
-      citStatus = '20% Rate';
-      citPercent = '20%';
-    } else if (p.citExemption.startsWith('TAXABLE_30')) {
-      citStatus = '30% Rate';
-      citPercent = '30%';
-    } else {
-      citStatus = 'No data';
-      citPercent = '0%';
-    }
+    final citStatus = p.citExemption.startsWith('EXEMPT')
+        ? 'Exempt'
+        : p.citExemption.startsWith('TAXABLE_20')
+            ? '20% Rate'
+            : p.citExemption.startsWith('TAXABLE_30')
+                ? '30% Rate'
+                : 'No data';
+    final citPercent = p.citExemption.startsWith('TAXABLE_20')
+        ? '20%'
+        : p.citExemption.startsWith('TAXABLE_30')
+            ? '30%'
+            : '0%';
+    final citRatio = p.citExemption.startsWith('EXEMPT')
+        ? 0.0
+        : p.citExemption.startsWith('TAXABLE_20')
+            ? 0.20
+            : p.citExemption.startsWith('TAXABLE_30')
+                ? 0.30
+                : 0.0;
 
     final categories = [
       _TaxCategory(

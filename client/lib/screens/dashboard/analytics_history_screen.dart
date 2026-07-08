@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../providers/tax_provider.dart';
+import '../../services/pdf_service.dart';
 
 class AnalyticsHistoryScreen extends ConsumerWidget {
   const AnalyticsHistoryScreen({super.key});
@@ -51,7 +52,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     _taxTrendsCard(theme),
                     const SizedBox(height: 16),
-                    _historyTable(theme, history, naira, isMobile),
+                    _historyTable(theme, history, naira, isMobile, taxState),
                   ],
                 )
               : Column(
@@ -65,7 +66,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    _historyTable(theme, history, naira, isMobile),
+                    _historyTable(theme, history, naira, isMobile, taxState),
                   ],
                 ),
         ],
@@ -305,7 +306,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _historyTable(ThemeData theme, List<_CalcHistory> history, NumberFormat naira, bool isMobile) {
+  Widget _historyTable(ThemeData theme, List<_CalcHistory> history, NumberFormat naira, bool isMobile, TaxState taxState) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -319,7 +320,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             if (isMobile)
               Column(
-                children: history.map((h) => _historyMobileCard(theme, h, naira)).toList(),
+                children: history.map((h) => _historyMobileCard(theme, h, naira, taxState)).toList(),
               )
             else
               Table(
@@ -384,7 +385,10 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                       ),
                       IconButton(
                         icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                        onPressed: () {},
+                        tooltip: 'Download Tax Report',
+                        onPressed: taxState.profile != null
+                            ? () => PdfService.exportTaxReport(taxState.profile!)
+                            : null,
                       ),
                     ],
                   )),
@@ -396,7 +400,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _historyMobileCard(ThemeData theme, _CalcHistory h, NumberFormat naira) {
+  Widget _historyMobileCard(ThemeData theme, _CalcHistory h, NumberFormat naira, TaxState taxState) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -424,7 +428,10 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
-                  onPressed: () {},
+                  tooltip: 'Download Tax Report',
+                  onPressed: taxState.profile != null
+                      ? () => PdfService.exportTaxReport(taxState.profile!)
+                      : null,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),

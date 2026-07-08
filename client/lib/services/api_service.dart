@@ -137,4 +137,13 @@ class ApiService {
     final res = await _dio.patch('/users/avatar', data: {'avatarUrl': avatarUrl});
     return res.data['data'] as Map<String, dynamic>;
   }
+
+  Future<void> completeOnboarding() async {
+    await _dio.patch('/users/onboarded');
+  }
+
+  Future<Map<String, dynamic>> getOnboardedStatus() async {
+    final res = await _dio.get('/users/onboarded');
+    return res.data['data'] as Map<String, dynamic>;
+  }
 }

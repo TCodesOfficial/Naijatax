@@ -22,7 +22,9 @@ class StorageService {
 
   static Map<String, dynamic>? getLatestTaxProfile() {
     final box = Hive.box('tax_profiles');
-    return box.get('latest') as Map<String, dynamic>?;
+    final raw = box.get('latest');
+    if (raw == null) return null;
+    return Map<String, dynamic>.from(raw as Map);
   }
 
   // ── Articles Cache ───────────────────────────────────────────────────────

@@ -37,7 +37,6 @@ class AppConstants {
   // ── SharedPreferences Keys (not sensitive) ────────────────────────────
   static const String themeKey = 'is_dark_mode';
   static const String biometricKey = 'biometric_enabled';
-  static const String onboardedKey = 'has_onboarded';
 
   // ── App Metadata (not sensitive) ──────────────────────────────────────
   static const String appName = 'NaijaTax Enlighten';
