@@ -243,6 +243,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         children: [
                           UserAvatar(
                             avatarUrl: authState.user?.avatarUrl,
+                            displayName: displayName,
                             radius: 40,
                             fallbackIcon: Icons.account_circle_outlined,
                             iconSize: 44,

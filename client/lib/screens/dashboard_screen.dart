@@ -277,7 +277,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'FILING STATUS',
+                    'TAX YEAR',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       letterSpacing: 0.5,
@@ -285,7 +285,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'On Track (Due Mar 31)',
+                    '${DateTime.now().year}  •  Profile Active',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: const Color(0xFF15803D),
                       fontWeight: FontWeight.w600,

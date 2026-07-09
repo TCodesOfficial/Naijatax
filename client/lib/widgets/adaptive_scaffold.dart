@@ -129,6 +129,7 @@ class AdaptiveScaffold extends ConsumerWidget {
                   onTap: () => context.go('/profile'),
                   child: UserAvatar(
                     avatarUrl: avatarUrl,
+                    displayName: displayName,
                     radius: 16,
                     fallbackIcon: Icons.account_circle_outlined,
                     iconSize: 20,
@@ -251,6 +252,7 @@ class AdaptiveScaffold extends ConsumerWidget {
                 children: [
                   UserAvatar(
                     avatarUrl: avatarUrl,
+                    displayName: displayName,
                     radius: 18,
                     fallbackIcon: Icons.account_circle_outlined,
                     iconSize: 20,

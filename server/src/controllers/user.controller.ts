@@ -5,7 +5,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 
 const avatarUrlSchema = z.object({
-  avatarUrl: z.string().url('Invalid avatar URL format'),
+  avatarUrl: z.string(),
 });
 
 export const updateAvatar = asyncHandler(async (req: Request, res: Response) => {
