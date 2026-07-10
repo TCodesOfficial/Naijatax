@@ -2,7 +2,7 @@ import { prisma } from '../config/database.js';
 import { env } from '../config/env.js';
 import { NIGERIAN_TAX_CONTEXT } from '../config/prompts.js';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 interface GeminiMessage {
   role: 'user' | 'model';
@@ -13,7 +13,7 @@ async function callGemini(
   messages: GeminiMessage[],
   systemInstruction?: string,
   options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string } = {},
-  maxRetries = 1,
+  maxRetries = 2,
 ): Promise<string> {
   const body: Record<string, unknown> = {
     contents: messages,
@@ -41,15 +41,15 @@ async function callGemini(
 
       if (!res.ok) {
         const errorBody = await res.text();
-        const isRateLimited = res.status === 429;
+        const isTransient = res.status === 429 || res.status === 503;
 
-        if (isRateLimited && attempt < maxRetries) {
+        if (isTransient && attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
 
-        if (isRateLimited) {
+        if (isTransient) {
           return 'AI is busy processing other requests. Please try again in a moment.';
         }
 

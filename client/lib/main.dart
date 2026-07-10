@@ -17,7 +17,6 @@ void main() async {
   await StorageService.init();
 
   // Initialize Supabase Auth & DB client
-  // Gracefully handle placeholder or missing credentials
   try {
     const url = AppConstants.supabaseUrl;
     const key = AppConstants.supabaseAnonKey;

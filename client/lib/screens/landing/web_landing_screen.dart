@@ -75,7 +75,7 @@ class WebLandingScreen extends StatelessWidget {
                   child: const Text('Sign In'),
                 ),
               AnimatedButton(
-                onPressed: () => context.go('/register'),
+                onPressed: () => context.go('/login'),
                 text: 'Get Started',
               ),
             ],
@@ -672,7 +672,7 @@ class WebLandingScreen extends StatelessWidget {
             ).animate().fadeIn(delay: 100.ms),
             const SizedBox(height: 32),
             AnimatedButton(
-              onPressed: () => context.go('/register'),
+              onPressed: () => context.go('/login'),
               text: 'Get Started Free',
               backgroundColor: Colors.white,
               foregroundColor: theme.colorScheme.primary,
