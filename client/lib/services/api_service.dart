@@ -54,8 +54,11 @@ class ApiService {
     return res.data['data'] as Map<String, dynamic>;
   }
 
-  Future<List<dynamic>> searchVat(String query) async {
-    final res = await _dio.get('/tax/vat', queryParameters: {'q': query});
+  Future<List<dynamic>> searchVat({String? query, String? status}) async {
+    final params = <String, dynamic>{};
+    if (query != null && query.isNotEmpty) params['q'] = query;
+    if (status != null) params['status'] = status;
+    final res = await _dio.get('/tax/vat', queryParameters: params);
     return res.data['data'] as List<dynamic>;
   }
 

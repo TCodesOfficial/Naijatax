@@ -19,8 +19,9 @@ async function callGemini(
     contents: messages,
     generationConfig: {
       temperature: options.temperature ?? 0.3,
-      maxOutputTokens: options.maxOutputTokens ?? 1000,
+      maxOutputTokens: options.maxOutputTokens ?? 2048,
       ...(options.responseMimeType ? { responseMimeType: options.responseMimeType } : {}),
+      thinkingConfig: { thinkingBudget: 0 },
     },
   };
 
@@ -155,7 +156,7 @@ export async function sendChatMessage(userId: string, content: string, sessionId
 
   const responseContent = await callGemini(geminiMessages, NIGERIAN_TAX_CONTEXT, {
     temperature: 0.3,
-    maxOutputTokens: 1000,
+    maxOutputTokens: 2048,
   });
 
   const isBusy = responseContent.includes('busy processing') || responseContent.includes('unable to process');
@@ -206,5 +207,9 @@ ${text.substring(0, 10000)}
     undefined,
     { temperature: 0.1, responseMimeType: 'application/json' },
   );
-  return JSON.parse(jsonStr);
+  try {
+    return JSON.parse(jsonStr);
+  } catch {
+    throw new Error('AI returned an invalid response. Please try again.');
+  }
 }

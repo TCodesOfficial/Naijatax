@@ -550,7 +550,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         color: theme.colorScheme.secondary,
         bgColor: theme.colorScheme.secondary.withValues(alpha: 0.12),
         icon: Icons.shopping_cart_outlined,
-        route: '/calculator',
+        route: '/vat-items',
       ),
       _TaxCategory(
         label: 'CIT',

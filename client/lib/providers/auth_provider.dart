@@ -364,10 +364,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> signInWithFacebook() async {
-    await _client.auth.signInWithOAuth(
-      OAuthProvider.facebook,
-      redirectTo: 'https://skxiwgqhzjxvvlrcmxxh.supabase.co/auth/v1/callback',
-    );
+    try {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.facebook,
+        redirectTo: 'https://skxiwgqhzjxvvlrcmxxh.supabase.co/auth/v1/callback',
+      );
+    } catch (e) {
+      throw 'Facebook sign-in failed. Please try again.';
+    }
   }
 
   void continueAsGuest() {

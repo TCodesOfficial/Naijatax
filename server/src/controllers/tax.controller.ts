@@ -60,10 +60,11 @@ export const parseStatement = asyncHandler(async (req: Request, res: Response) =
 
 const searchQuerySchema = z.object({
   q: z.string().max(100).optional(),
+  status: z.enum(['STANDARD', 'ZERO_RATED', 'EXEMPT']).optional(),
 });
 
 export const searchVat = asyncHandler(async (req: Request, res: Response) => {
-  const { q } = searchQuerySchema.parse(req.query);
-  const items = await searchVatItems(q);
+  const { q, status } = searchQuerySchema.parse(req.query);
+  const items = await searchVatItems(q, status);
   successResponse(res, items);
 });

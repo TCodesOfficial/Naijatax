@@ -541,16 +541,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _socialButton(theme, Icons.g_mobiledata, 'Google', () {
-                          ref.read(authProvider.notifier).signInWithGoogle();
+                        _socialButton(theme, Icons.g_mobiledata, 'Google', () async {
+                          try {
+                            await ref.read(authProvider.notifier).signInWithGoogle();
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                              );
+                            }
+                          }
                         }),
                         const SizedBox(width: 12),
-                        _socialButton(theme, Icons.apple, 'Apple', () {
-                          ref.read(authProvider.notifier).signInWithApple();
+                        _socialButton(theme, Icons.apple, 'Apple', () async {
+                          try {
+                            await ref.read(authProvider.notifier).signInWithApple();
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                              );
+                            }
+                          }
                         }),
                         const SizedBox(width: 12),
-                        _socialButton(theme, Icons.facebook, 'Facebook', () {
-                          ref.read(authProvider.notifier).signInWithFacebook();
+                        _socialButton(theme, Icons.facebook, 'Facebook', () async {
+                          try {
+                            await ref.read(authProvider.notifier).signInWithFacebook();
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                              );
+                            }
+                          }
                         }),
                       ],
                     ),

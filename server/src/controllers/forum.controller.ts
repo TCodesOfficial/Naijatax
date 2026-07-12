@@ -54,7 +54,7 @@ export const acceptReply = asyncHandler(async (req: Request, res: Response) => {
   try {
     const reply = await acceptForumReply(req.user!.id, req.params.id);
     successResponse(res, reply);
-  } catch (error: any) {
-    errorResponse(res, 'FORBIDDEN', error.message, 403);
+  } catch (error: unknown) {
+    errorResponse(res, 'FORBIDDEN', (error as Error).message, 403);
   }
 });

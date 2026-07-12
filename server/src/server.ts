@@ -39,11 +39,6 @@ const sanitize = (obj: unknown): unknown => {
   }
   return obj;
 };
-app.use((_req, res, next) => {
-  const originalJson = res.json.bind(res);
-  res.json = (body: unknown) => originalJson(body);
-  next();
-});
 app.use((req, _res, next) => {
   if (req.body && typeof req.body === 'object') {
     req.body = sanitize(req.body);

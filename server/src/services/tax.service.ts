@@ -140,14 +140,19 @@ export async function getLatestTaxProfile(userId: string) {
   });
 }
 
-export async function searchVatItems(query?: string) {
+export async function searchVatItems(query?: string, status?: string) {
+  const where: Record<string, unknown> = {};
+  if (query) {
+    where.OR = [
+      { name: { contains: query, mode: 'insensitive' } },
+      { category: { contains: query, mode: 'insensitive' } },
+    ];
+  }
+  if (status) {
+    where.status = status;
+  }
   return await prisma.vatItem.findMany({
-    where: query ? {
-      OR: [
-        { name: { contains: query, mode: 'insensitive' } },
-        { category: { contains: query, mode: 'insensitive' } },
-      ],
-    } : undefined,
-    take: 20,
+    where: Object.keys(where).length > 0 ? where : undefined,
+    orderBy: { category: 'asc' },
   });
 }

@@ -25,6 +25,7 @@ import '../../screens/profile/verify_account_screen.dart';
 import '../../screens/quiz/quiz_history_screen.dart';
 import '../../screens/quiz/quiz_play_screen.dart';
 import '../../screens/support/support_center_screen.dart';
+import '../../screens/vat/vat_items_screen.dart';
 import '../../widgets/adaptive_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -145,6 +146,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 icon: Icon(Icons.menu_book_outlined),
                 selectedIcon: Icon(Icons.menu_book),
               ),
+              AdaptiveScaffoldDestination(
+                label: 'VAT Items',
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long),
+              ),
             ],
           );
         },
@@ -260,6 +266,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ],
                   ),
                 ],
+              ),
+            ],
+          ),
+
+          // Branch 6: VAT Items
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/vat-items',
+                builder: (context, state) => const VatItemsScreen(),
               ),
             ],
           ),

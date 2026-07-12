@@ -550,24 +550,49 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         _socialButton(
                           theme,
                           Icons.g_mobiledata,
-                          () => ref
-                              .read(authProvider.notifier)
-                              .signInWithGoogle(),
+                          () async {
+                            try {
+                              await ref.read(authProvider.notifier).signInWithGoogle();
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                                );
+                              }
+                            }
+                          },
                         ),
                         const SizedBox(width: 10),
                         _socialButton(
                           theme,
                           Icons.apple,
-                          () =>
-                              ref.read(authProvider.notifier).signInWithApple(),
+                          () async {
+                            try {
+                              await ref.read(authProvider.notifier).signInWithApple();
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                                );
+                              }
+                            }
+                          },
                         ),
                         const SizedBox(width: 10),
                         _socialButton(
                           theme,
                           Icons.facebook,
-                          () => ref
-                              .read(authProvider.notifier)
-                              .signInWithFacebook(),
+                          () async {
+                            try {
+                              await ref.read(authProvider.notifier).signInWithFacebook();
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                                );
+                              }
+                            }
+                          },
                         ),
                       ],
                     ),

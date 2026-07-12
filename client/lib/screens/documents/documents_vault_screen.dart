@@ -55,13 +55,13 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
       return;
     }
 
-    final result = await FilePicker.pickFile(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'csv', 'xlsx', 'doc', 'docx'],
     );
-    if (result == null || !mounted) return;
+    if (result == null || result.files.isEmpty || !mounted) return;
 
-    final file = result;
+    final file = result.files.first;
     final bytes = await file.readAsBytes();
 
     setState(() => _isUploading = true);
