@@ -1,74 +1,58 @@
+import { GoogleGenAI } from '@google/genai';
 import { prisma } from '../config/database.js';
 import { env } from '../config/env.js';
 import { NIGERIAN_TAX_CONTEXT } from '../config/prompts.js';
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+// 1. Initialize the official Google Gen AI client with your AI Studio Key
+const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+
+// Using the standard stable production model identifier
+const MODEL_NAME = 'gemini-3.5-flash';
 
 interface GeminiMessage {
   role: 'user' | 'model';
   parts: { text: string }[];
 }
 
+/**
+ * Core internal wrapper utilizing the official SDK to fetch inferences
+ */
 async function callGemini(
   messages: GeminiMessage[],
   systemInstruction?: string,
   options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string } = {},
   maxRetries = 2,
 ): Promise<string> {
-  const body: Record<string, unknown> = {
-    contents: messages,
-    generationConfig: {
-      temperature: options.temperature ?? 0.3,
-      maxOutputTokens: options.maxOutputTokens ?? 2048,
-      ...(options.responseMimeType ? { responseMimeType: options.responseMimeType } : {}),
-      thinkingConfig: { thinkingBudget: 0 },
-    },
-  };
-
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
-  }
-
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const res = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': env.GEMINI_API_KEY,
+      // Utilizing the native SDK's content generation method
+      const response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: messages,
+        config: {
+          temperature: options.temperature ?? 0.3,
+          maxOutputTokens: options.maxOutputTokens ?? 2048,
+          systemInstruction: systemInstruction,
+          responseMimeType: options.responseMimeType,
         },
-        body: JSON.stringify(body),
       });
 
-      if (!res.ok) {
-        const errorBody = await res.text();
-        const isTransient = res.status === 429 || res.status === 503;
+      return response.text || 'I apologize, I am unable to process your request at this time.';
+    } catch (error: any) {
+      // Gracefully catch standard transient rate limits (429) or busy server flags (503)
+      const status = error?.status || error?.statusCode;
+      const isTransient = status === 429 || status === 503 || error?.message?.includes('429');
 
-        if (isTransient && attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 1000;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-
-        if (isTransient) {
-          return 'AI is busy processing other requests. Please try again in a moment.';
-        }
-
-        throw new Error(`Gemini API error ${res.status}: ${errorBody}`);
-      }
-
-      const data = await res.json() as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
-      };
-
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      return text || 'I apologize, I am unable to process your request at this time.';
-    } catch (error: unknown) {
-      if (attempt < maxRetries) {
+      if (isTransient && attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
+
+      if (isTransient) {
+        return 'AI is busy processing other requests. Please try again in a moment.';
+      }
+
       throw error;
     }
   }
@@ -76,6 +60,9 @@ async function callGemini(
   return 'I apologize, I am unable to process your request at this time.';
 }
 
+/**
+ * Sanitizes and prepares history objects ensuring strict alternating user -> model roles
+ */
 function toGeminiMessages(
   history: { role: string; content: string }[],
   currentMessage: string,
@@ -83,16 +70,32 @@ function toGeminiMessages(
   const messages: GeminiMessage[] = [];
 
   for (const msg of history) {
-    messages.push({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }],
-    });
+    const role = msg.role === 'assistant' ? 'model' : 'user';
+
+    // Prevent consecutive identical roles from throwing an API validation exception
+    if (messages.length > 0 && messages[messages.length - 1].role === role) {
+      messages[messages.length - 1].parts[0].text += `\n${msg.content}`;
+    } else {
+      messages.push({
+        role,
+        parts: [{ text: msg.content }],
+      });
+    }
   }
 
-  messages.push({ role: 'user', parts: [{ text: currentMessage }] });
+  // Double check user constraint sequencing right before adding the active prompt
+  if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+    messages[messages.length - 1].parts[0].text += `\n${currentMessage}`;
+  } else {
+    messages.push({ role: 'user', parts: [{ text: currentMessage }] });
+  }
 
   return messages;
 }
+
+/* ==========================================
+   Prisma Chat Session Persistent Layer Data Methods
+   ========================================== */
 
 export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
   if (sessionId) {
@@ -207,6 +210,7 @@ ${text.substring(0, 10000)}
     undefined,
     { temperature: 0.1, responseMimeType: 'application/json' },
   );
+  
   try {
     return JSON.parse(jsonStr);
   } catch {

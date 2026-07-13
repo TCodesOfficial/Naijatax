@@ -955,12 +955,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           )
-        else
+else
           SizedBox(
             height: 180,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: state.articles.take(5).length,
+              itemCount: state.articles.length.clamp(0, 10),
               separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, idx) {
                 final art = state.articles[idx];

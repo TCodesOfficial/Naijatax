@@ -21,6 +21,17 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     Future.microtask(() => ref.read(articlesProvider.notifier).fetchArticles());
   }
 
+  List<TaxArticle> _getFilteredArticles(List<TaxArticle> articles) {
+    if (_selectedFilter == 'All') return articles;
+    return articles.where((a) {
+      final sourceLower = a.source.toLowerCase();
+      final filterLower = _selectedFilter.toLowerCase();
+      return sourceLower.contains(filterLower) ||
+          a.title.toLowerCase().contains(filterLower) ||
+          a.summary.toLowerCase().contains(filterLower);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -29,6 +40,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     final articlesState = ref.watch(articlesProvider);
 
     final filters = ['All', 'NTA 2025', 'VAT Update', 'Business Tax', 'Compliance'];
+    final filteredArticles = _getFilteredArticles(articlesState.articles);
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -73,7 +85,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
               padding: EdgeInsets.all(40),
               child: CircularProgressIndicator(),
             ))
-          else if (articlesState.articles.isEmpty)
+          else if (filteredArticles.isEmpty)
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(40),
@@ -89,29 +101,39 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
             )
           else ...[
             // Featured article
-            if (articlesState.articles.isNotEmpty)
-              _featuredCard(theme, articlesState.articles.first, isMobile),
+            if (filteredArticles.isNotEmpty)
+              _featuredCard(theme, filteredArticles.first, isMobile),
             const SizedBox(height: 20),
             // News grid
             isMobile
                 ? Column(
-                    children: articlesState.articles.skip(1).take(4).map(
+                    children: filteredArticles.skip(1).map(
                       (a) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _newsCard(theme, a),
                       ),
                     ).toList(),
                   )
-                : GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: articlesState.articles.skip(1).take(6).map(
-                      (a) => _newsCard(theme, a),
-                    ).toList(),
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final crossAxisCount = constraints.maxWidth > 900 ? 3 : 2;
+                      final childAspectRatio = constraints.maxWidth > 900 ? 1.3 : 1.15;
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: childAspectRatio,
+                        ),
+                        itemCount: filteredArticles.skip(1).length.clamp(0, 6),
+                        itemBuilder: (context, index) {
+                          final article = filteredArticles.skip(1).elementAt(index);
+                          return _newsCard(theme, article);
+                        },
+                      );
+                    },
                   ),
           ],
         ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/utils/app_formatter.dart';
 import '../../providers/vat_provider.dart';
 
 class VatItemsScreen extends ConsumerStatefulWidget {
