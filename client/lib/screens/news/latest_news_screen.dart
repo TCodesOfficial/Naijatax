@@ -21,16 +21,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     Future.microtask(() => ref.read(articlesProvider.notifier).fetchArticles());
   }
 
-  List<TaxArticle> _getFilteredArticles(List<TaxArticle> articles) {
-    if (_selectedFilter == 'All') return articles;
-    return articles.where((a) {
-      final sourceLower = a.source.toLowerCase();
-      final filterLower = _selectedFilter.toLowerCase();
-      return sourceLower.contains(filterLower) ||
-          a.title.toLowerCase().contains(filterLower) ||
-          a.summary.toLowerCase().contains(filterLower);
-    }).toList();
-  }
+  List<String> get filters => ['All', 'NTA_2025', 'PAYE', 'CIT', 'VAT', 'COMPLIANCE'];
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +30,9 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     final isMobile = size.width < 600;
     final articlesState = ref.watch(articlesProvider);
 
-    final filters = ['All', 'NTA 2025', 'VAT Update', 'Business Tax', 'Compliance'];
-    final filteredArticles = _getFilteredArticles(articlesState.articles);
+    final filteredArticles = _selectedFilter == 'All'
+        ? articlesState.articles
+        : articlesState.articles.where((a) => a.category == _selectedFilter).toList();
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -68,7 +60,12 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
                 return ChoiceChip(
                   label: Text(f),
                   selected: isActive,
-                  onSelected: (_) => setState(() => _selectedFilter = f),
+                  onSelected: (_) {
+                    setState(() => _selectedFilter = f);
+                    ref.read(articlesProvider.notifier).setCategory(
+                      _selectedFilter == 'All' ? null : _selectedFilter,
+                    );
+                  },
                   selectedColor: theme.colorScheme.primary,
                   labelStyle: TextStyle(
                     color: isActive ? Colors.white : theme.colorScheme.onSurfaceVariant,
@@ -127,7 +124,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
                           mainAxisSpacing: 16,
                           childAspectRatio: childAspectRatio,
                         ),
-                        itemCount: filteredArticles.skip(1).length.clamp(0, 6),
+                        itemCount: filteredArticles.skip(1).length,
                         itemBuilder: (context, index) {
                           final article = filteredArticles.skip(1).elementAt(index);
                           return _newsCard(theme, article);
@@ -285,14 +282,12 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
-              Expanded(
-                child: Text(
-                  article.summary,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+              Text(
+                article.summary,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

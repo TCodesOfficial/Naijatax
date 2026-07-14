@@ -95,16 +95,14 @@ class AdaptiveScaffold extends ConsumerWidget {
                 const AppLogo(radius: 16, iconSize: 18),
                 if (!isVerySmall) ...[
                   const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      AppConstants.appName,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    AppConstants.appName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],
@@ -208,6 +206,14 @@ class AdaptiveScaffold extends ConsumerWidget {
                 _sidebarItem(
                   context,
                   theme,
+                  'Learn',
+                  Icons.menu_book_outlined,
+                  Icons.menu_book,
+                  5,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
                   'AI Assistant',
                   Icons.smart_toy_outlined,
                   Icons.smart_toy,
@@ -224,26 +230,18 @@ class AdaptiveScaffold extends ConsumerWidget {
                 _sidebarItem(
                   context,
                   theme,
-                  'Profile',
-                  Icons.person_outlined,
-                  Icons.person,
-                  4,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'Learn',
-                  Icons.menu_book_outlined,
-                  Icons.menu_book,
-                  5,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
                   'VAT Items',
                   Icons.receipt_long_outlined,
                   Icons.receipt_long,
                   6,
+                ),
+                _sidebarItem(
+                  context,
+                  theme,
+                  'Profile',
+                  Icons.person_outlined,
+                  Icons.person,
+                  4,
                 ),
               ],
             ),
@@ -313,7 +311,10 @@ class AdaptiveScaffold extends ConsumerWidget {
             : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
-          onTap: () => _onTap(context, index),
+          onTap: () => navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          ),
           borderRadius: BorderRadius.circular(10),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -378,10 +379,16 @@ class AdaptiveScaffold extends ConsumerWidget {
           // doesn't look jammed against the screen edge.
           padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
           child: GNav(
-            selectedIndex: navigationShell.currentIndex >= 5
-                ? 0
-                : navigationShell.currentIndex,
-            onTabChange: (index) => _onTap(context, index),
+            selectedIndex: switch (navigationShell.currentIndex) {
+              0 => 0,
+              1 => 1,
+              2 => 3,
+              3 => 4,
+              4 => 5,
+              5 => 2,
+              _ => 0,
+            },
+            onTabChange: (index) => _onBottomNavTap(context, index),
             gap: 3,
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
             tabBorderRadius: 20,
@@ -411,6 +418,12 @@ class AdaptiveScaffold extends ConsumerWidget {
                 text: 'Calculator',
               ),
               GButton(
+                icon: navigationShell.currentIndex == 5
+                    ? Icons.menu_book
+                    : Icons.menu_book_outlined,
+                text: 'Learn',
+              ),
+              GButton(
                 icon: navigationShell.currentIndex == 2
                     ? Icons.smart_toy
                     : Icons.smart_toy_outlined,
@@ -435,10 +448,12 @@ class AdaptiveScaffold extends ConsumerWidget {
     );
   }
 
-  void _onTap(BuildContext context, int index) {
+  static const _posToBranch = [0, 1, 5, 2, 3, 4];
+
+  void _onBottomNavTap(BuildContext context, int index) {
     navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
+      _posToBranch[index],
+      initialLocation: _posToBranch[index] == navigationShell.currentIndex,
     );
   }
 }

@@ -72,10 +72,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             _buildCalculatorCTA(theme, isMobile),
           SizedBox(height: isMobile ? 20 : 24),
 
-          // ─── Learn About Tax Reforms CTA ────────────────────────────────
-          _buildLearnCTA(theme, isMobile),
-          SizedBox(height: isMobile ? 20 : 24),
-
           // ─── Tax Category Results ─────────────────────────────────────────
           if (taxState.profile != null) ...[
             _buildTaxCategoryResults(theme, taxState, isMobile),
@@ -379,116 +375,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Learn About Tax Reforms CTA ──────────────────────────────────────
-  Widget _buildLearnCTA(ThemeData theme, bool isMobile) {
-    return Card(
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: isMobile
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.tertiaryContainer,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.menu_book_outlined,
-                            size: 22,
-                            color: theme.colorScheme.tertiary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Learn About Tax Reforms',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Understand the new Nigeria Tax Act 2025 — PAYE, VAT, CIT, and more.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.go('/learn'),
-                        icon: const Icon(Icons.arrow_forward, size: 18),
-                        label: const Text('Explore'),
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.tertiaryContainer,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.menu_book_outlined,
-                        size: 24,
-                        color: theme.colorScheme.tertiary,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Learn About Tax Reforms',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Understand the new Nigeria Tax Act 2025 — PAYE, VAT, CIT, and more.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    OutlinedButton.icon(
-                      onPressed: () => context.go('/learn'),
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('Explore'),
-                    ),
-                  ],
-                ),
         ),
       ),
     );

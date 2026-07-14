@@ -81,8 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (next.status == AuthStatus.authenticated) {
         final router = GoRouter.of(context);
         if (!mounted) return;
-        final hasOnboarded = next.user?.onboarded ?? false;
-        router.go(hasOnboarded ? '/dashboard' : '/onboarding');
+        router.go('/dashboard');
       } else if (next.needsOtpVerification) {
         setState(() {
           _otpSent = true;

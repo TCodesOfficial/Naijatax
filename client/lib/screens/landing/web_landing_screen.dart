@@ -17,10 +17,66 @@ class WebLandingScreen extends StatelessWidget {
     final isDesktop = size.width >= 900;
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        surfaceTintColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => context.pop(),
+          tooltip: 'Go back',
+        ),
+        title: Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppLogo(radius: 18, iconSize: 20),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  AppConstants.appName,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          if (!isDesktop)
+            IconButton(
+              onPressed: () => context.go('/login'),
+              icon: const Icon(Icons.login_rounded, size: 20),
+              tooltip: 'Sign In',
+            ),
+          if (isDesktop)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: () => context.go('/login'),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+                child: const Text('Sign In'),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: AnimatedButton(
+              onPressed: () => context.go('/login'),
+              text: 'Get Started',
+            ),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHeader(context, theme, isDesktop),
             _buildHero(context, theme, isDesktop),
             _buildStatsBar(context, theme, isDesktop),
             _buildFeatures(context, theme, isDesktop),
@@ -29,58 +85,6 @@ class WebLandingScreen extends StatelessWidget {
             _buildFooter(context, theme),
           ],
         ),
-      ),
-    );
-  }
-
-  // ─── Header ──────────────────────────────────────────────────────────────
-  Widget _buildHeader(BuildContext context, ThemeData theme, bool isDesktop) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 40 : 20,
-        vertical: 16,
-      ),
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const AppLogo(radius: 18, iconSize: 20),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    AppConstants.appName,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.end,
-            children: [
-              if (isDesktop)
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: const Text('Sign In'),
-                ),
-              AnimatedButton(
-                onPressed: () => context.go('/login'),
-                text: 'Get Started',
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

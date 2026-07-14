@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
+import '../../widgets/animated_button.dart';
 
 class MobileLandingScreen extends StatelessWidget {
   const MobileLandingScreen({super.key});
@@ -11,6 +12,73 @@ class MobileLandingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
+          onPressed: () => context.pop(),
+          tooltip: 'Go back',
+        ),
+        title: Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  AppConstants.appShortName,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: -0.36,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: () => context.go('/login'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Sign In'),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: AnimatedButton(
+              onPressed: () => context.go('/login'),
+              text: 'Get Started',
+            ),
+          ),
+        ],
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -67,7 +135,7 @@ class MobileLandingScreen extends StatelessWidget {
                     color: Colors.white,
                     letterSpacing: -0.72,
                   ),
-                ).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(
+).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(
                       begin: 0.3,
                       end: 0,
                       delay: 300.ms,

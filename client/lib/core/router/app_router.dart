@@ -58,22 +58,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuthenticatedLike && isAuthRoute) {
         // Guests skip onboarding entirely — go straight to dashboard
         if (isGuest) return '/dashboard';
-        return hasOnboarded ? '/dashboard' : '/onboarding';
+        // Signup → onboarding, Login → dashboard
+        if (location == '/register') return '/onboarding';
+        return '/dashboard';
       }
       // ── RULE 2: Already completed onboarding or guest → skip landing/onboarding ─
       if ((hasOnboarded || isGuest) && (isLanding || isOnboarding)) {
         return '/dashboard';
-      }
-
-      // ── RULE 3: Authenticated but not onboarded → force onboarding ──────
-      // Guests are excluded — they skip onboarding and go to dashboard
-      if (isAuthenticatedLike &&
-          !isGuest &&
-          !hasOnboarded &&
-          !isOnboarding &&
-          !isAuthRoute &&
-          !isLanding) {
-        return '/onboarding';
       }
 
       // ── RULE 4: Native returning users → skip landing to login ──────
@@ -248,7 +239,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Branch 5: Learn (desktop sidebar only, no bottom nav button)
+          // Branch 5: Learn
           StatefulShellBranch(
             routes: [
               GoRoute(

@@ -6,12 +6,14 @@ import '../services/storage_service.dart';
 class ArticlesState {
   final bool isLoading;
   final List<TaxArticle> articles;
+  final String? selectedCategory;
   final Map<String, dynamic> metrics;
   final String? error;
 
   const ArticlesState({
     this.isLoading = false,
     this.articles = const [],
+    this.selectedCategory,
     this.metrics = const {},
     this.error,
   });
@@ -19,12 +21,14 @@ class ArticlesState {
   ArticlesState copyWith({
     bool? isLoading,
     List<TaxArticle>? articles,
+    String? selectedCategory,
     Map<String, dynamic>? metrics,
     String? error,
   }) =>
       ArticlesState(
         isLoading: isLoading ?? this.isLoading,
         articles: articles ?? this.articles,
+        selectedCategory: selectedCategory ?? this.selectedCategory,
         metrics: metrics ?? this.metrics,
         error: error ?? this.error,
       );
@@ -44,10 +48,10 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
     );
   }
 
-  Future<void> fetchArticles() async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<void> fetchArticles({String? category}) async {
+    state = state.copyWith(isLoading: true, error: null, selectedCategory: category);
     try {
-      final List<dynamic> data = await ApiService.instance.getArticles();
+      final List<dynamic> data = await ApiService.instance.getPublicArticles(category: category);
       final list = data.map((e) => TaxArticle.fromJson(e as Map<String, dynamic>)).toList();
       
       // Save raw map data to cache
@@ -66,6 +70,15 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
       state = state.copyWith(metrics: metricsData);
     } catch (_) {
       // API unavailable — keep existing metrics
+    }
+  }
+
+  void setCategory(String? category) {
+    state = state.copyWith(selectedCategory: category);
+    if (category != null) {
+      fetchArticles(category: category);
+    } else {
+      fetchArticles();
     }
   }
 }

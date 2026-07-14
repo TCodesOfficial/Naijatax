@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  //set provider to postgress
+  // set provider to postgress
   provider = "postgresql"
 }
 
@@ -140,6 +140,7 @@ model TaxArticle {
   summary    String
   content    String
   source     String // FIRS, NRS, KPMG etc.
+  category   String? // NTA_2025, PAYE, CIT, VAT, COMPLIANCE
   url        String?
   isFeatured Boolean  @default(false) @map("is_featured")
   createdAt  DateTime @default(now()) @map("created_at")

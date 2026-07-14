@@ -2,6 +2,10 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from "@prisma/client";
 import "dotenv/config";
 
+// Supabase pooler uses self-signed SSL certs — disable verification so the
+// connection succeeds (same as src/config/database.ts).
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const adapter = new PrismaPg({ connectionString: process.env.DIRECT_URL! });
 const prisma = new PrismaClient({ adapter });
 
@@ -583,7 +587,7 @@ async function main() {
   }
   console.log(`✅ Seeded ${quizQuestions.length} quiz questions.`);
 
-  // 3. Seed Educational Articles (15 articles)
+// 3. Seed Educational Articles (20+ articles)
   console.log("📚 Seeding educational articles...");
   const articles = [
     {
@@ -591,6 +595,7 @@ async function main() {
       summary: "An overview of the landmark reforms restructuring Nigeria's tax brackets, exemptions, and collection agency.",
       content: "Effective January 1, 2026, the 2025 Nigeria Tax Act (NTA) fundamentally restructures the nation's fiscal framework. Signed into law by President Bola Ahmed Tinubu in June 2025, the new reforms target three main goals: relief for low-income earners, administrative efficiency, and simplified business compliance. Key highlights include the transition of the FIRS into the Nigeria Revenue Service (NRS), the raising of the personal income tax threshold to ₦800,000 annually, and tax exemptions for small businesses with annual turnovers of less than ₦100 million.",
       source: "NRS Gazette",
+      category: "NTA_2025",
       isFeatured: true,
     },
     {
@@ -598,6 +603,7 @@ async function main() {
       summary: "Learn how to calculate your personal income tax using the progressive annual brackets and mandatory deductions.",
       content: "Under the new 2025 progressive tax bands, personal income tax is calculated annually. The first ₦800,000 is exempt (0%). The next ₦3,000,000 is taxed at 15%. The following ₦3,000,000 at 20%. The next ₦14,000,000 at 22%. Anything above ₦20,800,000 is taxed at 25%. Deductions include 8% pension and rent relief (20% of rent paid, capped at ₦500,000/year).",
       source: "KPMG Advisory",
+      category: "PAYE",
       isFeatured: false,
     },
     {
@@ -605,27 +611,31 @@ async function main() {
       summary: "How the ₦100 million turnover and ₦250 million asset limits protect small enterprises from taxation.",
       content: "Companies with turnover not exceeding ₦100 million and fixed assets under ₦250 million are completely exempt from CIT. Medium companies (₦100M–₦500M turnover) pay 20%. Large companies (above ₦500M) pay 30%. This exemption covers over 90% of registered SMEs in Nigeria.",
       source: "PwC Nigeria Report",
+      category: "CIT",
       isFeatured: false,
     },
     {
-      title: "VAT changes and what they mean for consumers",
+      title: "VAT changes under the 2025 NTA: Zero-rated, exempt, and standard-rated items",
       summary: "A deep dive into zero-rated, exempt, and standard-rated items under the 2025 NTA.",
       content: "The 2025 NTA maintains the 7.5% standard VAT rate but expands the list of zero-rated items (basic food, medical supplies, educational materials) and exempt items (public transport, healthcare, financial services). Zero-rated items allow input VAT recovery, while exempt items do not. Understanding the difference helps businesses manage their tax obligations effectively.",
       source: "Deloitte Nigeria",
+      category: "VAT",
       isFeatured: false,
     },
     {
-      title: "Pension reforms under the 2025 NTA",
+      title: "Pension reforms under the 2025 NTA: 8% mandatory contribution",
       summary: "How the mandatory 8% pension contribution and retirement savings work under the new framework.",
       content: "The 2025 NTA reinforces the 8% mandatory employee pension contribution, fully tax-deductible. Employers must remit contributions within 7 working days. The reforms also introduce enhanced penalties for non-compliance and expand coverage to informal sector workers through the Micro Pension Plan.",
       source: "PenCom Advisory",
+      category: "PAYE",
       isFeatured: false,
     },
     {
-      title: "Digital tax compliance for online businesses",
+      title: "Digital services tax compliance for online businesses",
       summary: "What digital service providers need to know about VAT registration, collection, and remittance.",
       content: "Foreign digital service providers supplying to Nigerian consumers must register for VAT and charge 7.5% on subscriptions, app purchases, and streaming services. Nigerian digital businesses must also register and comply. The NRS has introduced simplified registration portals for digital businesses.",
       source: "TechCabal Insights",
+      category: "VAT",
       isFeatured: false,
     },
     {
@@ -633,6 +643,7 @@ async function main() {
       summary: "Understanding the 10% CGT rate, exemptions, and how to calculate gains on property and share disposals.",
       content: "Capital gains tax is 10% on net gains from asset disposal. Key exemptions include gains on the sale of a personal residence (subject to conditions), and certain share disposals. The 2025 NTA clarifies calculation methods for both property and financial asset disposals.",
       source: "FBN Quest Research",
+      category: "COMPLIANCE",
       isFeatured: false,
     },
     {
@@ -640,20 +651,23 @@ async function main() {
       summary: "Everything you need to know about WHT rates, deduction obligations, and credit mechanisms.",
       content: "WHT is deducted at source on dividends (10%), interest (10%), rent (10%), royalties (10%), and contracts (5-10%). For companies, WHT is a credit against CIT. For individuals, it is a final tax. Failure to deduct WHT attracts a 10% penalty on the undeducted amount.",
       source: "Stanbic IBTC Tax Advisory",
+      category: "COMPLIANCE",
       isFeatured: false,
     },
     {
-      title: "Tax incentives for agriculture and manufacturing",
+      title: "Tax incentives for agriculture and manufacturing sectors",
       summary: "How the 2025 NTA encourages investment in key sectors through tax holidays and allowances.",
       content: "The 2025 NTA provides tax holidays of 3-5 years for new agricultural investments, capital allowances of up to 100% for manufacturing equipment, and zero-rated VAT on agricultural inputs. These incentives aim to boost food security and industrialization.",
       source: "NIPC Bulletin",
+      category: "CIT",
       isFeatured: false,
     },
     {
-      title: "Understanding the Tax Clearance Certificate process",
+      title: "Understanding the Tax Clearance Certificate (TCC) process",
       summary: "Step-by-step guide to obtaining your TCC and why it matters for business operations.",
       content: "A Tax Clearance Certificate (TCC) is required for government contracts, import/export, and banking transactions. Apply through the tax authority with proof of filing returns, evidence of tax payment, and audited accounts. Processing takes 14-30 days. A valid TCC covers the preceding 3 years.",
       source: "NRS Public Notice",
+      category: "COMPLIANCE",
       isFeatured: false,
     },
     {
@@ -661,6 +675,7 @@ async function main() {
       summary: "Which documents attract stamp duty and how the rates work under the Stamp Duty Act.",
       content: "Stamp duty applies to tenancy agreements (0.5%), power of attorney (1.5%), share transfers (0.75%), and insurance policies (varies). Non-stamped documents may be inadmissible in court. The 2025 reforms streamline collection through electronic stamping.",
       source: "Federal Inland Revenue Service Archives",
+      category: "COMPLIANCE",
       isFeatured: false,
     },
     {
@@ -668,6 +683,7 @@ async function main() {
       summary: "Legal ways to reduce your tax burden through reliefs, allowances, and smart financial planning.",
       content: "Salaried workers can optimize their tax position by maximizing pension contributions (8% deductible), claiming rent relief (20% of rent, capped at ₦500K), using life insurance premium deductions, and taking advantage of the ₦800,000 exemption threshold. Avoiding taxable fringe benefits also helps.",
       source: "ARM Securities Research",
+      category: "PAYE",
       isFeatured: false,
     },
     {
@@ -675,6 +691,7 @@ async function main() {
       summary: "How the arm's length principle prevents profit shifting and ensures fair taxation.",
       content: "The 2025 NTA requires that related-party transactions follow arm's length pricing. Companies must maintain transfer pricing documentation, file annual returns with the NRS, and may face adjustments if prices deviate significantly from market rates. Penalties for non-compliance can be up to 1% of revenue.",
       source: "PwC Transfer Pricing Team",
+      category: "CIT",
       isFeatured: false,
     },
     {
@@ -682,6 +699,7 @@ async function main() {
       summary: "Step-by-step guide to obtaining your TIN, VAT registration, and CAC incorporation.",
       content: "New businesses must: (1) Register with CAC for incorporation, (2) Obtain a Tax Identification Number (TIN) from the Joint Tax Board, (3) Register for VAT if annual turnover exceeds ₦25 million, (4) Register for PAYE if hiring employees, (5) Open a business bank account with TIN. The entire process can be completed online through the JTB portal.",
       source: "SMEDAN Guide",
+      category: "COMPLIANCE",
       isFeatured: false,
     },
     {
@@ -689,6 +707,55 @@ async function main() {
       summary: "Tax obligations for non-residents earning income from Nigeria.",
       content: "Non-residents earning income from Nigeria are subject to Nigerian tax on income derived from or accrued in Nigeria. This includes employment income for duties performed in Nigeria, business profits through a permanent establishment, and rental income from Nigerian property. WHT at 10% applies as a final tax for most non-resident income types.",
       source: "Baker McKenzie Nigeria",
+      category: "COMPLIANCE",
+      isFeatured: false,
+    },
+    {
+      title: "Nigeria Revenue Service (NRS) replaces FIRS: What changes for taxpayers",
+      summary: "The transition from FIRS to NRS and what it means for tax administration and collection.",
+      content: "The Nigeria Revenue Service (NRS) replaces FIRS as the single collector of all federal revenues. This unified agency will handle CIT, PIT, VAT, CGT, and other federal taxes. The change aims to improve collection efficiency, reduce leakages, and provide a single point of contact for taxpayers. All existing FIRS TINs remain valid.",
+      source: "FIRS Notice",
+      category: "NTA_2025",
+      isFeatured: true,
+    },
+    {
+      title: "Minimum wage increase to ₦70,000: Impact on PAYE and tax exemption",
+      summary: "How the new ₦70,000 minimum wage (effective July 2025) affects personal income tax calculations.",
+      content: "With the minimum wage at ₦70,000 monthly (₦840,000 annually), minimum wage earners fall below the new ₦800,000 PAYE exemption threshold. This means most minimum wage workers are now completely exempt from personal income tax. The 2025 NTA aligns the tax-free threshold with the minimum wage to protect low-income earners.",
+      source: "NRS Gazette",
+      category: "PAYE",
+      isFeatured: false,
+    },
+    {
+      title: "Rent relief cap at ₦500,000 per year: How to claim your deduction",
+      summary: "Understanding the 20% rent relief deduction capped at ₦500,000 annually under the 2025 NTA.",
+      content: "Employees can claim 20% of rent paid as tax relief, capped at ₦500,000 per year. To claim, provide your employer with a valid tenancy agreement and rent receipts. The relief reduces taxable income before PAYE calculation. Self-employed individuals claim it in their annual tax returns.",
+      source: "Deloitte Nigeria",
+      category: "PAYE",
+      isFeatured: false,
+    },
+    {
+      title: "Filing deadlines calendar for 2026: PAYE, CIT, VAT, and WHT",
+      summary: "Key tax filing and payment deadlines for the 2026 tax year under the NTA.",
+      content: "Important dates: PAYE Annual Returns - March 31, 2026; CIT Returns - June 30, 2026; VAT Monthly Returns - 21st of following month; WHT Returns - 21st of following month; Capital Gains Tax - June 30 and Dec 31; Stamp Duty - within 40 days of execution. Late filing attracts penalties: ₦25,000 for individuals, ₦50,000 for companies plus additional monthly penalties.",
+      source: "NRS Public Notice",
+      category: "COMPLIANCE",
+      isFeatured: false,
+    },
+    {
+      title: "VAIDS 2.0: Voluntary Assets and Income Declaration Scheme relaunched",
+      summary: "The tax amnesty program offering penalty waivers for voluntary disclosure of undeclared assets and income.",
+      content: "VAIDS 2.0 allows taxpayers to regularize their tax status by declaring previously undisclosed assets and income. Benefits include waiver of penalties and interest, immunity from prosecution, and installment payment options. The scheme runs for 12 months from launch. Taxpayers must declare through the NRS portal with supporting documentation.",
+      source: "NRS Gazette",
+      category: "COMPLIANCE",
+      isFeatured: false,
+    },
+    {
+      title: "Education and medical services: VAT exempt status explained",
+      summary: "Why school fees, hospital consultations, and medical services are VAT-exempt under the 2025 NTA.",
+      content: "The 2025 NTA maintains VAT-exempt status for education (school tuition, crèche services, textbooks) and medical services (hospital consultations, surgeries, prescriptions, diagnostics, dental care, vaccines). VAT-exempt means no VAT is charged AND input VAT cannot be recovered. This differs from zero-rated items where input VAT is recoverable. The exemption aims to keep essential services affordable.",
+      source: "PwC Nigeria Report",
+      category: "VAT",
       isFeatured: false,
     },
   ];

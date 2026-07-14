@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
@@ -682,14 +684,92 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ? null
                         : Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
                   ),
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: isUser ? Colors.white : theme.colorScheme.onSurface,
-                      fontSize: 15,
-                      height: 1.4,
-                    ),
-                  ),
+                  child: isUser
+                      ? Text(
+                          text,
+                          style: TextStyle(
+                            color: isUser ? Colors.white : theme.colorScheme.onSurface,
+                            fontSize: 15,
+                            height: 1.4,
+                          ),
+                        )
+                      : MarkdownBody(
+                          data: text,
+                          selectable: true,
+                          styleSheet: MarkdownStyleSheet(
+                            p: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 15,
+                              height: 1.5,
+                            ),
+                            code: TextStyle(
+                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                              fontFamily: 'monospace',
+                              fontSize: 13.5,
+                            ),
+                            codeblockDecoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            codeblockPadding: const EdgeInsets.all(12),
+                            blockquote: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            blockquotePadding: const EdgeInsets.only(left: 12),
+                            blockquoteDecoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: theme.colorScheme.primary,
+                                  width: 4,
+                                ),
+                              ),
+                            ),
+                            h1: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              height: 1.3,
+                            ),
+                            h2: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              height: 1.3,
+                            ),
+                            h3: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                            ),
+                            listBullet: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 15,
+                            ),
+                            listIndent: 24,
+                            tableHead: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            tableBody: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            tableBorder: TableBorder(
+                              horizontalInside: BorderSide(
+                                color: theme.colorScheme.outlineVariant,
+                              ),
+                              verticalInside: BorderSide(
+                                color: theme.colorScheme.outlineVariant,
+                              ),
+                            ),
+                          ),
+                          onTapLink: (text, href, title) {
+                            if (href != null) {
+                              launchUrl(Uri.parse(href));
+                            }
+                          },
+                        ),
                 ),
                 const SizedBox(height: 4),
                 Text(

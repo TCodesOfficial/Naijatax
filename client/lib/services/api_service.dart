@@ -130,6 +130,19 @@ class ApiService {
     return res.data['data'] as List<dynamic>;
   }
 
+  Future<List<dynamic>> getPublicArticles({bool featured = false, String? category, int limit = 50}) async {
+    final queryParams = <String, dynamic>{
+      'featured': featured,
+      'limit': limit,
+    };
+    if (category != null && category.isNotEmpty) {
+      queryParams['category'] = category;
+    }
+    final res =
+        await _dio.get('/news/public', queryParameters: queryParams);
+    return res.data['data'] as List<dynamic>;
+  }
+
   Future<Map<String, dynamic>> getEconomicMetrics() async {
     final res = await _dio.get('/news/metrics');
     return res.data['data'] as Map<String, dynamic>;

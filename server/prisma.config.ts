@@ -6,10 +6,10 @@ import { defineConfig, env } from "prisma/config";
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
-    seed: "prisma/seed.ts",
+    seed: "npx tsx prisma/seed.ts",
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DIRECT_URL"),
+    url: env("DIRECT_URL"),       // Use the pooled port (6543) for runtime apps// Use the direct port (5432) for running migrations
   },
 });

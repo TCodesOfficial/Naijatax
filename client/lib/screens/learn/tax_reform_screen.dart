@@ -254,30 +254,87 @@ class TaxReformScreen extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context, ThemeData theme, bool isMobile) {
-    return Row(
-      children: [
-        Expanded(
-          child: _actionCard(
-            context,
-            theme,
-            icon: Icons.quiz_outlined,
-            label: 'Take the Quiz',
-            subtitle: 'Test your knowledge',
-            onTap: () => context.go('/learn/quiz'),
+    if (!isMobile) {
+      return Row(
+        children: [
+          Expanded(
+            child: _actionCard(
+              context,
+              theme,
+              icon: Icons.quiz_outlined,
+              label: 'Take the Quiz',
+              subtitle: 'Test your knowledge',
+              onTap: () => context.go('/learn/quiz'),
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _actionCard(
-            context,
-            theme,
-            icon: Icons.smart_toy_outlined,
-            label: 'Ask AI Assistant',
-            subtitle: 'Get instant answers',
-            onTap: () => context.go('/chat'),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _actionCard(
+              context,
+              theme,
+              icon: Icons.smart_toy_outlined,
+              label: 'Ask AI Assistant',
+              subtitle: 'Get instant answers',
+              onTap: () => context.go('/chat'),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: _actionCard(
+              context,
+              theme,
+              icon: Icons.receipt_long_outlined,
+              label: 'See VAT Items',
+              subtitle: 'Browse rates & exemptions',
+              onTap: () => context.go('/vat-items'),
+            ),
+          ),
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: cardWidth,
+              child: _actionCard(
+                context,
+                theme,
+                icon: Icons.quiz_outlined,
+                label: 'Take the Quiz',
+                subtitle: 'Test your knowledge',
+                onTap: () => context.go('/learn/quiz'),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _actionCard(
+                context,
+                theme,
+                icon: Icons.smart_toy_outlined,
+                label: 'Ask AI Assistant',
+                subtitle: 'Get instant answers',
+                onTap: () => context.go('/chat'),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _actionCard(
+                context,
+                theme,
+                icon: Icons.receipt_long_outlined,
+                label: 'See VAT Items',
+                subtitle: 'Browse rates & exemptions',
+                onTap: () => context.go('/vat-items'),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

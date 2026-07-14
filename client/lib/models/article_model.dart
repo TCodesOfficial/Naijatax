@@ -4,6 +4,7 @@ class TaxArticle {
   final String summary;
   final String content;
   final String source;
+  final String category;
   final String? url;
   final bool isFeatured;
   final DateTime createdAt;
@@ -14,6 +15,7 @@ class TaxArticle {
     required this.summary,
     required this.content,
     required this.source,
+    required this.category,
     this.url,
     required this.isFeatured,
     required this.createdAt,
@@ -25,6 +27,7 @@ class TaxArticle {
         summary: json['summary'] as String,
         content: json['content'] as String,
         source: json['source'] as String,
+        category: json['category'] as String? ?? 'COMPLIANCE',
         url: json['url'] as String?,
         isFeatured: json['isFeatured'] as bool? ?? false,
         createdAt: DateTime.parse(json['createdAt'] as String),
@@ -36,6 +39,7 @@ class TaxArticle {
         'summary': summary,
         'content': content,
         'source': source,
+        'category': category,
         'url': url,
         'isFeatured': isFeatured,
         'createdAt': createdAt.toIso8601String(),

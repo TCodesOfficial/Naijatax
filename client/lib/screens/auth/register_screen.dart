@@ -112,8 +112,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (next.status == AuthStatus.authenticated) {
         final router = GoRouter.of(context);
         if (!mounted) return;
-        final hasOnboarded = next.user?.onboarded ?? false;
-        router.go(hasOnboarded ? '/dashboard' : '/onboarding');
+        router.go('/onboarding');
       } else if (next.needsOtpVerification) {
         setState(() {
           _otpSent = true;
