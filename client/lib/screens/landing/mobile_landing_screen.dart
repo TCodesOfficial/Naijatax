@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../widgets/animated_button.dart';
+import '../../widgets/app_logo.dart';
 
 class MobileLandingScreen extends StatelessWidget {
   const MobileLandingScreen({super.key});
@@ -35,11 +36,7 @@ class MobileLandingScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                 ),
-                child: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 18,
-                  color: Colors.white,
-                ),
+                child: const AppLogo(radius: 14, iconSize: 18),
               ),
               const SizedBox(width: 8),
               Flexible(
@@ -111,11 +108,7 @@ class MobileLandingScreen extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.2),
                     ),
                   ),
-                  child: const Icon(
-                    Icons.account_balance_wallet_outlined,
-                    size: 44,
-                    color: Colors.white,
-                  ),
+                  child: const AppLogo(radius: 40, iconSize: 44),
                 ).animate().scale(
                       delay: 200.ms,
                       duration: 500.ms,

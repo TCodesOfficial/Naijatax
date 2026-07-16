@@ -43,6 +43,10 @@ class AppConstants {
   static const String appShortName = 'NaijaTax';
   static const String appVersion = '1.0.0';
 
+  // ── Logo Assets ───────────────────────────────────────────────────────
+  static const String logoSquareAsset = 'assets/images/logo_square.svg';
+  static const String logoLongAsset = 'assets/images/logo_long.svg';
+
   // ── Layout Breakpoints (not sensitive) ────────────────────────────────
   static const double mobileBreakpoint = 600;
   static const double tabletBreakpoint = 900;

@@ -713,11 +713,7 @@ class WebLandingScreen extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.account_balance,
-                                color: theme.colorScheme.inversePrimary,
-                                size: 24,
-                              ),
+                              const AppLogo(radius: 12, iconSize: 24),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
@@ -759,11 +755,7 @@ class WebLandingScreen extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.account_balance,
-                          color: theme.colorScheme.inversePrimary,
-                          size: 24,
-                        ),
+                        const AppLogo(radius: 12, iconSize: 24),
                         const SizedBox(width: 8),
                         Text(
                           AppConstants.appName,
