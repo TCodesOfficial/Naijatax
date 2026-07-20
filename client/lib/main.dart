@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'core/constants/app_constants.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -10,7 +11,15 @@ import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+    print("--- ENV VARIABLE CHECK ---");
+  print("API URL: '${AppConstants.apiBaseUrl}'");
+  print("SUPABASE URL: '${AppConstants.supabaseUrl}'");
+  print("SUPABASE KEY LENGTH: ${AppConstants.supabaseAnonKey}");
+  print("--------------------------");
+
+    assert(AppConstants.supabaseUrl.isNotEmpty, "Supabase URL is empty!");
+  assert(AppConstants.supabaseAnonKey.isNotEmpty, "Supabase Key is empty!");
+
   setUrlStrategy(PathUrlStrategy());
 
   // Initialize Offline Caching
@@ -23,20 +32,18 @@ void main() async {
 
     if (url.isEmpty || key.isEmpty) {
       debugPrint(
-          '⚠️ Supabase credentials not provided via --dart-define. Running in offline/demo mode.');
+        '⚠️ Supabase credentials not provided via --dart-define. Running in offline/demo mode.',
+      );
     } else {
       await Supabase.initialize(url: url, publishableKey: key);
     }
   } catch (e) {
     debugPrint(
-        '⚠️ Supabase initialization failed: $e. Running in offline/demo mode.');
+      '⚠️ Supabase initialization failed: $e. Running in offline/demo mode.',
+    );
   }
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

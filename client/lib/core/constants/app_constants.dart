@@ -3,12 +3,16 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 
 class AppConstants {
-  AppConstants._();
+
+AppConstants._();
+
+  // 1. Move the compilation flag to a true top-level compile-time const
+  static const String _envApiBaseUrl = String.fromEnvironment('API_BASE_URL');
 
   // ── API ───────────────────────────────────────────────────────────────
   static String get apiBaseUrl {
-    const defined = String.fromEnvironment('API_BASE_URL');
-    if (defined.isNotEmpty) return defined;
+    // 2. Safely check the compile-time constant here
+    if (_envApiBaseUrl.isNotEmpty) return _envApiBaseUrl;
 
     // Fallback for local development if not provided in .env
     if (kIsWeb ||
@@ -26,12 +30,11 @@ class AppConstants {
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
   );
-
+  
   // ── Google Sign-In ────────────────────────────────────────────────────
   static const String googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
   );
-
   // ── Hive Box Names ────────────────────────────────────────────────────
   static const String taxProfileBox = 'tax_profiles';
   static const String articlesBox = 'tax_articles';

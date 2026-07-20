@@ -6,7 +6,7 @@
   "scripts": {
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && flutter run --dart-define-from-file=config.dev.json",
-    "dev:web": "cd client && flutter run -d chrome --dart-define-from-file=config.dev.json",
+    "dev:web": "cd client && flutter run -d chrome --dart-define-from-file=.env",
     "dev": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
     "build:server": "cd server && npm run build",
     "build:client": "cd client && flutter build apk --dart-define-from-file=.env",
