@@ -10,6 +10,7 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+*/.env
 
 implementation_plan.md
 task.md
