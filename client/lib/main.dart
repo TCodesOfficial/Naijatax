@@ -11,15 +11,6 @@ import 'services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    print("--- ENV VARIABLE CHECK ---");
-  print("API URL: '${AppConstants.apiBaseUrl}'");
-  print("SUPABASE URL: '${AppConstants.supabaseUrl}'");
-  print("SUPABASE KEY LENGTH: ${AppConstants.supabaseAnonKey}");
-  print("--------------------------");
-
-    assert(AppConstants.supabaseUrl.isNotEmpty, "Supabase URL is empty!");
-  assert(AppConstants.supabaseAnonKey.isNotEmpty, "Supabase Key is empty!");
-
   setUrlStrategy(PathUrlStrategy());
 
   // Initialize Offline Caching
