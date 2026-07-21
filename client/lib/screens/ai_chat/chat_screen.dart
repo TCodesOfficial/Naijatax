@@ -369,16 +369,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
     );
 
-    final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
-    if (isDesktop) {
-      return Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: chatBody,
-        ),
-      );
-    }
     return chatBody;
   }
 

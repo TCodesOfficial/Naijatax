@@ -34,20 +34,14 @@ class AppLogo extends StatelessWidget {
       );
     }
 
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: theme.colorScheme.primary,
-      child: ClipOval(
-        child: SvgPicture.asset(
-          AppConstants.logoSquareAsset,
-          width: size,
-          height: size,
-          placeholderBuilder: (_) => Icon(
-            Icons.account_balance,
-            size: size,
-            color: theme.colorScheme.onPrimary,
-          ),
-        ),
+    return SvgPicture.asset(
+      AppConstants.logoSquareAsset,
+      width: size,
+      height: size,
+      placeholderBuilder: (_) => Icon(
+        Icons.account_balance,
+        size: size,
+        color: theme.colorScheme.primary,
       ),
     );
   }

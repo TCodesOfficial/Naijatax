@@ -108,8 +108,8 @@ class ApiService {
   }
 
   // ── Quiz ─────────────────────────────────────────────────────────────────
-  Future<List<dynamic>> getQuizQuestions() async {
-    final res = await _dio.get('/quiz/questions');
+  Future<List<dynamic>> getQuizQuestions({int count = 7}) async {
+    final res = await _dio.get('/quiz/questions', queryParameters: {'count': count});
     return res.data['data'] as List<dynamic>;
   }
 

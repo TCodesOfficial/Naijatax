@@ -61,6 +61,20 @@ class StorageService {
     await articlesBox.clear();
   }
 
+  static Future<void> clearAllSettingsExcept(List<String> keepKeys) async {
+    final box = Hive.box('app_settings');
+    final keep = <String, dynamic>{};
+    for (final key in keepKeys) {
+      keep[key] = box.get(key);
+    }
+    await box.clear();
+    for (final entry in keep.entries) {
+      if (entry.value != null) {
+        await box.put(entry.key, entry.value);
+      }
+    }
+  }
+
   static Future<void> clearUserCache() async {
     final taxBox = Hive.box('tax_profiles');
     await taxBox.clear();

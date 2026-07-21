@@ -418,8 +418,8 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> signOut() async {
     await _client.auth.signOut();
     await StorageService.clearAllUserData();
+    await StorageService.clearAllSettingsExcept(['darkMode']);
     ref.read(taxProvider.notifier).reset();
-    await StorageService.setSetting('onboarded', false);
     _onboardedCache = null;
     _onboardedCacheTime = null;
     _emit(const AuthState(status: AuthStatus.unauthenticated));

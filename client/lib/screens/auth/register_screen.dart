@@ -144,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.primary.withValues(alpha: 0.08),
-              Colors.white,
+              theme.colorScheme.surface,
               theme.colorScheme.secondary.withValues(alpha: 0.06),
             ],
           ),
@@ -241,7 +241,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       key: _formKey,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -628,7 +628,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget _buildEmailVerificationCard(ThemeData theme, AuthState authState) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

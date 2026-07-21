@@ -36,7 +36,7 @@ class QuizNotifier extends Notifier<QuizState> {
   Future<void> fetchQuestions() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final List<dynamic> data = await ApiService.instance.getQuizQuestions();
+      final List<dynamic> data = await ApiService.instance.getQuizQuestions(count: 7);
       final questions = data.map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>)).toList();
       state = state.copyWith(isLoading: false, questions: questions);
     } catch (e) {

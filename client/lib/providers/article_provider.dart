@@ -35,7 +35,6 @@ class ArticlesState {
 }
 
 class ArticlesNotifier extends Notifier<ArticlesState> {
-  static DateTime? _lastArticlesFetch;
   static DateTime? _lastMetricsFetch;
 
   @override
@@ -48,19 +47,12 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
   }
 
   Future<void> fetchArticles({String? category}) async {
-    // Skip if fetched within last 60 seconds and no category change
-    if (_lastArticlesFetch != null &&
-        category == null &&
-        DateTime.now().difference(_lastArticlesFetch!).inSeconds < 60) {
-      return;
-    }
     state = state.copyWith(isLoading: true, error: null, selectedCategory: category);
     try {
       final List<dynamic> data = await ApiService.instance.getPublicArticles(category: category);
       final list = data.map((e) => TaxArticle.fromJson(e as Map<String, dynamic>)).toList();
       await StorageService.saveArticles(data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
       state = state.copyWith(isLoading: false, articles: list);
-      _lastArticlesFetch = DateTime.now();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }

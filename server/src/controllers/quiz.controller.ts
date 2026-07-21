@@ -13,8 +13,9 @@ const scoreSchema = z.object({
   totalQuestions: z.number().int().positive(),
 });
 
-export const getQuestions = asyncHandler(async (_req: Request, res: Response) => {
-  const questions = await getQuizQuestions();
+export const getQuestions = asyncHandler(async (req: Request, res: Response) => {
+  const count = Math.min(Math.max(parseInt(req.query.count as string) || 7, 1), 50);
+  const questions = await getQuizQuestions(count);
   successResponse(res, questions);
 });
 
