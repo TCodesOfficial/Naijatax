@@ -52,4 +52,17 @@ class StorageService {
     final box = Hive.box('app_settings');
     return box.get(key) as T?;
   }
+
+  // ── Cache Clearing ──────────────────────────────────────────────────────
+  static Future<void> clearAllUserData() async {
+    final taxBox = Hive.box('tax_profiles');
+    final articlesBox = Hive.box('tax_articles');
+    await taxBox.clear();
+    await articlesBox.clear();
+  }
+
+  static Future<void> clearUserCache() async {
+    final taxBox = Hive.box('tax_profiles');
+    await taxBox.clear();
+  }
 }

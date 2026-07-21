@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,9 +14,17 @@ class VatItemsScreen extends ConsumerStatefulWidget {
 class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(vatProvider.notifier).fetchIfNeeded());
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -58,12 +67,15 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
               hintText: 'Search items or categories...',
               prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        ref.read(vatProvider.notifier).setSearchQuery('');
-                      },
+                  ? Tooltip(
+                      message: 'Clear search',
+                      child: IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          ref.read(vatProvider.notifier).setSearchQuery('');
+                        },
+                      ),
                     )
                   : null,
               border: OutlineInputBorder(
@@ -72,7 +84,12 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
-            onChanged: (v) => ref.read(vatProvider.notifier).setSearchQuery(v),
+            onChanged: (v) {
+              _debounce?.cancel();
+              _debounce = Timer(const Duration(milliseconds: 300), () {
+                ref.read(vatProvider.notifier).setSearchQuery(v);
+              });
+            },
           ),
           const SizedBox(height: 16),
 
@@ -141,7 +158,12 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
               ),
             )
           else
-            ...filteredItems.map((item) => _vatItemTile(theme, item)),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredItems.length,
+              itemBuilder: (context, index) => _vatItemTile(theme, filteredItems[index]),
+            ),
         ],
       ),
     );
@@ -166,18 +188,21 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
 
   Widget _chip(ThemeData theme, String label, VatFilter value, VatFilter current) {
     final isSelected = value == current;
-    return FilterChip(
-      label: Text(label, style: TextStyle(fontSize: 13)),
-      selected: isSelected,
-      onSelected: (_) => ref.read(vatProvider.notifier).setFilter(value),
-      selectedColor: theme.colorScheme.primaryContainer,
-      checkmarkColor: theme.colorScheme.primary,
-      side: BorderSide(
-        color: isSelected
-            ? theme.colorScheme.primary.withValues(alpha: 0.3)
-            : theme.colorScheme.outlineVariant,
+    return Tooltip(
+      message: 'Show only $label items',
+      child: FilterChip(
+        label: Text(label, style: TextStyle(fontSize: 13)),
+        selected: isSelected,
+        onSelected: (_) => ref.read(vatProvider.notifier).setFilter(value),
+        selectedColor: theme.colorScheme.primaryContainer,
+        checkmarkColor: theme.colorScheme.primary,
+        side: BorderSide(
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.3)
+              : theme.colorScheme.outlineVariant,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 

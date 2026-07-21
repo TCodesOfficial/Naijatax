@@ -28,19 +28,25 @@ class _TaxEducationScreenState extends ConsumerState<TaxEducationScreen> {
       builder: (context) {
         return Scaffold(
           appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context),
+            leading: Tooltip(
+              message: 'Close',
+              child: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
             title: Text(art.source),
             actions: [
               if (art.url != null)
-                IconButton(
-                  icon: const Icon(Icons.open_in_browser),
-                  onPressed: () async {
-                    final uri = Uri.tryParse(art.url!);
-                    if (uri != null) await launchUrl(uri);
-                  },
+                Tooltip(
+                  message: 'Open in browser',
+                  child: IconButton(
+                    icon: const Icon(Icons.open_in_browser),
+                    onPressed: () async {
+                      final uri = Uri.tryParse(art.url!);
+                      if (uri != null) await launchUrl(uri);
+                    },
+                  ),
                 ),
             ],
           ),

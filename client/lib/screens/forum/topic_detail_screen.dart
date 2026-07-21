@@ -73,9 +73,12 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/forum'),
+        leading: Tooltip(
+          message: 'Back to discussions',
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/forum'),
+          ),
         ),
         title: const Text('Topic Discussion'),
       ),

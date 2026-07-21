@@ -6,6 +6,7 @@ import '../core/constants/app_constants.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import 'tax_provider.dart';
 
 enum AuthStatus {
   loading,
@@ -46,6 +47,9 @@ class AuthNotifier extends Notifier<AuthState> {
   final _routerRefreshNotifier = _RouterRefreshNotifier();
   ChangeNotifier get refreshNotifier => _routerRefreshNotifier;
 
+  static bool? _onboardedCache;
+  static DateTime? _onboardedCacheTime;
+
   void _emit(AuthState newState) {
     state = newState;
     _routerRefreshNotifier.notify();
@@ -65,11 +69,20 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> _fetchOnboarded() async {
+    // Use in-memory cache (5 min TTL)
+    if (_onboardedCache != null && _onboardedCacheTime != null) {
+      if (DateTime.now().difference(_onboardedCacheTime!).inMinutes < 5) {
+        return _onboardedCache!;
+      }
+    }
     try {
       final data = await ApiService.instance.getOnboardedStatus();
-      return data['onboarded'] as bool? ?? false;
+      final result = data['onboarded'] as bool? ?? false;
+      _onboardedCache = result;
+      _onboardedCacheTime = DateTime.now();
+      return result;
     } catch (_) {
-      return false;
+      return _onboardedCache ?? false;
     }
   }
 
@@ -85,6 +98,7 @@ class AuthNotifier extends Notifier<AuthState> {
           status: AuthStatus.authenticated,
           user: _userFromSession(user, onboarded: cachedOnboarded),
         );
+        // Lazy sync: fetch onboarded in background, update if changed
         Future.microtask(() async {
           final onboarded = await _fetchOnboarded();
           await StorageService.setSetting('onboarded', onboarded);
@@ -114,17 +128,34 @@ class AuthNotifier extends Notifier<AuthState> {
             event == AuthChangeEvent.tokenRefreshed) {
           if (session != null) {
             final user = session.user;
-            final onboarded = await _fetchOnboarded();
-            await StorageService.setSetting('onboarded', onboarded);
-            _emit(
-              AuthState(
-                status: AuthStatus.authenticated,
-                user: _userFromSession(user, onboarded: onboarded),
-              ),
-            );
+            if (event == AuthChangeEvent.signedIn) {
+              await StorageService.clearUserCache();
+              // Only fetch onboarded on fresh sign-in, not token refresh
+              final onboarded = await _fetchOnboarded();
+              await StorageService.setSetting('onboarded', onboarded);
+              _emit(
+                AuthState(
+                  status: AuthStatus.authenticated,
+                  user: _userFromSession(user, onboarded: onboarded),
+                ),
+              );
+            } else {
+              // Token refresh: use cached onboarded, don't make API call
+              final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
+              _emit(
+                AuthState(
+                  status: AuthStatus.authenticated,
+                  user: _userFromSession(user, onboarded: cachedOnboarded),
+                ),
+              );
+            }
           }
         } else if (event == AuthChangeEvent.signedOut) {
+          await StorageService.clearAllUserData();
+          ref.read(taxProvider.notifier).reset();
           await StorageService.setSetting('onboarded', false);
+          _onboardedCache = null;
+          _onboardedCacheTime = null;
           _emit(const AuthState(status: AuthStatus.unauthenticated));
         }
       });
@@ -150,11 +181,13 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return;
       }
-      final onboarded = await _fetchOnboarded();
+      await StorageService.clearUserCache();
+      // Use cached onboarded status — don't block sign-in on API call
+      final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: _userFromSession(u, onboarded: onboarded),
+          user: _userFromSession(u, onboarded: cachedOnboarded),
         ),
       );
     } on AuthException catch (e) {
@@ -200,11 +233,13 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return;
       }
-      final onboarded = await _fetchOnboarded();
+      await StorageService.clearUserCache();
+      // New user: onboarded is always false
+      await StorageService.setSetting('onboarded', false);
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: _userFromSession(u, onboarded: onboarded),
+          user: _userFromSession(u, onboarded: false),
         ),
       );
     } on AuthException catch (e) {
@@ -283,6 +318,7 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return;
       }
+      await StorageService.clearUserCache();
       final onboarded = await _fetchOnboarded();
       _emit(
         AuthState(
@@ -349,6 +385,7 @@ class AuthNotifier extends Notifier<AuthState> {
       throw 'Google sign-in failed: missing tokens';
     }
 
+    await StorageService.clearUserCache();
     await _client.auth.signInWithIdToken(
       provider: OAuthProvider.google,
       idToken: idToken,
@@ -380,7 +417,11 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> signOut() async {
     await _client.auth.signOut();
+    await StorageService.clearAllUserData();
+    ref.read(taxProvider.notifier).reset();
     await StorageService.setSetting('onboarded', false);
+    _onboardedCache = null;
+    _onboardedCacheTime = null;
     _emit(const AuthState(status: AuthStatus.unauthenticated));
   }
 
@@ -393,6 +434,8 @@ class AuthNotifier extends Notifier<AuthState> {
       // Server update failed — still update local state so user can proceed
     }
     await StorageService.setSetting('onboarded', true);
+    _onboardedCache = true;
+    _onboardedCacheTime = DateTime.now();
     _emit(AuthState(
       status: state.status,
       user: UserModel(

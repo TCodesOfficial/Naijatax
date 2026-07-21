@@ -4,6 +4,31 @@ import { env } from '../config/env.js';
 
 const parser = new Parser();
 
+// ─── In-Memory TTL Cache ─────────────────────────────────────────────────────
+class MemoryCache<T> {
+  private cache = new Map<string, { data: T; expiresAt: number }>();
+
+  get(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+    return entry.data;
+  }
+
+  set(key: string, data: T, ttlMs: number) {
+    this.cache.set(key, { data, expiresAt: Date.now() + ttlMs });
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
+const cache = new MemoryCache<any>();
+
 // Multiple RSS feeds for Nigerian tax/finance news
 const RSS_FEEDS = [
   { url: 'https://nairametrics.com/category/taxation/feed/', source: 'Nairametrics' },
@@ -23,35 +48,23 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
   COMPLIANCE: ['filing', 'deadline', 'penalty', 'compliance', 'tax clearance', 'tcc', 'stamp duty', 'withholding tax', 'wht', 'capital gains', 'cgt', 'transfer pricing', 'vaids', 'amnesty', 'audit', 'filing deadline'],
 };
 
-// Categorize article based on title and content
 function categorizeArticle(title: string, content: string, source: string): string {
   const text = (title + ' ' + content).toLowerCase();
-  
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     for (const keyword of keywords) {
-      if (text.includes(keyword.toLowerCase())) {
-        return category;
-      }
+      if (text.includes(keyword.toLowerCase())) return category;
     }
   }
-  
-  // Source-based fallback
-  if (source.toLowerCase().includes('firs') || source.toLowerCase().includes('nrs')) {
-    return 'NTA_2025';
-  }
-  
+  if (source.toLowerCase().includes('firs') || source.toLowerCase().includes('nrs')) return 'NTA_2025';
   return 'COMPLIANCE';
 }
 
-// Normalize feed item to TaxArticle format
 function normalizeArticle(item: any, source: string): Omit<import('@prisma/client').TaxArticle, 'id' | 'createdAt'> {
   const title = item.title || 'Untitled';
   const content = item.content || item.contentSnippet || '';
   const summary = item.contentSnippet?.substring(0, 200) + '...' || 'No summary available';
   const url = item.link || '';
-  const pubDate = item.pubDate ? new Date(item.pubDate) : new Date();
   const category = categorizeArticle(title, content, source);
-  
   return {
     title: title.substring(0, 255),
     summary: summary.substring(0, 500),
@@ -64,55 +77,62 @@ function normalizeArticle(item: any, source: string): Omit<import('@prisma/clien
 }
 
 export async function syncTaxNews() {
-  if (env.NODE_ENV === 'development') console.log('🔄 Syncing tax news from RSS feeds...');
   let totalCount = 0;
-  
   for (const feed of RSS_FEEDS) {
     try {
       const feedData = await parser.parseURL(feed.url);
       let count = 0;
-      
       for (const item of feedData.items) {
         if (!item.title || !item.contentSnippet) continue;
-        
         const normalized = normalizeArticle(item, feed.source);
-        
-        // Check if article already exists
         const existing = await prisma.taxArticle.findFirst({
           where: { title: normalized.title },
         });
-        
         if (!existing) {
           await prisma.taxArticle.create({ data: normalized });
           count++;
         }
       }
-      
-      if (env.NODE_ENV === 'development') console.log(`✅ ${feed.source}: Ingested ${count} new articles.`);
       totalCount += count;
     } catch (error) {
-      console.warn(`⚠️ Failed to sync from ${feed.source}:`, error);
+      // Skip failed feed silently
     }
   }
-  
-  if (env.NODE_ENV === 'development') console.log(`✅ RSS sync complete. Total new articles: ${totalCount}`);
+  // Invalidate article cache after sync
+  cache.clear();
   return { success: true, newArticlesCount: totalCount };
 }
 
-// Get articles for public API with optional category filter
 export async function getPublicArticles(
   featuredOnly = false,
   category?: string,
   limit = 50
 ) {
+  const cacheKey = `articles:${featuredOnly}:${category}:${limit}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
   const where: any = featuredOnly ? { isFeatured: true } : {};
   if (category) where.category = category;
-  
-  return await prisma.taxArticle.findMany({
+
+  const result = await prisma.taxArticle.findMany({
     where,
     orderBy: { createdAt: 'desc' },
     take: limit,
+    select: {
+      id: true,
+      title: true,
+      summary: true,
+      source: true,
+      category: true,
+      url: true,
+      isFeatured: true,
+      createdAt: true,
+    },
   });
+
+  cache.set(cacheKey, result, 5 * 60 * 1000); // 5 min TTL
+  return result;
 }
 
 export async function getTaxArticles(featuredOnly = false, limit = 50) {
@@ -120,14 +140,30 @@ export async function getTaxArticles(featuredOnly = false, limit = 50) {
     where: featuredOnly ? { isFeatured: true } : undefined,
     orderBy: { createdAt: 'desc' },
     take: limit,
+    select: {
+      id: true,
+      title: true,
+      summary: true,
+      source: true,
+      category: true,
+      url: true,
+      isFeatured: true,
+      createdAt: true,
+    },
   });
 }
 
 export async function getCategories(): Promise<string[]> {
-  return prisma.taxArticle.groupBy({
+  const cached = cache.get('categories');
+  if (cached) return cached;
+
+  const result = await prisma.taxArticle.groupBy({
     by: ['category'],
     where: { category: { not: null } },
   }).then(groups => groups.map(g => g.category).filter(Boolean) as string[]);
+
+  cache.set('categories', result, 60 * 60 * 1000); // 1 hour TTL
+  return result;
 }
 
 export async function getEconomicMetrics() {

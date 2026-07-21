@@ -29,6 +29,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isLoadingSessions = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  MarkdownStyleSheet? _cachedStyleSheet;
+  DateTime? _lastScrollTime;
+
   @override
   void initState() {
     super.initState();
@@ -118,6 +121,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _scrollToBottom() {
+    final now = DateTime.now();
+    if (_lastScrollTime != null && now.difference(_lastScrollTime!).inMilliseconds < 100) return;
+    _lastScrollTime = now;
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent + 60,
@@ -125,6 +131,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         curve: Curves.easeOut,
       );
     }
+  }
+
+  MarkdownStyleSheet _getStyleSheet(ThemeData theme) {
+    return _cachedStyleSheet ??= MarkdownStyleSheet(
+      p: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15, height: 1.5),
+      code: TextStyle(
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        fontFamily: 'monospace',
+        fontSize: 13.5,
+      ),
+      codeblockDecoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      codeblockPadding: const EdgeInsets.all(12),
+      blockquote: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontStyle: FontStyle.italic),
+      blockquotePadding: const EdgeInsets.only(left: 12),
+      blockquoteDecoration: BoxDecoration(
+        border: Border(left: BorderSide(color: theme.colorScheme.primary, width: 4)),
+      ),
+      h1: TextStyle(color: theme.colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold, height: 1.3),
+      h2: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold, height: 1.3),
+      h3: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600, height: 1.3),
+      listBullet: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15),
+      listIndent: 24,
+      tableHead: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold),
+      tableBody: TextStyle(color: theme.colorScheme.onSurface),
+      tableBorder: TableBorder(
+        horizontalInside: BorderSide(color: theme.colorScheme.outlineVariant),
+        verticalInside: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+    );
   }
 
   Future<void> _sendMessage({String? text}) async {
@@ -292,24 +330,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     enabled: !isGuest,
                     decoration: InputDecoration(
                       hintText: isGuest ? 'Log in to chat with AI...' : 'Ask about the 2025 Tax Act...',
-                      prefixIcon: const Icon(Icons.attach_file, size: 20),
+                      prefixIcon: Tooltip(message: 'Attach file', child: const Icon(Icons.attach_file, size: 20)),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send, size: 20),
-                  onPressed: isGuest ? () => showGuestRestrictionDialog(context) : _sendMessage,
-                  style: IconButton.styleFrom(
-                    backgroundColor: isGuest
-                        ? theme.colorScheme.surfaceContainerHigh
-                        : theme.colorScheme.primary,
-                    foregroundColor: isGuest
-                        ? theme.colorScheme.onSurfaceVariant
-                        : Colors.white,
-                    padding: const EdgeInsets.all(12),
+                Tooltip(
+                  message: 'Send message',
+                  child: IconButton(
+                    icon: const Icon(Icons.send, size: 20),
+                    onPressed: isGuest ? () => showGuestRestrictionDialog(context) : _sendMessage,
+                    style: IconButton.styleFrom(
+                      backgroundColor: isGuest
+                          ? theme.colorScheme.surfaceContainerHigh
+                          : theme.colorScheme.primary,
+                      foregroundColor: isGuest
+                          ? theme.colorScheme.onSurfaceVariant
+                          : Colors.white,
+                      padding: const EdgeInsets.all(12),
+                    ),
                   ),
                 ),
               ],
@@ -573,11 +614,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   dateStr,
                                   style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
                                 ),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.close, size: 16, color: theme.colorScheme.outline),
-                                  onPressed: () => _deleteSession(id),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                trailing: Tooltip(
+                                  message: 'Delete conversation',
+                                  child: IconButton(
+                                    icon: Icon(Icons.close, size: 16, color: theme.colorScheme.outline),
+                                    onPressed: () => _deleteSession(id),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
                                 ),
                                 onTap: () => _loadSession(id),
                               ),
@@ -696,74 +740,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       : MarkdownBody(
                           data: text,
                           selectable: true,
-                          styleSheet: MarkdownStyleSheet(
-                            p: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 15,
-                              height: 1.5,
-                            ),
-                            code: TextStyle(
-                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                              fontFamily: 'monospace',
-                              fontSize: 13.5,
-                            ),
-                            codeblockDecoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            codeblockPadding: const EdgeInsets.all(12),
-                            blockquote: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            blockquotePadding: const EdgeInsets.only(left: 12),
-                            blockquoteDecoration: BoxDecoration(
-                              border: Border(
-                                left: BorderSide(
-                                  color: theme.colorScheme.primary,
-                                  width: 4,
-                                ),
-                              ),
-                            ),
-                            h1: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              height: 1.3,
-                            ),
-                            h2: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              height: 1.3,
-                            ),
-                            h3: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              height: 1.3,
-                            ),
-                            listBullet: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 15,
-                            ),
-                            listIndent: 24,
-                            tableHead: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            tableBody: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                            ),
-                            tableBorder: TableBorder(
-                              horizontalInside: BorderSide(
-                                color: theme.colorScheme.outlineVariant,
-                              ),
-                              verticalInside: BorderSide(
-                                color: theme.colorScheme.outlineVariant,
-                              ),
-                            ),
-                          ),
+                          styleSheet: _getStyleSheet(theme),
                           onTapLink: (text, href, title) {
                             if (href != null) {
                               launchUrl(Uri.parse(href));
@@ -800,11 +777,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _suggestionChip(ThemeData theme, String text, bool isGuest) {
-    return ActionChip(
-      label: Text(text, style: TextStyle(fontSize: 13, color: theme.colorScheme.primary)),
+    return Tooltip(
+      message: 'Tap to ask this question',
+      child: ActionChip(
+        label: Text(text, style: TextStyle(fontSize: 13, color: theme.colorScheme.primary)),
       side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
       backgroundColor: theme.colorScheme.surface,
       onPressed: isGuest ? () => showGuestRestrictionDialog(context) : () => _sendMessage(text: text),
+      ),
     );
   }
 

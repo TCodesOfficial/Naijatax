@@ -1,5 +1,26 @@
 import { prisma } from '../config/database.js';
 
+// ─── In-Memory TTL Cache ─────────────────────────────────────────────────────
+class MemoryCache<T> {
+  private cache = new Map<string, { data: T; expiresAt: number }>();
+
+  get(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+    return entry.data;
+  }
+
+  set(key: string, data: T, ttlMs: number) {
+    this.cache.set(key, { data, expiresAt: Date.now() + ttlMs });
+  }
+}
+
+const cache = new MemoryCache<any>();
+
 export interface TaxAssessmentInput {
   monthlyIncome: number;
   rentPaid?: number;
@@ -141,6 +162,10 @@ export async function getLatestTaxProfile(userId: string) {
 }
 
 export async function searchVatItems(query?: string, status?: string) {
+  const cacheKey = `vat:${query || ''}:${status || ''}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
   const where: Record<string, unknown> = {};
   if (query) {
     where.OR = [
@@ -151,8 +176,11 @@ export async function searchVatItems(query?: string, status?: string) {
   if (status) {
     where.status = status;
   }
-  return await prisma.vatItem.findMany({
+  const result = await prisma.vatItem.findMany({
     where: Object.keys(where).length > 0 ? where : undefined,
     orderBy: { category: 'asc' },
   });
+
+  cache.set(cacheKey, result, 60 * 60 * 1000); // 1 hour TTL
+  return result;
 }

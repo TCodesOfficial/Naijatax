@@ -52,6 +52,7 @@ model VatItem {
   rate      Decimal  @db.Decimal(4, 2)
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([status])
   @@map("vat_items")
 }
 
@@ -145,5 +146,8 @@ model TaxArticle {
   isFeatured Boolean  @default(false) @map("is_featured")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@index([category])
+  @@index([createdAt(sort: Desc)])
+  @@index([isFeatured, createdAt(sort: Desc)])
   @@map("tax_articles")
 }

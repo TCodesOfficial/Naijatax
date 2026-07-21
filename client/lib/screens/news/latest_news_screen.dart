@@ -57,20 +57,23 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
               itemBuilder: (context, idx) {
                 final f = filters[idx];
                 final isActive = _selectedFilter == f;
-                return ChoiceChip(
-                  label: Text(f),
-                  selected: isActive,
-                  onSelected: (_) {
-                    setState(() => _selectedFilter = f);
-                    ref.read(articlesProvider.notifier).setCategory(
-                      _selectedFilter == 'All' ? null : _selectedFilter,
-                    );
-                  },
-                  selectedColor: theme.colorScheme.primary,
-                  labelStyle: TextStyle(
-                    color: isActive ? Colors.white : theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                return Tooltip(
+                  message: 'Filter by $f',
+                  child: ChoiceChip(
+                    label: Text(f),
+                    selected: isActive,
+                    onSelected: (_) {
+                      setState(() => _selectedFilter = f);
+                      ref.read(articlesProvider.notifier).setCategory(
+                        _selectedFilter == 'All' ? null : _selectedFilter,
+                      );
+                    },
+                    selectedColor: theme.colorScheme.primary,
+                    labelStyle: TextStyle(
+                      color: isActive ? Colors.white : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
                   ),
                 );
               },
@@ -102,36 +105,42 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
               _featuredCard(theme, filteredArticles.first, isMobile),
             const SizedBox(height: 20),
             // News grid
-            isMobile
-                ? Column(
-                    children: filteredArticles.skip(1).map(
-                      (a) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _newsCard(theme, a),
-                      ),
-                    ).toList(),
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final crossAxisCount = constraints.maxWidth > 900 ? 3 : 2;
-                      final childAspectRatio = constraints.maxWidth > 900 ? 1.3 : 1.15;
-                      return GridView.builder(
+            Builder(
+              builder: (context) {
+                final remaining = filteredArticles.length > 1
+                    ? filteredArticles.sublist(1)
+                    : <dynamic>[];
+                if (remaining.isEmpty) return const SizedBox.shrink();
+                return isMobile
+                    ? ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: childAspectRatio,
+                        itemCount: remaining.length,
+                        itemBuilder: (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _newsCard(theme, remaining[index]),
                         ),
-                        itemCount: filteredArticles.skip(1).length,
-                        itemBuilder: (context, index) {
-                          final article = filteredArticles.skip(1).elementAt(index);
-                          return _newsCard(theme, article);
+                      )
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final crossAxisCount = constraints.maxWidth > 900 ? 3 : 2;
+                          final childAspectRatio = constraints.maxWidth > 900 ? 1.3 : 1.15;
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: childAspectRatio,
+                            ),
+                            itemCount: remaining.length,
+                            itemBuilder: (context, index) => _newsCard(theme, remaining[index]),
+                          );
                         },
                       );
-                    },
-                  ),
+              },
+            ),
           ],
         ],
       ),

@@ -111,26 +111,32 @@ class AdaptiveScaffold extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.only(right: 12.0),
           child: isGuest
-              ? GestureDetector(
-                  onTap: () => context.go('/login'),
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Icon(
-                      Icons.account_circle_outlined,
-                      size: 20,
-                      color: theme.colorScheme.primary,
+              ? Tooltip(
+                  message: 'Log in',
+                  child: GestureDetector(
+                    onTap: () => context.go('/login'),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: Icon(
+                        Icons.account_circle_outlined,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 )
-              : GestureDetector(
-                  onTap: () => context.go('/profile'),
-                  child: UserAvatar(
-                    avatarUrl: avatarUrl,
-                    displayName: displayName,
-                    radius: 16,
-                    fallbackIcon: Icons.account_circle_outlined,
-                    iconSize: 20,
+              : Tooltip(
+                  message: 'View profile',
+                  child: GestureDetector(
+                    onTap: () => context.go('/profile'),
+                    child: UserAvatar(
+                      avatarUrl: avatarUrl,
+                      displayName: displayName,
+                      radius: 16,
+                      fallbackIcon: Icons.account_circle_outlined,
+                      iconSize: 20,
+                    ),
                   ),
                 ),
         ),
@@ -252,40 +258,43 @@ class AdaptiveScaffold extends ConsumerWidget {
           // User section at bottom
           Container(
             padding: const EdgeInsets.all(16),
-            child: GestureDetector(
-              onTap: () => context.go('/profile'),
-              child: Row(
-                children: [
-                  UserAvatar(
-                    avatarUrl: avatarUrl,
-                    displayName: displayName,
-                    radius: 18,
-                    fallbackIcon: Icons.account_circle_outlined,
-                    iconSize: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          displayName,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          isGuest ? 'Guest Mode' : 'View Profile',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+            child: Tooltip(
+              message: 'View profile',
+              child: GestureDetector(
+                onTap: () => context.go('/profile'),
+                child: Row(
+                  children: [
+                    UserAvatar(
+                      avatarUrl: avatarUrl,
+                      displayName: displayName,
+                      radius: 18,
+                      fallbackIcon: Icons.account_circle_outlined,
+                      iconSize: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayName,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            isGuest ? 'Guest Mode' : 'View Profile',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

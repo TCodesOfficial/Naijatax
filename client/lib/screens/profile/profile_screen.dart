@@ -265,18 +265,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                            Positioned(
                             bottom: 0,
                             right: 0,
-                            child: GestureDetector(
-                              onTap: _isUploading ? null : _pickAndUploadAvatar,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.secondaryContainer,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.edit,
-                                  size: 14,
-                                  color: theme.colorScheme.onSecondaryContainer,
+                            child: Tooltip(
+                              message: 'Change profile photo',
+                              child: GestureDetector(
+                                onTap: _isUploading ? null : _pickAndUploadAvatar,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.secondaryContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: theme.colorScheme.onSecondaryContainer,
+                                  ),
                                 ),
                               ),
                             ),
@@ -285,18 +288,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Positioned(
                               top: 0,
                               right: 0,
-                              child: GestureDetector(
-                                onTap: _isUploading ? null : _deleteAvatar,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.errorContainer,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.close,
-                                    size: 14,
-                                    color: theme.colorScheme.onErrorContainer,
+                               child: Tooltip(
+                                message: 'Remove profile photo',
+                                child: GestureDetector(
+                                  onTap: _isUploading ? null : _deleteAvatar,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.errorContainer,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 14,
+                                      color: theme.colorScheme.onErrorContainer,
+                                    ),
                                   ),
                                 ),
                               ),

@@ -194,22 +194,25 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                     (_selectedTag == null && tag == 'All');
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(tag),
-                    selected: isSelected,
-                    selectedColor: theme.colorScheme.primary,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
+                  child: Tooltip(
+                    message: 'Filter by $tag',
+                    child: ChoiceChip(
+                      label: Text(tag),
+                      selected: isSelected,
+                      selectedColor: theme.colorScheme.primary,
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      onSelected: (selected) {
+                        setState(() => _selectedTag = tag == 'All' ? null : tag);
+                        ref
+                            .read(forumProvider.notifier)
+                            .fetchTopics(tag: _selectedTag);
+                      },
                     ),
-                    onSelected: (selected) {
-                      setState(() => _selectedTag = tag == 'All' ? null : tag);
-                      ref
-                          .read(forumProvider.notifier)
-                          .fetchTopics(tag: _selectedTag);
-                    },
                   ),
                 );
               }).toList(),

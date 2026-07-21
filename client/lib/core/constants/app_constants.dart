@@ -1,28 +1,30 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart';
 
 class AppConstants {
 
 AppConstants._();
 
-  // 1. Move the compilation flag to a true top-level compile-time const
   static const String _envApiBaseUrl = String.fromEnvironment('API_BASE_URL');
 
   // ── API ───────────────────────────────────────────────────────────────
   static String get apiBaseUrl {
-    // 2. Safely check the compile-time constant here
     if (_envApiBaseUrl.isNotEmpty) return _envApiBaseUrl;
 
-    // Fallback for local development if not provided in .env
-    if (kIsWeb ||
-        Platform.isIOS ||
-        Platform.isMacOS ||
-        Platform.isWindows ||
-        Platform.isLinux) {
+    if (kIsWeb) {
       return 'http://localhost:3000/api/v1';
     }
-    return 'http://10.0.2.2:3000/api/v1'; // Android emulator
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+      case TargetPlatform.linux:
+        return 'http://localhost:3000/api/v1';
+      case TargetPlatform.android:
+        return 'http://10.0.2.2:3000/api/v1';
+      default:
+        return 'http://localhost:3000/api/v1';
+    }
   }
 
   // ── Supabase ──────────────────────────────────────────────────────────

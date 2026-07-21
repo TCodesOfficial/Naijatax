@@ -72,8 +72,13 @@ class VatState {
 }
 
 class VatNotifier extends StateNotifier<VatState> {
-  VatNotifier() : super(const VatState()) {
-    fetchItems();
+  bool _loaded = false;
+
+  VatNotifier() : super(const VatState());
+
+  Future<void> fetchIfNeeded() async {
+    if (_loaded && state.items.isNotEmpty) return;
+    await fetchItems();
   }
 
   Future<void> fetchItems({String? query, String? status}) async {
@@ -82,6 +87,7 @@ class VatNotifier extends StateNotifier<VatState> {
       final res = await ApiService.instance.searchVat(query: query, status: status);
       final items = res.map((e) => VatItem.fromJson(e as Map<String, dynamic>)).toList();
       state = state.copyWith(items: items, isLoading: false);
+      _loaded = true;
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
     }

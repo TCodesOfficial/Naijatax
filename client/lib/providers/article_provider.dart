@@ -35,39 +35,46 @@ class ArticlesState {
 }
 
 class ArticlesNotifier extends Notifier<ArticlesState> {
+  static DateTime? _lastArticlesFetch;
+  static DateTime? _lastMetricsFetch;
+
   @override
   ArticlesState build() {
-    // Load cached articles for offline access
     final cached = StorageService.getCachedArticles();
     final List<TaxArticle> cachedList = cached != null
         ? cached.map((e) => TaxArticle.fromJson(e)).toList()
         : [];
-    // If no cached data, return empty state
-    return ArticlesState(
-      articles: cachedList,
-    );
+    return ArticlesState(articles: cachedList);
   }
 
   Future<void> fetchArticles({String? category}) async {
+    // Skip if fetched within last 60 seconds and no category change
+    if (_lastArticlesFetch != null &&
+        category == null &&
+        DateTime.now().difference(_lastArticlesFetch!).inSeconds < 60) {
+      return;
+    }
     state = state.copyWith(isLoading: true, error: null, selectedCategory: category);
     try {
       final List<dynamic> data = await ApiService.instance.getPublicArticles(category: category);
       final list = data.map((e) => TaxArticle.fromJson(e as Map<String, dynamic>)).toList();
-      
-      // Save raw map data to cache
       await StorageService.saveArticles(data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
-      
       state = state.copyWith(isLoading: false, articles: list);
+      _lastArticlesFetch = DateTime.now();
     } catch (e) {
-      // API unavailable — keep existing data
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> fetchMetrics() async {
+    if (_lastMetricsFetch != null &&
+        DateTime.now().difference(_lastMetricsFetch!).inSeconds < 300) {
+      return;
+    }
     try {
       final metricsData = await ApiService.instance.getEconomicMetrics();
       state = state.copyWith(metrics: metricsData);
+      _lastMetricsFetch = DateTime.now();
     } catch (_) {
       // API unavailable — keep existing metrics
     }

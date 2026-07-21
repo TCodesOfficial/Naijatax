@@ -24,24 +24,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(articlesProvider.notifier).fetchArticles();
-      ref.read(articlesProvider.notifier).fetchMetrics();
-      ref.read(inflationProvider.notifier).fetch();
-
       final auth = ref.read(authProvider);
       if (auth.status == AuthStatus.authenticated) {
         ref.read(taxProvider.notifier).fetchFromServer();
       }
+      ref.read(articlesProvider.notifier).fetchArticles();
+      // Defer non-critical calls
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        ref.read(articlesProvider.notifier).fetchMetrics();
+        ref.read(inflationProvider.notifier).fetch();
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (prev, next) {
-      if (next.status == AuthStatus.authenticated &&
-          (prev == null || prev.status != AuthStatus.authenticated)) {
-        ref.read(taxProvider.notifier).fetchFromServer();
-      }
+      // Tax data is already fetched in initState; no duplicate needed here
     });
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
@@ -56,59 +56,54 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ? (authState.user!.displayName ?? authState.user!.email?.split('@').first ?? 'User')
         : 'Guest';
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ─── Welcome Header ───────────────────────────────────────────────
-          _buildWelcomeHeader(theme, displayName),
-          SizedBox(height: isMobile ? 20 : 24),
-
-          // ─── Tax at a Glance or Calculator CTA ───────────────────────────
-          if (taxState.profile != null)
-            _buildTaxGlanceCard(theme, taxState, isMobile)
-          else
-            _buildCalculatorCTA(theme, isMobile),
-          SizedBox(height: isMobile ? 20 : 24),
-
-          // ─── Tax Category Results ─────────────────────────────────────────
-          if (taxState.profile != null) ...[
-            _buildTaxCategoryResults(theme, taxState, isMobile),
+    return RepaintBoundary(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildWelcomeHeader(theme, displayName),
             SizedBox(height: isMobile ? 20 : 24),
+            if (taxState.profile != null)
+              _buildTaxGlanceCard(theme, taxState, isMobile)
+            else
+              _buildCalculatorCTA(theme, isMobile),
+            SizedBox(height: isMobile ? 20 : 24),
+            if (taxState.profile != null) ...[
+              _buildTaxCategoryResults(theme, taxState, isMobile),
+              SizedBox(height: isMobile ? 20 : 24),
+            ],
+            _buildInflationChart(theme, inflationState, isMobile),
+            SizedBox(height: isMobile ? 20 : 24),
+            _buildRecentNews(theme, articlesState, isMobile),
           ],
-
-          // ─── Inflation Chart ──────────────────────────────────────────────
-          _buildInflationChart(theme, inflationState, isMobile),
-          SizedBox(height: isMobile ? 20 : 24),
-
-          // ─── Recent News ──────────────────────────────────────────────────
-          _buildRecentNews(theme, articlesState, isMobile),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildWelcomeHeader(ThemeData theme, String name) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Welcome back, $name',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
+    return RepaintBoundary(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Welcome back, $name',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          "Here's your tax profile summary for the current fiscal year.",
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+          const SizedBox(height: 4),
+          Text(
+            "Here's your tax profile summary for the current fiscal year.",
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -618,181 +613,183 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   // ─── Inflation Chart ───────────────────────────────────────────────────
   Widget _buildInflationChart(ThemeData theme, InflationState state, bool isMobile) {
-    return Card(
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Nigeria Inflation Rate',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  if (state.data.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+    return RepaintBoundary(
+      child: Card(
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Text(
-                        'Latest: ${state.data.last.value.toStringAsFixed(1)}%',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
-                          fontWeight: FontWeight.w600,
+                        'Nigeria Inflation Rate',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Consumer prices, annual % \u2014 World Bank',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                    if (state.data.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Latest: ${state.data.last.value.toStringAsFixed(1)}%',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onErrorContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-              SizedBox(height: isMobile ? 16 : 24),
-              if (state.isLoading)
-                const SizedBox(
-                  height: 200,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (state.error != null && state.data.isEmpty)
-                SizedBox(
-                  height: 200,
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.cloud_off_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Unable to load inflation data',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: () => ref.read(inflationProvider.notifier).retry(),
-                          icon: const Icon(Icons.refresh, size: 18),
-                          label: const Text('Retry'),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  'Consumer prices, annual % \u2014 World Bank',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                )
-              else
-                SizedBox(
-                  height: 220,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: state.data.isEmpty ? 10.0 : state.data.map((d) => d.value).reduce((a, b) => a > b ? a : b) * 1.2,
-                      barTouchData: BarTouchData(
-                        touchTooltipData: BarTouchTooltipData(
-                          getTooltipItem: (group, groupIdx, rod, rodIdx) {
-                            return BarTooltipItem(
-                              '${state.data[group.x.toInt()].year}\n${rod.toY.toStringAsFixed(1)}%',
-                              GoogleFonts.plusJakartaSans(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final idx = value.toInt();
-                              if (idx < state.data.length) {
-                                if (isMobile && idx % 2 != 0 && idx != state.data.length - 1) {
-                                  return const SizedBox.shrink();
-                                }
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    '${state.data[idx].year}',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                            reservedSize: isMobile ? 36 : 32,
+                ),
+                SizedBox(height: isMobile ? 16 : 24),
+                if (state.isLoading)
+                  const SizedBox(
+                    height: 200,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (state.error != null && state.data.isEmpty)
+                  SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.cloud_off_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Unable to load inflation data',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 40,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                '${value.toInt()}%',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: () => ref.read(inflationProvider.notifier).retry(),
+                            icon: const Icon(Icons.refresh, size: 18),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height: 220,
+                    child: BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: state.data.isEmpty ? 10.0 : state.data.map((d) => d.value).reduce((a, b) => a > b ? a : b) * 1.2,
+                        barTouchData: BarTouchData(
+                          touchTooltipData: BarTouchTooltipData(
+                            getTooltipItem: (group, groupIdx, rod, rodIdx) {
+                              return BarTooltipItem(
+                                '${state.data[group.x.toInt()].year}\n${rod.toY.toStringAsFixed(1)}%',
+                                GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               );
                             },
                           ),
                         ),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        horizontalInterval: 5,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      barGroups: List.generate(state.data.length, (i) {
-                        final d = state.data[i];
-                        final isLatest = i == state.data.length - 1;
-                        return BarChartGroupData(
-                          x: i,
-                          barRods: [
-                            BarChartRodData(
-                              toY: d.value,
-                              color: isLatest
-                                  ? theme.colorScheme.error
-                                  : theme.colorScheme.primary.withValues(alpha: 0.7),
-                              width: isMobile ? 20 : 28,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                        titlesData: FlTitlesData(
+                          show: true,
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final idx = value.toInt();
+                                if (idx < state.data.length) {
+                                  if (isMobile && idx % 2 != 0 && idx != state.data.length - 1) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      '${state.data[idx].year}',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                              reservedSize: isMobile ? 36 : 32,
                             ),
-                          ],
-                        );
-                      }),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 40,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  '${value.toInt()}%',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: 5,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        barGroups: List.generate(state.data.length, (i) {
+                          final d = state.data[i];
+                          final isLatest = i == state.data.length - 1;
+                          return BarChartGroupData(
+                            x: i,
+                            barRods: [
+                              BarChartRodData(
+                                toY: d.value,
+                                color: isLatest
+                                    ? theme.colorScheme.error
+                                    : theme.colorScheme.primary.withValues(alpha: 0.7),
+                                width: isMobile ? 20 : 28,
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                              ),
+                            ],
+                          );
+                        }),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -801,60 +798,62 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   // ─── Recent News ───────────────────────────────────────────────────────
   Widget _buildRecentNews(ThemeData theme, ArticlesState state, bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Text(
-                'Recent News: NTA 2025',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            TextButton(
-              onPressed: () => context.go('/dashboard/news'),
-              child: const Text('View All'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (state.isLoading)
-          const Center(child: CircularProgressIndicator())
-        else if (state.articles.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
+    return RepaintBoundary(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
                 child: Text(
-                  'No articles available yet.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  'Recent News: NTA 2025',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.go('/dashboard/news'),
+                child: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (state.isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (state.articles.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Text(
+                    'No articles available yet.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
+            )
+          else
+            SizedBox(
+              height: 180,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.articles.length.clamp(0, 10),
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, idx) {
+                  final art = state.articles[idx];
+                  return _newsCard(theme, art);
+                },
+              ),
             ),
-          )
-else
-          SizedBox(
-            height: 180,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: state.articles.length.clamp(0, 10),
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, idx) {
-                final art = state.articles[idx];
-                return _newsCard(theme, art);
-              },
-            ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

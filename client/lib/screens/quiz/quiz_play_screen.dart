@@ -184,11 +184,14 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
               children: [
                 Row(
                   children: [
-                    IconButton(
-                      onPressed: () => Navigator.maybePop(context),
-                      icon: const Icon(Icons.close, size: 22),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    Tooltip(
+                      message: 'Exit quiz',
+                      child: IconButton(
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(Icons.close, size: 22),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Text(

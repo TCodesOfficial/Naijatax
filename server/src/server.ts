@@ -13,7 +13,7 @@ const app = express();
 // ─── Rate Limiting ───────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests. Please try again later.' } },
@@ -26,8 +26,7 @@ app.use(cors({
   origin: env.CORS_ORIGINS.includes('*') ? true : env.CORS_ORIGINS,
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' }));
 
 // ─── Input Sanitization Middleware ───────────────────────────────────────────
 const sanitize = (obj: unknown): unknown => {
@@ -57,28 +56,18 @@ app.use((_req, res) => {
   });
 });
 
-
 // ─── Global Error Handler ────────────────────────────────────────────────────
 app.use(errorHandler);
-
 
 // ─── Server Bootstrap ────────────────────────────────────────────────────────
 async function runApp() {
   try {
-    // Verify DB connection on startup
     await prisma.$connect();
-    if (env.NODE_ENV === 'development') {
-      console.log('✅ Connected to Supabase PostgreSQL database');
-    }
-
     app.listen(env.PORT, () => {
-      if (env.NODE_ENV === 'development') {
-        console.log(`🚀 NaijaTax Enlighten API running on http://localhost:${env.PORT}`);
-        console.log(`📡 API prefix: ${env.API_PREFIX}`);
-      }
+      // Server started silently
     });
   } catch (error) {
-    console.error('❌ Failed to connect to the database:', error);
+    console.error('Failed to connect to database:', error);
     await prisma.$disconnect();
     process.exit(1);
   }
