@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { calculateTax, fetchLatestProfile, parseStatement, searchVat } from '../controllers/tax.controller.js';
+import { calculateTax, fetchLatestProfile, fetchTaxHistory, parseStatement, searchVat } from '../controllers/tax.controller.js';
 import { optionalAuth, requireAuth } from '../auth/auth.middleware.js';
 
 const router = Router();
@@ -18,5 +18,8 @@ router.post('/parse-statement', requireAuth, upload.single('statement'), parseSt
 
 // Auth-required: Get user's latest tax profile
 router.get('/profiles/latest', requireAuth, fetchLatestProfile);
+
+// Auth-required: Get user's tax calculation history
+router.get('/profiles/history', requireAuth, fetchTaxHistory);
 
 export default router;

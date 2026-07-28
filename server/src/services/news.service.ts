@@ -123,6 +123,7 @@ export async function getPublicArticles(
       id: true,
       title: true,
       summary: true,
+      content: true,
       source: true,
       category: true,
       url: true,

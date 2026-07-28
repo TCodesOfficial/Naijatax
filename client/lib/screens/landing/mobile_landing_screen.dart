@@ -19,41 +19,35 @@ class MobileLandingScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.white),
-          onPressed: () => context.pop(),
-          tooltip: 'Go back',
-        ),
-        title: Flexible(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                ),
-                child: const AppLogo(radius: 14, iconSize: 18),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  AppConstants.appShortName,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.36,
+        automaticallyImplyLeading: false,
+        title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  child: const AppLogo(radius: 14, iconSize: 18),
                 ),
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    AppConstants.appShortName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.36,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
         centerTitle: false,
         actions: [
           Padding(

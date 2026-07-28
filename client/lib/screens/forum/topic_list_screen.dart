@@ -252,7 +252,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
 
     return Card(
       child: InkWell(
-        onTap: () => context.go('/forum/${topic.id}'),
+        onTap: () => context.push('/forum/${topic.id}'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -301,7 +301,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2FBE9),
+                              color: theme.colorScheme.tertiaryContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

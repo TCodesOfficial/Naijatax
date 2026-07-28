@@ -72,8 +72,12 @@ class TaxNotifier extends Notifier<TaxState> {
         'isMonthly': true,
       });
       final profile = TaxProfile.fromJson(data);
-      // Cache for offline usage
       await StorageService.saveTaxProfile(data);
+
+      final historyEntry = Map<String, dynamic>.from(data as Map);
+      historyEntry['createdAt'] = DateTime.now().toIso8601String();
+      await StorageService.addTaxCalculationToHistory(historyEntry);
+
       state = state.copyWith(status: TaxStatus.loaded, profile: profile);
     } catch (e) {
       state = state.copyWith(status: TaxStatus.error, error: e.toString());

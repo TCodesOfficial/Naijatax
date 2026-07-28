@@ -212,7 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -620,7 +620,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       decoration: BoxDecoration(
         border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
+        color: theme.colorScheme.surfaceContainerLow,
       ),
       child: IconButton(
         onPressed: onPressed,

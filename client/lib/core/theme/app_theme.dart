@@ -67,6 +67,7 @@ class AppTheme {
           foregroundColor: AppColors.onSurface,
           elevation: 0,
           scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
           centerTitle: false,
           titleTextStyle: GoogleFonts.plusJakartaSans(
               fontSize: 20,
@@ -136,6 +137,21 @@ class AppTheme {
       );
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────
+  // Blue-purple tinted dark theme with layered contrasts
+  static const _darkBluePurple = Color(0xFF121624);
+  static const _darkSurface = Color(0xFF1C2236);
+  static const _darkCard = Color(0xFF1E2540);
+  static const _darkInput = Color(0xFF1A2034);
+  static const _darkContainer = Color(0xFF222840);
+  static const _darkContainerHigh = Color(0xFF2A3050);
+  static const _darkContainerHighest = Color(0xFF343C58);
+  static const _darkBorder = Color(0xFF2E3550);
+  static const _darkBorderSubtle = Color(0xFF3A4060);
+  static const _darkOutline = Color(0xFF7A80A8);
+  static const _darkOutlineVariant = Color(0xFF3A4060);
+  static const _darkTextPrimary = Color(0xFFE2E6F0);
+  static const _darkTextSubtle = Color(0xFFA0A8C0);
+
   static ThemeData get dark => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
@@ -146,26 +162,26 @@ class AppTheme {
           onSecondary: Color(0xFF001C39),
           tertiary: Color(0xFF4EDEA3),
           error: Color(0xFFFFB4AB),
-          surface: Color(0xFF253047),
-          onSurface: AppColors.inverseOnSurface,
-          surfaceContainerLowest: Color(0xFF1A2332),
-          surfaceContainerLow: Color(0xFF202D42),
-          surfaceContainer: Color(0xFF253347),
-          surfaceContainerHigh: Color(0xFF2A3A50),
-          surfaceContainerHighest: Color(0xFF304260),
-          outline: Color(0xFF8E8FA0),
-          outlineVariant: Color(0xFF44454F),
+          surface: _darkSurface,
+          onSurface: _darkTextPrimary,
+          surfaceContainerLowest: _darkBluePurple,
+          surfaceContainerLow: _darkInput,
+          surfaceContainer: _darkContainer,
+          surfaceContainerHigh: _darkContainerHigh,
+          surfaceContainerHighest: _darkContainerHighest,
+          outline: _darkOutline,
+          outlineVariant: _darkOutlineVariant,
           inversePrimary: AppColors.primary,
         ),
-        textTheme:
-            _textTheme(AppColors.inverseOnSurface, const Color(0xFFBCC0D0)),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF253047),
-          foregroundColor: AppColors.inverseOnSurface,
+        textTheme: _textTheme(_darkTextPrimary, _darkTextSubtle),
+        appBarTheme: AppBarTheme(
+          backgroundColor: _darkSurface,
+          foregroundColor: _darkTextPrimary,
           elevation: 0,
           scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
           centerTitle: false,
-          titleTextStyle: TextStyle(
+          titleTextStyle: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppColors.inversePrimary),
@@ -174,8 +190,8 @@ class AppTheme {
           elevation: 0,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFF354560))),
-          color: const Color(0xFF253347),
+              side: const BorderSide(color: _darkBorder)),
+          color: _darkCard,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -202,15 +218,15 @@ class AppTheme {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF202D42),
+          fillColor: _darkInput,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF354560))),
+              borderSide: const BorderSide(color: _darkBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF354560))),
+              borderSide: const BorderSide(color: _darkBorder)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide:
@@ -218,18 +234,18 @@ class AppTheme {
           errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFFFB4AB))),
-          labelStyle: GoogleFonts.inter(color: const Color(0xFFBCC0D0)),
-          hintStyle: GoogleFonts.inter(color: const Color(0xFF8E8FA0)),
+          labelStyle: GoogleFonts.inter(color: _darkTextSubtle),
+          hintStyle: GoogleFonts.inter(color: _darkOutline),
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFF253047),
+          backgroundColor: _darkSurface,
           selectedItemColor: AppColors.inversePrimary,
-          unselectedItemColor: Color(0xFF8E8FA0),
+          unselectedItemColor: _darkOutline,
           elevation: 8,
           type: BottomNavigationBarType.fixed,
         ),
         dividerTheme: const DividerThemeData(
-            color: Color(0xFF354560), thickness: 1, space: 1),
-        scaffoldBackgroundColor: const Color(0xFF1E2638),
+            color: _darkBorderSubtle, thickness: 1, space: 1),
+        scaffoldBackgroundColor: _darkBluePurple,
       );
 }

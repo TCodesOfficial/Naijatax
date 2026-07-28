@@ -510,7 +510,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (authState.isGuest) {
               showGuestRestrictionDialog(context);
             } else {
-              context.go('/profile/documents');
+              context.push('/profile/documents');
             }
           },
         ),
@@ -523,7 +523,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             if (authState.isGuest) {
               showGuestRestrictionDialog(context);
             } else {
-              context.go('/profile/verify');
+              context.push('/profile/verify');
             }
           },
         ),

@@ -264,7 +264,7 @@ class TaxReformScreen extends StatelessWidget {
               icon: Icons.quiz_outlined,
               label: 'Take the Quiz',
               subtitle: 'Test your knowledge',
-              onTap: () => context.go('/learn/quiz'),
+              onTap: () => context.push('/learn/quiz'),
             ),
           ),
           const SizedBox(width: 12),
@@ -307,7 +307,7 @@ class TaxReformScreen extends StatelessWidget {
                 icon: Icons.quiz_outlined,
                 label: 'Take the Quiz',
                 subtitle: 'Test your knowledge',
-                onTap: () => context.go('/learn/quiz'),
+              onTap: () => context.push('/learn/quiz'),
               ),
             ),
             SizedBox(

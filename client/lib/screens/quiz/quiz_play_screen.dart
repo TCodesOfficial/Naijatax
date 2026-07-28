@@ -155,7 +155,7 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
                   const SizedBox(width: 16),
                   Flexible(
                     child: AnimatedButton(
-                      onPressed: () => context.go('/learn/quiz/history'),
+                      onPressed: () => context.push('/learn/quiz/history'),
                       text: 'View History',
                       isOutlined: true,
                     ),
@@ -258,11 +258,11 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
 
                     if (_answered) {
                       if (idx == q.correctIndex) {
-                        cardColor = const Color(0xFFE2FBE9);
+                        cardColor = theme.colorScheme.tertiaryContainer;
                         textColor = const Color(0xFF15803D);
                         borderSide = const BorderSide(color: Color(0xFF15803D), width: 1.5);
                       } else if (_selectedAns == idx) {
-                        cardColor = const Color(0xFFFBEBEB);
+                        cardColor = theme.colorScheme.errorContainer;
                         textColor = const Color(0xFFB91C1C);
                         borderSide = const BorderSide(color: Color(0xFFB91C1C), width: 1.5);
                       }

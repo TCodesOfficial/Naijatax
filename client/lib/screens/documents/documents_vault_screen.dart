@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/tax_provider.dart';
+import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
 import '../../services/pdf_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
 
@@ -21,11 +23,49 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
   List<FileObject> _files = [];
   bool _isLoading = true;
   bool _isUploading = false;
+  List<Map<String, dynamic>> _taxHistory = [];
+  bool _isLoadingHistory = true;
 
   @override
   void initState() {
     super.initState();
     _loadFiles();
+    _loadTaxHistory();
+  }
+
+  Future<void> _loadTaxHistory() async {
+    final localHistory = StorageService.getTaxCalculationHistory();
+    if (mounted) {
+      setState(() {
+        _taxHistory = localHistory;
+        _isLoadingHistory = false;
+      });
+    }
+
+    final auth = ref.read(authProvider);
+    if (auth.isGuest || auth.status == AuthStatus.unauthenticated) return;
+
+    try {
+      final serverData = await ApiService.instance.getTaxHistory();
+      if (mounted && serverData.isNotEmpty) {
+        setState(() {
+          final existingIds = _taxHistory
+              .map((e) => e['id']?.toString() ?? '')
+              .where((id) => id.isNotEmpty)
+              .toSet();
+          final newEntries = serverData
+              .cast<Map<String, dynamic>>()
+              .where((e) => !existingIds.contains(e['id']?.toString()))
+              .toList();
+          _taxHistory = [...newEntries, ..._taxHistory];
+          _taxHistory.sort((a, b) {
+            final aDate = DateTime.tryParse(a['createdAt']?.toString() ?? '') ?? DateTime(0);
+            final bDate = DateTime.tryParse(b['createdAt']?.toString() ?? '') ?? DateTime(0);
+            return bDate.compareTo(aDate);
+          });
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadFiles() async {
@@ -289,6 +329,8 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
                         children: [
                           _taxReportsCard(theme),
                           const SizedBox(height: 16),
+                          _taxHistoryCard(theme),
+                          const SizedBox(height: 16),
                           _secureStorageCard(theme),
                         ],
                       ),
@@ -300,6 +342,8 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
                     _bankStatementsCard(theme),
                     const SizedBox(height: 16),
                     _taxReportsCard(theme),
+                    const SizedBox(height: 16),
+                    _taxHistoryCard(theme),
                     const SizedBox(height: 16),
                     _secureStorageCard(theme),
                   ],
@@ -475,6 +519,132 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
     if (b < 1024) return '$b B';
     if (b < 1024 * 1024) return '${(b / 1024).toStringAsFixed(1)} KB';
     return '${(b / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  Widget _taxHistoryCard(ThemeData theme) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tax Calculations',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Your recent tax calculation history.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_isLoadingHistory)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_taxHistory.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Icon(Icons.calculate_outlined, size: 48, color: theme.colorScheme.outline),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No calculations yet.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Run a tax calculation to see your history here.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ..._taxHistory.map((calc) => _calculationTile(theme, calc)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _calculationTile(ThemeData theme, Map<String, dynamic> calc) {
+    final createdAt = calc['createdAt'] != null
+        ? DateTime.tryParse(calc['createdAt'] as String)
+        : null;
+    final monthlyIncome = (calc['monthlyIncome'] as num?)?.toDouble() ?? 0;
+    final computedTax = (calc['computedTax'] as num?)?.toDouble() ?? 0;
+    final netIncome = (calc['netIncome'] as num?)?.toDouble() ?? 0;
+
+    String naira(double v) {
+      if (v >= 1000000) return '₦${(v / 1000000).toStringAsFixed(1)}M';
+      if (v >= 1000) return '₦${(v / 1000).toStringAsFixed(0)}K';
+      return '₦${v.toStringAsFixed(0)}';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.receipt_long_outlined, size: 20, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  createdAt != null ? DateFormat('d MMM yyyy, h:mm a').format(createdAt) : 'Unknown date',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Income: ${naira(monthlyIncome * 12)}  •  Tax: ${naira(computedTax)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            naira(netIncome),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _secureStorageCard(ThemeData theme) {

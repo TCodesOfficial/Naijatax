@@ -245,7 +245,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -632,7 +632,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -759,7 +759,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       decoration: BoxDecoration(
         border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(10),
-        color: Colors.white,
+        color: theme.colorScheme.surfaceContainerLow,
       ),
       child: IconButton(
         onPressed: onPressed,

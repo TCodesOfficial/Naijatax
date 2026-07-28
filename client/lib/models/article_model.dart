@@ -22,15 +22,17 @@ class TaxArticle {
   });
 
   factory TaxArticle.fromJson(Map<String, dynamic> json) => TaxArticle(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        summary: json['summary'] as String,
-        content: json['content'] as String,
-        source: json['source'] as String,
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        summary: json['summary'] as String? ?? '',
+        content: json['content'] as String? ?? '',
+        source: json['source'] as String? ?? '',
         category: json['category'] as String? ?? 'COMPLIANCE',
         url: json['url'] as String?,
         isFeatured: json['isFeatured'] as bool? ?? false,
-        createdAt: DateTime.parse(json['createdAt'] as String),
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+            : DateTime.now(),
       );
 
   Map<String, dynamic> toJson() => {

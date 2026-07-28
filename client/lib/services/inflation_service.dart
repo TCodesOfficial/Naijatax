@@ -1,23 +1,43 @@
 import 'package:dio/dio.dart';
 import '../models/inflation_data.dart';
+import 'api_service.dart';
 
 class InflationService {
-  static const _baseUrl =
-      'https://api.worldbank.org/v2/country/NGA/indicator/FP.CPI.TOTL.ZG';
-
   static final _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
+    connectTimeout: const Duration(seconds: 15),
+    receiveTimeout: const Duration(seconds: 15),
     headers: {'Accept': 'application/json'},
   ));
 
   static Future<List<InflationData>> fetchInflation({int years = 10}) async {
+    // Try server proxy first (avoids CORS on web)
+    try {
+      final data = await ApiService.instance.getInflationData(years: years);
+      if (data is List && data.length >= 2) {
+        final dataList = data[1];
+        if (dataList is List) {
+          final items = dataList
+              .map((e) => InflationData.fromJson(e as Map<String, dynamic>))
+              .where((d) => d.value > 0)
+              .toList()
+            ..sort((a, b) => a.year.compareTo(b.year));
+          if (items.length > years) {
+            return items.sublist(items.length - years);
+          }
+          return items;
+        }
+      }
+      return [];
+    } catch (_) {
+      // Fall back to direct World Bank API call
+    }
+
+    // Direct call fallback
     final endYear = DateTime.now().year;
     final startYear = endYear - years + 1;
     final url =
-        '$_baseUrl?format=json&per_page=${years * 3}&date=$startYear:$endYear';
+        'https://api.worldbank.org/v2/country/NGA/indicator/FP.CPI.TOTL.ZG?format=json&per_page=${years * 3}&date=$startYear:$endYear';
 
-    // Retry up to 3 times with 2s delay
     for (int attempt = 0; attempt < 3; attempt++) {
       try {
         final response = await _dio.get(url);

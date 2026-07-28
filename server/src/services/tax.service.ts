@@ -161,6 +161,14 @@ export async function getLatestTaxProfile(userId: string) {
   });
 }
 
+export async function getTaxHistory(userId: string) {
+  return await prisma.taxProfile.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+}
+
 export async function searchVatItems(query?: string, status?: string) {
   const cacheKey = `vat:${query || ''}:${status || ''}`;
   const cached = cache.get(cacheKey);

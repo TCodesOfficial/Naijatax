@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
 import { z } from 'zod';
-import { calculateUnifiedTax, saveTaxProfile, getLatestTaxProfile, searchVatItems } from '../services/tax.service.js';
+import { calculateUnifiedTax, saveTaxProfile, getLatestTaxProfile, getTaxHistory, searchVatItems } from '../services/tax.service.js';
 import { parseStatementText } from '../services/ai.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { successResponse, errorResponse } from '../utils/response.js';
@@ -41,6 +41,25 @@ export const fetchLatestProfile = asyncHandler(async (req: Request, res: Respons
     assets: 0,
   });
   successResponse(res, result);
+});
+
+export const fetchTaxHistory = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    return errorResponse(res, 'UNAUTHORIZED', 'Authentication required', 401);
+  }
+  const profiles = await getTaxHistory(req.user.id);
+  const results = profiles.map((p) => ({
+    id: p.id,
+    createdAt: p.createdAt,
+    ...calculateUnifiedTax({
+      monthlyIncome: Number(p.monthlyIncome),
+      rentPaid: Number(p.rentPaid),
+      pensionRate: Number(p.pensionRate),
+      turnover: 0,
+      assets: 0,
+    }),
+  }));
+  successResponse(res, results);
 });
 
 export const parseStatement = asyncHandler(async (req: Request, res: Response) => {

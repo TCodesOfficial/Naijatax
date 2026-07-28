@@ -27,6 +27,27 @@ class StorageService {
     return Map<String, dynamic>.from(raw as Map);
   }
 
+  // ── Tax Calculation History ─────────────────────────────────────────────
+  static Future<void> addTaxCalculationToHistory(Map<String, dynamic> calculation) async {
+    final box = Hive.box('tax_profiles');
+    final raw = box.get('history');
+    final history = raw != null
+        ? List<Map<String, dynamic>>.from((raw as List).map((e) => Map<String, dynamic>.from(e as Map)))
+        : <Map<String, dynamic>>[];
+    history.insert(0, calculation);
+    if (history.length > 50) history.removeRange(50, history.length);
+    await box.put('history', history);
+  }
+
+  static List<Map<String, dynamic>> getTaxCalculationHistory() {
+    final box = Hive.box('tax_profiles');
+    final raw = box.get('history');
+    if (raw == null) return [];
+    return (raw as List)
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+  }
+
   // ── Articles Cache ───────────────────────────────────────────────────────
   static Future<void> saveArticles(List<Map<String, dynamic>> articles) async {
     final box = Hive.box('tax_articles');

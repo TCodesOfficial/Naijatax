@@ -22,30 +22,24 @@ class WebLandingScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.pop(),
-          tooltip: 'Go back',
-        ),
-        title: Flexible(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const AppLogo(radius: 18, iconSize: 20),
-              const SizedBox(width: 10),
-              Flexible(
-                child: Text(
-                  AppConstants.appName,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+        automaticallyImplyLeading: false,
+        title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const AppLogo(radius: 18, iconSize: 20),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    AppConstants.appName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
         centerTitle: false,
         actions: [
           if (!isDesktop)
@@ -356,7 +350,7 @@ class WebLandingScreen extends StatelessWidget {
         horizontal: isDesktop ? 60 : 24,
         vertical: 80,
       ),
-      color: Colors.white,
+      color: theme.colorScheme.surface,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -437,12 +431,12 @@ class WebLandingScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -678,7 +672,7 @@ class WebLandingScreen extends StatelessWidget {
             AnimatedButton(
               onPressed: () => context.go('/login'),
               text: 'Get Started Free',
-              backgroundColor: Colors.white,
+              backgroundColor: theme.colorScheme.surface,
               foregroundColor: theme.colorScheme.primary,
               icon: const Icon(Icons.arrow_forward, size: 18),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
@@ -699,7 +693,7 @@ class WebLandingScreen extends StatelessWidget {
         horizontal: isDesktop ? 40 : 20,
         vertical: 32,
       ),
-      color: theme.colorScheme.onSurface,
+      color: theme.colorScheme.surfaceContainerLowest,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),

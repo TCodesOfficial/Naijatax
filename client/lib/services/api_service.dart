@@ -48,6 +48,11 @@ class ApiService {
     return res.data['data'] as Map<String, dynamic>?;
   }
 
+  Future<List<dynamic>> getTaxHistory() async {
+    final res = await _dio.get('/tax/profiles/history');
+    return res.data['data'] as List<dynamic>;
+  }
+
   Future<Map<String, dynamic>> parseStatement(MultipartFile file) async {
     final formData = FormData.fromMap({'statement': file});
     final res = await _dio.post('/tax/parse-statement', data: formData);
@@ -146,6 +151,11 @@ class ApiService {
   Future<Map<String, dynamic>> getEconomicMetrics() async {
     final res = await _dio.get('/news/metrics');
     return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<dynamic> getInflationData({int years = 10}) async {
+    final res = await _dio.get('/news/inflation', queryParameters: {'years': years});
+    return res.data['data'];
   }
 
   // ── User Profile ──────────────────────────────────────────────────────

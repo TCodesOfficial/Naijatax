@@ -173,7 +173,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFE2FBE9),
+                                            color: theme.colorScheme.tertiaryContainer,
                                             borderRadius: BorderRadius.circular(
                                               100,
                                             ),

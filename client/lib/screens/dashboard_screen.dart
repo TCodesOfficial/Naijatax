@@ -535,7 +535,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               border: Border.all(color: theme.colorScheme.outlineVariant),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
+                  color: theme.colorScheme.shadow.withValues(alpha: 0.06),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -817,7 +817,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () => context.go('/dashboard/news'),
+                onPressed: () => context.push('/dashboard/news'),
                 child: const Text('View All'),
               ),
             ],
@@ -882,7 +882,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         border: Border.all(color: theme.colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

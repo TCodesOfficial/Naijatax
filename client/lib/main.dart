@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,8 +14,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   GoogleFonts.config.allowRuntimeFetching = false;
-
-  setUrlStrategy(PathUrlStrategy());
 
   // Show branded loading screen immediately
   runApp(const ProviderScope(child: LoadingApp()));
