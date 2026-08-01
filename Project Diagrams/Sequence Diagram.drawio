@@ -1,0 +1,974 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.5 Chrome/134.0.6998.205 Electron/35.3.0 Safari/537.36" version="27.0.5">
+  <diagram name="Page-1" id="pCz5fMx1DejE3V7uRdIV">
+    <mxGraphModel dx="6640" dy="5016" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-185" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="30" y="3350" width="2560" height="1950" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-181" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Tax calculation&lt;/font&gt;" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-185">
+          <mxGeometry width="2560" height="1950" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-182" value="" style="group" vertex="1" connectable="0" parent="ZgrG1S2CWpW2SbbOh14H-185">
+          <mxGeometry x="40" y="80" width="2468" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-109" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};participant=umlActor;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry width="35" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-110" value="AssessmentFormScreen" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="354" width="187" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-111" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-110">
+          <mxGeometry x="88" y="107" width="10" height="1398" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-112" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-110">
+          <mxGeometry x="88" y="1547" width="10" height="196" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-131" value="_calculate() (Validate &amp; load)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-110" source="ZgrG1S2CWpW2SbbOh14H-111" target="ZgrG1S2CWpW2SbbOh14H-111">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="148" y="159" />
+              <mxPoint x="148" y="189" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-132" value="2" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-131">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-113" value="TaxNotifier" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="708" width="150" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-114" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-113">
+          <mxGeometry x="70" y="241" width="10" height="1202" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-135" value="state = TaxState(status: loading)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-113" source="ZgrG1S2CWpW2SbbOh14H-114" target="ZgrG1S2CWpW2SbbOh14H-114">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="293" />
+              <mxPoint x="130" y="323" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-136" value="4" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-135">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-165" value="state = TaxState(status: loaded, ...)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-113" source="ZgrG1S2CWpW2SbbOh14H-114" target="ZgrG1S2CWpW2SbbOh14H-114">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="1279" />
+              <mxPoint x="130" y="1309" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-166" value="19" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-165">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-167" value="StorageService.addTaxCalculationToHistory(...)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-113" source="ZgrG1S2CWpW2SbbOh14H-114" target="ZgrG1S2CWpW2SbbOh14H-114">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="1361" />
+              <mxPoint x="130" y="1391" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-168" value="20" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-167">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-115" value="ApiService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="940" width="150" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-116" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-115">
+          <mxGeometry x="70" y="375" width="10" height="842" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-117" value="NestJS Tax Controller" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="1374" width="168" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-118" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-117">
+          <mxGeometry x="79" y="427" width="10" height="728" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-141" value="Zod validation" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-117" source="ZgrG1S2CWpW2SbbOh14H-118" target="ZgrG1S2CWpW2SbbOh14H-118">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="139" y="479" />
+              <mxPoint x="139" y="509" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-142" value="7" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-141">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-119" value="NestJS Tax Service" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="1634" width="150" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-120" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-119">
+          <mxGeometry x="70" y="561" width="10" height="532" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-145" value="PAYE calculation (5-bracket progression)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-119" source="ZgrG1S2CWpW2SbbOh14H-120" target="ZgrG1S2CWpW2SbbOh14H-120">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="613" />
+              <mxPoint x="130" y="643" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-146" value="9" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-145">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-147" value="CIT exemption check (Turnover/Assets limit)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-119" source="ZgrG1S2CWpW2SbbOh14H-120" target="ZgrG1S2CWpW2SbbOh14H-120">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="695" />
+              <mxPoint x="130" y="725" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-148" value="10" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-147">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-149" value="Savings calculation (Vs pre-2025 rates)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-119" source="ZgrG1S2CWpW2SbbOh14H-120" target="ZgrG1S2CWpW2SbbOh14H-120">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="777" />
+              <mxPoint x="130" y="807" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-150" value="11" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-149">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-121" value="Prisma" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="1849" width="150" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-122" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-121">
+          <mxGeometry x="70" y="905" width="10" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-123" value="PostgreSQL" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="2118" width="150" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-124" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-123">
+          <mxGeometry x="70" y="957" width="10" height="2" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-125" value="PdfService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="2318" width="150" height="1838" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-126" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-125">
+          <mxGeometry x="70" y="1599" width="10" height="134" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-177" value="Build PDF document (A4 Layout)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-125" source="ZgrG1S2CWpW2SbbOh14H-126" target="ZgrG1S2CWpW2SbbOh14H-126">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="1651" />
+              <mxPoint x="130" y="1681" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-178" value="25" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-177">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-127" value="alt" style="shape=umlFrame;dashed=1;pointerEvents=0;dropTarget=0;strokeColor=#B3B3B3;height=20;width=30" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-182">
+          <mxGeometry x="1443" y="827" width="765" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-128" value="[User is authenticated]" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-127">
+          <mxGeometry x="30" width="735" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-129" value="Taps &quot;Calculate&quot; button" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-109" target="ZgrG1S2CWpW2SbbOh14H-111">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="270" y="107" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-130" value="1" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-129">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-193.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-133" value="calculate(monthlyIncome, rentPaid, ...)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-111" target="ZgrG1S2CWpW2SbbOh14H-114">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="626" y="241" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-134" value="3" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-133">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-173.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-137" value="calculateTax(body)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-114" target="ZgrG1S2CWpW2SbbOh14H-116">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-138" value="5" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-137">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-121.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-139" value="POST /api/v1/tax/calculate (HTTP Async with JWT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-116" target="ZgrG1S2CWpW2SbbOh14H-118">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1247" y="427" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-140" value="6" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-139">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-227" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-143" value="calculateUnifiedTax(input)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-118" target="ZgrG1S2CWpW2SbbOh14H-120">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1594" y="561" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-144" value="8" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-143">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-131" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-151" value="taxProfile.create({ userId, ... })" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-118" target="ZgrG1S2CWpW2SbbOh14H-122">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1702" y="905" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-152" value="12" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-151">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-238.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-153" value="INSERT INTO tax_profiles (...)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-122" target="ZgrG1S2CWpW2SbbOh14H-124">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2069" y="957" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-154" value="13" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-153">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-140" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-155" value="Created record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-123" target="ZgrG1S2CWpW2SbbOh14H-122">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2070" y="1009" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-156" value="14" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-155">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="124" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-157" value="Return saved profile" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-121" target="ZgrG1S2CWpW2SbbOh14H-118">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1703" y="1061" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-158" value="15" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-157">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="222.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-159" value="TaxAssessmentResult" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-119" target="ZgrG1S2CWpW2SbbOh14H-118">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1595" y="1123" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-160" value="16" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-159">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="115" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-161" value="HTTP 200 { success: true, data: TaxAssessmentResult }" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-117" target="ZgrG1S2CWpW2SbbOh14H-116">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1248" y="1175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-162" value="17" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-161">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="211" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-163" value="Map&lt;String, dynamic&gt;" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-115" target="ZgrG1S2CWpW2SbbOh14H-114">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="911" y="1227" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-164" value="18" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-163">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="105.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-169" value="Update UI State" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-114" target="ZgrG1S2CWpW2SbbOh14H-111">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="627" y="1443" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-170" value="21" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-169">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="157.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-171" value="Display results (Assessment summary card)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-111" target="ZgrG1S2CWpW2SbbOh14H-109">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="271" y="1495" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-172" value="22" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-171">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="177.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-173" value="Taps &quot;Export PDF&quot;" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-109" target="ZgrG1S2CWpW2SbbOh14H-112">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="270" y="1547" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-174" value="23" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-173">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-193.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-175" value="exportTaxReport(profile)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-112" target="ZgrG1S2CWpW2SbbOh14H-126">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1431" y="1599" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-176" value="24" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-175">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-978.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-179" value="System share sheet (Save/Share)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-182" source="ZgrG1S2CWpW2SbbOh14H-126" target="ZgrG1S2CWpW2SbbOh14H-109">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1244" y="1733" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-180" value="26" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-179">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="1150.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-186" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="-60" y="-70" width="2930" height="2783" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-183" value="&lt;font style=&quot;font-size: 22px;&quot;&gt;Ai chat&lt;/font&gt;" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-186">
+          <mxGeometry width="2930" height="2740" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-184" value="" style="group" vertex="1" connectable="0" parent="ZgrG1S2CWpW2SbbOh14H-186">
+          <mxGeometry x="80" y="90" width="2795" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-1" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};participant=umlActor;verticalAlign=bottom;labelPosition=center;verticalLabelPosition=top;align=center;size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry width="35" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-2" value="ChatScreen&#xa;(Flutter)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="370" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-3" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-2">
+          <mxGeometry x="70" y="107" width="10" height="2491" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-33" value="_sendMessage() (Set _isLoading=true, update UI)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-2" source="ZgrG1S2CWpW2SbbOh14H-3" target="ZgrG1S2CWpW2SbbOh14H-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="159" />
+              <mxPoint x="130" y="189" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-34" value="2" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-33">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-105" value="_sendMessage() cont. (Set _isLoading=false, update state)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-2" source="ZgrG1S2CWpW2SbbOh14H-3" target="ZgrG1S2CWpW2SbbOh14H-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="2506" />
+              <mxPoint x="130" y="2536" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-106" value="38" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-105">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-4" value="ApiService&#xa;(Dio Client)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="734" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-5" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-4">
+          <mxGeometry x="70" y="241" width="10" height="2213" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-6" value="AI Controller&#xa;(NestJS)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="1148" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-7" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-6">
+          <mxGeometry x="70" y="293" width="10" height="2099" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-39" value="Zod validation (messageSchema)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-6" source="ZgrG1S2CWpW2SbbOh14H-7" target="ZgrG1S2CWpW2SbbOh14H-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="345" />
+              <mxPoint x="130" y="375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-40" value="5" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-39">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-8" value="AI Service&#xa;(NestJS)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="1534" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-9" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-8">
+          <mxGeometry x="70" y="427" width="10" height="1903" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-59" value="Verify session.userId === userId" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-8" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="987" />
+              <mxPoint x="130" y="1017" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-60" value="15" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-59">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-77" value="toGeminiMessages() (Format context history)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-8" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="1525" />
+              <mxPoint x="130" y="1555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-78" value="24" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-77">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-83" value="Retry with backoff (exponential, up to 2x)" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-8" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="1757" />
+              <mxPoint x="130" y="1787" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-84" value="27" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-83">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-89" value="Replace with user-friendly apology message" style="curved=1;endArrow=block;rounded=0;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-8" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="2020" />
+              <mxPoint x="130" y="2050" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-90" value="30" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-89">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-57" y="-22" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-10" value="Google Gemini&#xa;(gemini-3.5-flash)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="2026" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-11" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-10">
+          <mxGeometry x="70" y="1607" width="10" height="264" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-12" value="Prisma Client&#xa;(ORM)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="2226" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-13" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-12">
+          <mxGeometry x="70" y="525" width="10" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-14" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-12">
+          <mxGeometry x="70" y="779" width="10" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-15" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-12">
+          <mxGeometry x="70" y="1109" width="10" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-16" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-12">
+          <mxGeometry x="70" y="1317" width="10" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-17" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-12">
+          <mxGeometry x="70" y="2142" width="10" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-18" value="PostgreSQL&#xa;(Supabase)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};size=65;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="2645" width="150" height="2693" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-19" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-18">
+          <mxGeometry x="70" y="577" width="10" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-20" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-18">
+          <mxGeometry x="70" y="831" width="10" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-21" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-18">
+          <mxGeometry x="70" y="1161" width="10" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-22" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-18">
+          <mxGeometry x="70" y="1369" width="10" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-23" value="" style="points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0}" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-18">
+          <mxGeometry x="70" y="2194" width="10" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-24" value="alt" style="shape=umlFrame;dashed=1;pointerEvents=0;dropTarget=0;strokeColor=#B3B3B3;height=20;width=30" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="1490" y="447" width="1245" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-25" value="[sessionId is null (New Conversation)]" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-24">
+          <mxGeometry x="30" width="1215" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-26" value="[sessionId is provided (Existing Conversation)]" style="shape=line;dashed=1;whiteSpace=wrap;verticalAlign=top;labelPosition=center;verticalLabelPosition=middle;align=center;strokeColor=#B3B3B3;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-24">
+          <mxGeometry y="259" width="1245" height="4" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-27" value="alt" style="shape=umlFrame;dashed=1;pointerEvents=0;dropTarget=0;strokeColor=#B3B3B3;height=20;width=30" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="1460" y="1627" width="657" height="232" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-28" value="[Transient Error (429/503)]" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-27">
+          <mxGeometry x="30" width="627" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-29" value="opt" style="shape=umlFrame;dashed=1;pointerEvents=0;dropTarget=0;strokeColor=#B3B3B3;height=20;width=30" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-184">
+          <mxGeometry x="1449" y="1921" width="330" height="179" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-30" value="[response contains &quot;busy processing&quot;&#xa;or &quot;unable to process&quot;]" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-29">
+          <mxGeometry x="30" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-31" value="User taps &quot;Send&quot; button" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-1" target="ZgrG1S2CWpW2SbbOh14H-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="269" y="107" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-32" value="1" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-31">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-192.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-35" value="sendChatMessage(content, sessionId?)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-3" target="ZgrG1S2CWpW2SbbOh14H-5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="638" y="241" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-36" value="3" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-35">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-187.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-37" value="POST /api/v1/ai/message (HTTP Async with JWT)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-5" target="ZgrG1S2CWpW2SbbOh14H-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1027" y="293" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-38" value="4" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-37">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-212.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-41" value="sendChatMessage(userId, content, sessionId)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-7" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1427" y="427" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-42" value="6" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-41">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-198.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-43" value="chatSession.create()" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1966" y="525" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-44" value="7" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-43">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-351.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-45" value="SQL: INSERT INTO chat_sessions..." style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-13" target="ZgrG1S2CWpW2SbbOh14H-19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2521" y="577" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-46" value="8" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-45">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-215" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-47" value="Return new session record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-18" target="ZgrG1S2CWpW2SbbOh14H-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2522" y="629" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-48" value="9" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-47">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="199" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-49" value="Return session object" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-12" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1967" y="681" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-50" value="10" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-49">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="335.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-51" value="chatSession.findUnique()" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1966" y="779" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-52" value="11" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-51">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-351.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-53" value="SQL: SELECT FROM chat_sessions..." style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-14" target="ZgrG1S2CWpW2SbbOh14H-20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2521" y="831" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-54" value="12" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-53">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-215" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-55" value="Return session record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-18" target="ZgrG1S2CWpW2SbbOh14H-14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2522" y="883" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-56" value="13" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-55">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="199" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-57" value="Return session object" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-12" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1967" y="935" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-58" value="14" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-57">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="335.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-61" value="chatMessage.create() (role=&quot;user&quot;)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1966" y="1109" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-62" value="16" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-61">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-351.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-63" value="SQL: INSERT INTO chat_messages..." style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-15" target="ZgrG1S2CWpW2SbbOh14H-21">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2521" y="1161" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-64" value="17" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-63">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-215" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-65" value="Return message record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-18" target="ZgrG1S2CWpW2SbbOh14H-15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2522" y="1213" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-66" value="18" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-65">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="199" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-67" value="Return message record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-12" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1967" y="1265" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-68" value="19" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-67">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="335.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-69" value="chatMessage.findMany() (Limit 5)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1966" y="1317" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-70" value="20" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-69">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-351.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-71" value="SQL: SELECT... ORDER BY created_at DESC LIMIT 5" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-16" target="ZgrG1S2CWpW2SbbOh14H-22">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2521" y="1369" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-72" value="21" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-71">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-215" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-73" value="Return message array" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-18" target="ZgrG1S2CWpW2SbbOh14H-16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2522" y="1421" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-74" value="22" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-73">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="199" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-75" value="Return message array" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-12" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1967" y="1473" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-76" value="23" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-75">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="335.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-79" value="callGemini(messages, NIGERIAN_TAX_CONTEXT) (Async API)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1866" y="1607" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-80" value="25" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-79">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-251.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-81" value="429 Rate Limit / 503 Server Busy" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-11" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1867" y="1705" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-82" value="26" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-81">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="235.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-85" value="callGemini(messages, ...) [retry]" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1864" y="1839" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-86" value="28" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-85">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-249.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-87" value="Return response text (Nigerian tax response)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-10" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1867" y="1901" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-88" value="29" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-87">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="235.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-91" value="chatMessage.create() (role=&quot;assistant&quot;)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-9" target="ZgrG1S2CWpW2SbbOh14H-17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1966" y="2142" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-92" value="31" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-91">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-351.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-93" value="SQL: INSERT INTO chat_messages..." style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-17" target="ZgrG1S2CWpW2SbbOh14H-23">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2521" y="2194" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-94" value="32" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-93">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="-215" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-95" value="Return message record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-18" target="ZgrG1S2CWpW2SbbOh14H-17">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2522" y="2246" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-96" value="33" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-95">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="199" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-97" value="Return message record" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-12" target="ZgrG1S2CWpW2SbbOh14H-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1967" y="2298" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-98" value="34" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-97">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="335.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-99" value="Return { sessionId, sessionTitle, message }" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-8" target="ZgrG1S2CWpW2SbbOh14H-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1428" y="2350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-100" value="35" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-99">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="182.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-101" value="HTTP 200 { success: true, data: {...} }" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-6" target="ZgrG1S2CWpW2SbbOh14H-5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1028" y="2402" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-102" value="36" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-101">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="196.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-103" value="Return Map&lt;String, dynamic&gt; (Dart map)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-5" target="ZgrG1S2CWpW2SbbOh14H-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="639" y="2454" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-104" value="37" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-103">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="171.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-107" value="Display response (Render Markdown in UI)" style="verticalAlign=bottom;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;dashed=1;dashPattern=2 3;endArrow=block;" edge="1" parent="ZgrG1S2CWpW2SbbOh14H-184" source="ZgrG1S2CWpW2SbbOh14H-3" target="ZgrG1S2CWpW2SbbOh14H-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="270" y="2588" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgrG1S2CWpW2SbbOh14H-108" value="39" style="ellipse;aspect=fixed;fillColor=#000000;align=center;fontColor=#FFFFFF;" vertex="1" parent="ZgrG1S2CWpW2SbbOh14H-107">
+          <mxGeometry width="14" height="14" relative="1" as="geometry">
+            <mxPoint x="176.5" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
