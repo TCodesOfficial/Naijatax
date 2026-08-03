@@ -8,6 +8,13 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'tax_provider.dart';
 
+String _getRedirectUrl() {
+  if (kIsWeb) {
+    return '${Uri.base.origin}/';
+  }
+  return 'naijatax://';
+}
+
 enum AuthStatus {
   loading,
   authenticated,
@@ -367,7 +374,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (kIsWeb) {
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'https://skxiwgqhzjxvvlrcmxxh.supabase.co/auth/v1/callback',
+        redirectTo: _getRedirectUrl(),
       );
       return;
     }
@@ -396,7 +403,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> signInWithApple() async {
     await _client.auth.signInWithOAuth(
       OAuthProvider.apple,
-      redirectTo: 'https://skxiwgqhzjxvvlrcmxxh.supabase.co/auth/v1/callback',
+      redirectTo: _getRedirectUrl(),
     );
   }
 
@@ -404,7 +411,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       await _client.auth.signInWithOAuth(
         OAuthProvider.facebook,
-        redirectTo: 'https://skxiwgqhzjxvvlrcmxxh.supabase.co/auth/v1/callback',
+        redirectTo: _getRedirectUrl(),
       );
     } catch (e) {
       throw 'Facebook sign-in failed. Please try again.';

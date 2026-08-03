@@ -52,8 +52,8 @@ AppConstants._();
   static const String appVersion = '1.0.0';
 
   // ── Assets ────────────────────────────────────────────────────────────
-  static const String logoSquareAsset = 'assets/images/logo_square.svg';
-  static const String logoLongAsset = 'assets/images/logo_long.svg';
+  static const String logoSquareAsset = 'assets/images/logo_square.png';
+  static const String logoLongAsset = 'assets/images/logo_long.png';
 
   // ── Layout Breakpoints ────────────────────────────────────────────────
   static const double mobileBreakpoint = 600;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../core/constants/app_constants.dart';
 
@@ -23,10 +22,10 @@ class AppLogo extends StatelessWidget {
     final size = iconSize ?? radius + 2;
 
     if (variant == LogoVariant.long) {
-      return SvgPicture.asset(
+      return Image.asset(
         AppConstants.logoLongAsset,
         height: size,
-        placeholderBuilder: (_) => Icon(
+        errorBuilder: (_, __, ___) => Icon(
           Icons.account_balance,
           size: size,
           color: theme.colorScheme.primary,
@@ -34,11 +33,11 @@ class AppLogo extends StatelessWidget {
       );
     }
 
-    return SvgPicture.asset(
+    return Image.asset(
       AppConstants.logoSquareAsset,
       width: size,
       height: size,
-      placeholderBuilder: (_) => Icon(
+      errorBuilder: (_, __, ___) => Icon(
         Icons.account_balance,
         size: size,
         color: theme.colorScheme.primary,

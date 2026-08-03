@@ -67,7 +67,6 @@ dependencies:
   url_launcher: ^6.3.0
 
   # ── UI Enhancements ──────────────────────────────────────────────────────────
-  flutter_svg: ^2.0.10+1
   shimmer: ^3.0.0
   flutter_markdown: ^0.7.0
 

@@ -37,12 +37,14 @@ model TaxProfile {
   computedTax   Decimal  @map("computed_tax") @db.Decimal(15, 2)
   netIncome     Decimal  @map("net_income") @db.Decimal(15, 2)
   isExempt      Boolean  @default(false) @map("is_exempt")
-  citExemption  String   @default("EXEMPT") @map("cit_exemption") // EXEMPT, TAXABLE_15, TAXABLE_20 etc.
+  citExemption  String   @default("EXEMPT") @map("cit_exemption") 
+  turnover      Decimal  @default(0.00) @map("turnover") @db.Decimal(15, 2)
+  assets        Decimal  @default(0.00) @map("assets") @db.Decimal(15, 2)
   createdAt     DateTime @default(now()) @map("created_at")
-
   @@index([userId, createdAt])
   @@map("tax_profiles")
 }
+
 
 model VatItem {
   id        String   @id @default(cuid())

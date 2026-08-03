@@ -136,7 +136,7 @@ class WebLandingScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            'NTA 2025 Compliant',
+            'Nigeria\'s Tax Compliance Platform',
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w600,
@@ -146,7 +146,7 @@ class WebLandingScreen extends StatelessWidget {
         ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
         const SizedBox(height: 20),
         Text(
-          'Master the 2025\nNigeria Tax Act Reforms',
+          'NaijaTax Enlighten —\nYour Tax Compliance Partner',
           style: GoogleFonts.plusJakartaSans(
             fontSize: isDesktop ? 42 : 28,
             fontWeight: FontWeight.w700,
@@ -157,9 +157,10 @@ class WebLandingScreen extends StatelessWidget {
         ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.15),
         const SizedBox(height: 20),
         Text(
-          'Understand and plan your taxes with confidence. Run complex PAYE calculations, '
-          'check CIT exemption statuses, upload bank statements for AI parsing, and '
-          'learn via community support.',
+          'NaijaTax Enlighten is Nigeria\'s leading tax compliance and education platform. '
+          'Calculate your PAYE using the 2025 Nigeria Tax Act progressive brackets, '
+          'check CIT exemption statuses, upload bank statements for AI-powered parsing, '
+          'and learn through interactive quizzes and a community forum.',
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             height: 1.6,
