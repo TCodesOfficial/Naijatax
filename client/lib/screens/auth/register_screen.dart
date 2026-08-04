@@ -559,11 +559,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             }
                           }
                         },
-                        icon: const Icon(Icons.g_mobiledata, size: 20),
+                        icon: Image.asset(
+                          'assets/images/google_logo.png',
+                          width: 18,
+                          height: 18,
+                        ),
                         label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.onSurface,
-                          side: BorderSide(color: theme.colorScheme.outlineVariant),
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1F1F1F),
+                          side: const BorderSide(color: Color(0xFF747775)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/theme_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/guest_restriction_dialog.dart';
 
@@ -111,7 +112,9 @@ class VerifyAccountScreen extends ConsumerWidget {
                     theme,
                     stepNum: null,
                     icon: Icons.check_circle,
-                    iconColor: const Color(0xFF15803D),
+                    iconColor: theme.brightness == Brightness.dark
+                        ? AppColors.darkSuccess
+                        : AppColors.success,
                     title: 'Email Verified',
                     subtitle: 'amina.okonjo@example.com',
                     isCompleted: true,

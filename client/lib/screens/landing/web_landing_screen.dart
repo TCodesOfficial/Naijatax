@@ -412,7 +412,7 @@ class WebLandingScreen extends StatelessWidget {
                     title: 'Tax Education',
                     description:
                         'Learn about the 2025 reforms through guides, articles, and interactive quizzes.',
-                    color: const Color(0xFFB91C1C),
+                    color: theme.colorScheme.error,
                   ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
                 ],
               ),

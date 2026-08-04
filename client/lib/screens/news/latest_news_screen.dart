@@ -239,7 +239,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFB91C1C),
+            color: theme.colorScheme.error,
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Text(

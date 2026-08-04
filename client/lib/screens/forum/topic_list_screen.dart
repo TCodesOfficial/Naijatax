@@ -307,7 +307,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                             child: Text(
                               '$replyCount replies',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: const Color(0xFF15803D),
+                                color: theme.colorScheme.onTertiaryContainer,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
