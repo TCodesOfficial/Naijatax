@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../core/theme/theme_colors.dart';
 import '../core/utils/app_formatter.dart';
 import '../models/tax_profile.dart';
 import '../models/article_model.dart';
@@ -11,6 +12,11 @@ import '../providers/tax_provider.dart';
 import '../providers/article_provider.dart';
 import '../providers/inflation_provider.dart';
 import '../services/pdf_service.dart';
+
+/// Returns [darkColor] in dark mode, [lightColor] in light mode.
+Color _semanticColor(BuildContext context, Color lightColor, Color darkColor) {
+  return Theme.of(context).brightness == Brightness.dark ? darkColor : lightColor;
+}
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -245,7 +251,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 theme,
                 'Tax Liability',
                 AppFormatter.nairaCompact(profile.computedTax),
-                const Color(0xFFB91C1C),
+                _semanticColor(context, AppColors.govRed, AppColors.darkError),
               ),
             ),
           ],
@@ -257,8 +263,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(8),
-            border: const Border(
-              left: BorderSide(color: Color(0xFF15803D), width: 4),
+            border: Border(
+              left: BorderSide(
+                color: _semanticColor(context, AppColors.success, AppColors.darkSuccess),
+                width: 4,
+              ),
             ),
           ),
           child: Row(
@@ -278,15 +287,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Text(
                     '${DateTime.now().year}  •  Profile Active',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF15803D),
+                      color: _semanticColor(context, AppColors.success, AppColors.darkSuccess),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
-              const Icon(
+              Icon(
                 Icons.check_circle,
-                color: Color(0xFF15803D),
+                color: _semanticColor(context, AppColors.success, AppColors.darkSuccess),
                 size: 24,
               ),
             ],
@@ -450,8 +459,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         percentage: '${(netRatio * 100).toStringAsFixed(0)}%',
         amount: AppFormatter.naira(netIncome),
         subtitle: 'of ${AppFormatter.nairaCompact(annualGross)} gross',
-        color: const Color(0xFF15803D),
-        bgColor: const Color(0xFF15803D).withValues(alpha: 0.1),
+        color: _semanticColor(context, AppColors.success, AppColors.darkSuccess),
+        bgColor: _semanticColor(context, AppColors.success, AppColors.darkSuccess).withValues(alpha: 0.12),
         icon: Icons.account_balance_wallet_outlined,
         route: '/dashboard/analytics',
       ),
@@ -461,8 +470,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         percentage: '${(pensionRatio * 100).toStringAsFixed(0)}%',
         amount: AppFormatter.naira(pension),
         subtitle: '8% of gross',
-        color: const Color(0xFFB45309),
-        bgColor: const Color(0xFFB45309).withValues(alpha: 0.1),
+        color: _semanticColor(context, const Color(0xFFB45309), const Color(0xFFFBBF24)),
+        bgColor: _semanticColor(context, const Color(0xFFB45309), const Color(0xFFFBBF24)).withValues(alpha: 0.12),
         icon: Icons.savings_outlined,
         route: '/calculator',
       ),
@@ -472,8 +481,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         percentage: '${(reliefRatio * 100).toStringAsFixed(0)}%',
         amount: AppFormatter.naira(rentRelief),
         subtitle: 'max rent relief cap',
-        color: const Color(0xFF7C3AED),
-        bgColor: const Color(0xFF7C3AED).withValues(alpha: 0.1),
+        color: _semanticColor(context, const Color(0xFF6D28D9), const Color(0xFFA78BFA)),
+        bgColor: _semanticColor(context, const Color(0xFF6D28D9), const Color(0xFFA78BFA)).withValues(alpha: 0.12),
         icon: Icons.discount_outlined,
         route: '/calculator',
       ),

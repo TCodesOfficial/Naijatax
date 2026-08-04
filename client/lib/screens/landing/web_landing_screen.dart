@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../widgets/animated_button.dart';
@@ -727,9 +728,9 @@ class WebLandingScreen extends StatelessWidget {
                           spacing: 12,
                           runSpacing: 8,
                           children: [
-                            _footerLink(theme, 'Privacy Policy'),
-                            _footerLink(theme, 'Terms of Service'),
-                            _footerLink(theme, 'Contact'),
+                            _footerLink(theme, 'Privacy Policy', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/privacy.html'),
+                            _footerLink(theme, 'Terms of Service', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/terms.html'),
+                            _footerLink(theme, 'Contact', 'mailto:support@naijataxenlighten.com'),
                           ],
                         ),
                       ],
@@ -738,7 +739,7 @@ class WebLandingScreen extends StatelessWidget {
                     Divider(color: Colors.white.withValues(alpha: 0.15)),
                     const SizedBox(height: 16),
                     Text(
-                      '© 2025 ${AppConstants.appName}. Built for the 2025 Nigeria Tax Act reforms.',
+                      '© 2026 ${AppConstants.appName}. Built for the 2025 Nigeria Tax Act reforms.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.5),
                       ),
@@ -767,16 +768,16 @@ class WebLandingScreen extends StatelessWidget {
                       runSpacing: 8,
                       alignment: WrapAlignment.center,
                       children: [
-                        _footerLink(theme, 'Privacy Policy'),
-                        _footerLink(theme, 'Terms of Service'),
-                        _footerLink(theme, 'Contact'),
+                        _footerLink(theme, 'Privacy Policy', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/privacy.html'),
+                        _footerLink(theme, 'Terms of Service', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/terms.html'),
+                        _footerLink(theme, 'Contact', 'mailto:support@naijataxenlighten.com'),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Divider(color: Colors.white.withValues(alpha: 0.15)),
                     const SizedBox(height: 12),
                     Text(
-                      '© 2025 ${AppConstants.appName}.',
+                      '© 2026 ${AppConstants.appName}.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.5),
@@ -796,13 +797,16 @@ class WebLandingScreen extends StatelessWidget {
     );
   }
 
-  Widget _footerLink(ThemeData theme, String text) {
+  Widget _footerLink(ThemeData theme, String text, String url) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Text(
-        text,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: Colors.white.withValues(alpha: 0.7),
+      child: InkWell(
+        onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+        child: Text(
+          text,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
         ),
       ),
     );

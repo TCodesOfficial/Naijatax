@@ -44,10 +44,20 @@ class AppTheme {
         colorScheme: const ColorScheme.light(
           primary: AppColors.primary,
           onPrimary: AppColors.white,
+          primaryContainer: AppColors.primaryFixed,
+          onPrimaryContainer: AppColors.primary,
           secondary: AppColors.secondary,
           onSecondary: AppColors.white,
+          secondaryContainer: Color(0xFFD0E4FF),
+          onSecondaryContainer: Color(0xFF001C39),
           tertiary: AppColors.tertiary,
+          onTertiary: AppColors.white,
+          tertiaryContainer: Color(0xFFB7F0D4),
+          onTertiaryContainer: Color(0xFF002114),
           error: AppColors.error,
+          onError: AppColors.white,
+          errorContainer: Color(0xFFFFDAD6),
+          onErrorContainer: Color(0xFF410002),
           surface: AppColors.surface,
           onSurface: AppColors.onSurface,
           surfaceContainerLowest: AppColors.white,
@@ -57,9 +67,9 @@ class AppTheme {
           surfaceContainerHighest: AppColors.surfaceHighest,
           outline: AppColors.outline,
           outlineVariant: AppColors.outlineVariant,
-          inverseSurface: AppColors.inverseSurface,
-          onInverseSurface: AppColors.inverseOnSurface,
-          inversePrimary: AppColors.inversePrimary,
+          inverseSurface: AppColors.darkSurface,
+          onInverseSurface: AppColors.darkTextPrimary,
+          inversePrimary: AppColors.darkPrimary,
         ),
         textTheme: _textTheme(AppColors.onSurface, AppColors.onSurfaceVariant),
         appBarTheme: AppBarTheme(
@@ -137,66 +147,85 @@ class AppTheme {
       );
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────
-  // Blue-purple tinted dark theme with layered contrasts
-  static const _darkBluePurple = Color(0xFF121624);
-  static const _darkSurface = Color(0xFF1C2236);
-  static const _darkCard = Color(0xFF1E2540);
-  static const _darkInput = Color(0xFF1A2034);
-  static const _darkContainer = Color(0xFF222840);
-  static const _darkContainerHigh = Color(0xFF2A3050);
-  static const _darkContainerHighest = Color(0xFF343C58);
-  static const _darkBorder = Color(0xFF2E3550);
-  static const _darkBorderSubtle = Color(0xFF3A4060);
-  static const _darkOutline = Color(0xFF7A80A8);
-  static const _darkOutlineVariant = Color(0xFF3A4060);
-  static const _darkTextPrimary = Color(0xFFE2E6F0);
-  static const _darkTextSubtle = Color(0xFFA0A8C0);
-
+  // Pure blue-navy tinted dark theme. Every surface, border, and accent lives
+  // on the blue spectrum — no purple drift, no grey contamination.
   static ThemeData get dark => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: const ColorScheme.dark(
-          primary: AppColors.inversePrimary,
-          onPrimary: Color(0xFF001453),
-          secondary: Color(0xFFA4C9FF),
-          onSecondary: Color(0xFF001C39),
-          tertiary: Color(0xFF4EDEA3),
-          error: Color(0xFFFFB4AB),
-          surface: _darkSurface,
-          onSurface: _darkTextPrimary,
-          surfaceContainerLowest: _darkBluePurple,
-          surfaceContainerLow: _darkInput,
-          surfaceContainer: _darkContainer,
-          surfaceContainerHigh: _darkContainerHigh,
-          surfaceContainerHighest: _darkContainerHighest,
-          outline: _darkOutline,
-          outlineVariant: _darkOutlineVariant,
+          // ── Primary (bright sky blue) ──────────────────────────────────
+          primary: AppColors.darkPrimary,
+          onPrimary: AppColors.darkOnPrimary,
+          primaryContainer: AppColors.darkPrimaryContainer,
+          onPrimaryContainer: AppColors.darkOnPrimaryContainer,
+
+          // ── Secondary (lighter sky blue, good for badges / chips) ──────
+          secondary: AppColors.darkSecondary,
+          onSecondary: AppColors.darkOnSecondary,
+          secondaryContainer: AppColors.darkSecondaryContainer,
+          onSecondaryContainer: AppColors.darkOnSecondaryContainer,
+
+          // ── Tertiary (cyan accent — complementary to blue palette) ─────
+          tertiary: AppColors.darkTertiary,
+          onTertiary: AppColors.darkOnTertiary,
+          tertiaryContainer: AppColors.darkTertiaryContainer,
+          onTertiaryContainer: AppColors.darkOnTertiaryContainer,
+
+          // ── Error ──────────────────────────────────────────────────────
+          error: AppColors.darkError,
+          onError: AppColors.darkOnError,
+          errorContainer: AppColors.darkErrorContainer,
+          onErrorContainer: AppColors.darkOnErrorContainer,
+
+          // ── Surfaces (all deep blue-navy) ──────────────────────────────
+          surface: AppColors.darkSurface,
+          onSurface: AppColors.darkTextPrimary,
+          surfaceContainerLowest: AppColors.darkBackground,
+          surfaceContainerLow: AppColors.darkSurfaceLow,
+          surfaceContainer: AppColors.darkSurfaceContainer,
+          surfaceContainerHigh: AppColors.darkSurfaceHigh,
+          surfaceContainerHighest: AppColors.darkSurfaceHighest,
+
+          // ── Outlines ──────────────────────────────────────────────────
+          outline: AppColors.darkOutline,
+          outlineVariant: AppColors.darkBorder,
+
+          // ── Inverse (for snackbars, tooltips) ─────────────────────────
+          inverseSurface: AppColors.inverseSurface,
+          onInverseSurface: AppColors.inverseOnSurface,
           inversePrimary: AppColors.primary,
         ),
-        textTheme: _textTheme(_darkTextPrimary, _darkTextSubtle),
+        textTheme: _textTheme(AppColors.darkTextPrimary, AppColors.darkTextSubtle),
+
+        // ── AppBar ────────────────────────────────────────────────────────
         appBarTheme: AppBarTheme(
-          backgroundColor: _darkSurface,
-          foregroundColor: _darkTextPrimary,
+          backgroundColor: AppColors.darkSurface,
+          foregroundColor: AppColors.darkTextPrimary,
           elevation: 0,
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           centerTitle: false,
-          titleTextStyle: const TextStyle(
+          titleTextStyle: GoogleFonts.plusJakartaSans(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.inversePrimary),
+              color: AppColors.darkPrimary),
         ),
+
+        // ── Cards ─────────────────────────────────────────────────────────
         cardTheme: CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: _darkBorder)),
-          color: _darkCard,
+              side: const BorderSide(color: AppColors.darkBorder)),
+          color: AppColors.darkSurfaceContainer,
         ),
+
+        // ── Elevated Button ───────────────────────────────────────────────
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.inversePrimary,
-            foregroundColor: const Color(0xFF001453),
+            backgroundColor: AppColors.darkPrimary,
+            foregroundColor: AppColors.darkOnPrimary,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape:
@@ -205,10 +234,12 @@ class AppTheme {
                 GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
+
+        // ── Outlined Button ───────────────────────────────────────────────
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.inversePrimary,
-            side: const BorderSide(color: AppColors.inversePrimary),
+            foregroundColor: AppColors.darkPrimary,
+            side: const BorderSide(color: AppColors.darkPrimary),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -216,36 +247,90 @@ class AppTheme {
                 GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
+
+        // ── Text Button ───────────────────────────────────────────────────
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.darkPrimary,
+          ),
+        ),
+
+        // ── Input Decoration ──────────────────────────────────────────────
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: _darkInput,
+          fillColor: AppColors.darkSurfaceLow,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _darkBorder)),
+              borderSide: const BorderSide(color: AppColors.darkBorder)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: _darkBorder)),
+              borderSide: const BorderSide(color: AppColors.darkBorder)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: AppColors.inversePrimary, width: 2)),
+              borderSide: const BorderSide(
+                  color: AppColors.darkPrimary, width: 2)),
           errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFFFB4AB))),
-          labelStyle: GoogleFonts.inter(color: _darkTextSubtle),
-          hintStyle: GoogleFonts.inter(color: _darkOutline),
+              borderSide: const BorderSide(color: AppColors.darkError)),
+          focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.darkError, width: 2)),
+          labelStyle: GoogleFonts.inter(color: AppColors.darkTextSubtle),
+          hintStyle: GoogleFonts.inter(color: AppColors.darkOutline),
+          prefixIconColor: AppColors.darkOutline,
         ),
+
+        // ── Bottom Navigation ─────────────────────────────────────────────
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: _darkSurface,
-          selectedItemColor: AppColors.inversePrimary,
-          unselectedItemColor: _darkOutline,
-          elevation: 8,
+          backgroundColor: AppColors.darkSurface,
+          selectedItemColor: AppColors.darkPrimary,
+          unselectedItemColor: AppColors.darkOutline,
+          elevation: 0,
           type: BottomNavigationBarType.fixed,
         ),
+
+        // ── Divider ───────────────────────────────────────────────────────
         dividerTheme: const DividerThemeData(
-            color: _darkBorderSubtle, thickness: 1, space: 1),
-        scaffoldBackgroundColor: _darkBluePurple,
+            color: AppColors.darkBorderSubtle, thickness: 1, space: 1),
+
+        // ── Scaffold ──────────────────────────────────────────────────────
+        scaffoldBackgroundColor: AppColors.darkBackground,
+
+        // ── Slider ────────────────────────────────────────────────────────
+        sliderTheme: const SliderThemeData(
+          activeTrackColor: AppColors.darkPrimary,
+          inactiveTrackColor: AppColors.darkBorder,
+          thumbColor: AppColors.darkPrimary,
+          overlayColor: Color(0x1A7EB3FF),
+        ),
+
+        // ── Switch ────────────────────────────────────────────────────────
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.darkOnPrimary;
+            }
+            return AppColors.darkOutline;
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.darkPrimary;
+            }
+            return AppColors.darkBorder;
+          }),
+        ),
+
+        // ── ListTile ──────────────────────────────────────────────────────
+        listTileTheme: const ListTileThemeData(
+          iconColor: AppColors.darkOutline,
+          textColor: AppColors.darkTextPrimary,
+        ),
+
+        // ── Icon ──────────────────────────────────────────────────────────
+        iconTheme: const IconThemeData(
+          color: AppColors.darkTextSubtle,
+        ),
       );
 }

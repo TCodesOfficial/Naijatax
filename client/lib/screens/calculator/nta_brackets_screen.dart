@@ -179,8 +179,14 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            _statRow(theme, 'Total Tax Liability', _naira(_totalTax), const Color(0xFFB91C1C)),
-            _statRow(theme, 'Consolidated Relief (CRA)', _naira(_cra), const Color(0xFF15803D)),
+            _statRow(theme, 'Total Tax Liability', _naira(_totalTax),
+                Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkError
+                    : AppColors.govRed),
+            _statRow(theme, 'Consolidated Relief (CRA)', _naira(_cra),
+                Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSuccess
+                    : AppColors.success),
             _statRow(theme, 'Chargeable Income', _naira(_chargeableIncome), theme.colorScheme.onSurface),
             _statRow(theme, 'Monthly Take-Home', _naira(_monthlyTakeHome), theme.colorScheme.primary),
           ],

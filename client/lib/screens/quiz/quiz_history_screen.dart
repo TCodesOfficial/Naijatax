@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../core/theme/theme_colors.dart';
 import '../../providers/quiz_provider.dart';
 
 class QuizHistoryScreen extends ConsumerStatefulWidget {
@@ -47,7 +48,9 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
 
                     Color gradeColor;
                     if (isExcellent) {
-                      gradeColor = const Color(0xFF15803D);
+                      gradeColor = theme.brightness == Brightness.dark
+                          ? AppColors.darkSuccess
+                          : AppColors.success;
                     } else if (isGood) {
                       gradeColor = theme.colorScheme.primary;
                     } else {

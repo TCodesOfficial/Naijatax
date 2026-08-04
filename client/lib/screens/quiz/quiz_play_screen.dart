@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/theme_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/quiz_provider.dart';
 import '../../widgets/animated_button.dart';
@@ -138,7 +139,9 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
                 'Percentage: ${percentage.toStringAsFixed(0)}%',
                 style: TextStyle(
                   fontSize: 16,
-                  color: percentage >= 60 ? const Color(0xFF15803D) : theme.colorScheme.error,
+                  color: percentage >= 60
+                      ? (theme.brightness == Brightness.dark ? AppColors.darkSuccess : AppColors.success)
+                      : theme.colorScheme.error,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -259,12 +262,19 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
                     if (_answered) {
                       if (idx == q.correctIndex) {
                         cardColor = theme.colorScheme.tertiaryContainer;
-                        textColor = const Color(0xFF15803D);
-                        borderSide = const BorderSide(color: Color(0xFF15803D), width: 1.5);
+                        textColor = theme.brightness == Brightness.dark
+                            ? AppColors.darkSuccess
+                            : AppColors.success;
+                        borderSide = BorderSide(
+                          color: theme.brightness == Brightness.dark
+                              ? AppColors.darkSuccess
+                              : AppColors.success,
+                          width: 1.5,
+                        );
                       } else if (_selectedAns == idx) {
                         cardColor = theme.colorScheme.errorContainer;
-                        textColor = const Color(0xFFB91C1C);
-                        borderSide = const BorderSide(color: Color(0xFFB91C1C), width: 1.5);
+                        textColor = theme.colorScheme.error;
+                        borderSide = BorderSide(color: theme.colorScheme.error, width: 1.5);
                       }
                     } else if (_selectedAns == idx) {
                       cardColor = theme.colorScheme.primaryContainer.withValues(alpha: 0.1);
@@ -338,11 +348,17 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFF15803D)),
-                                SizedBox(width: 6),
-                                Text('Explanation', style: TextStyle(fontWeight: FontWeight.bold)),
+                                Icon(
+                                  Icons.lightbulb_outline,
+                                  size: 18,
+                                  color: theme.brightness == Brightness.dark
+                                      ? AppColors.darkSuccess
+                                      : AppColors.success,
+                                ),
+                                const SizedBox(width: 6),
+                                const Text('Explanation', style: TextStyle(fontWeight: FontWeight.bold)),
                               ],
                             ),
                             const SizedBox(height: 8),

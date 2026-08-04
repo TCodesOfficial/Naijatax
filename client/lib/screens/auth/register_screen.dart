@@ -531,7 +531,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            'Or continue with',
+                            'Or sign up with',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontSize: 11,
@@ -543,57 +543,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _socialButton(
-                          theme,
-                          Icons.g_mobiledata,
-                          () async {
-                            try {
-                              await ref.read(authProvider.notifier).signInWithGoogle();
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('$e'), backgroundColor: Colors.red),
-                                );
-                              }
+                    // Google sign-up button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          try {
+                            await ref.read(authProvider.notifier).signInWithGoogle();
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
+                              );
                             }
-                          },
+                          }
+                        },
+                        icon: const Icon(Icons.g_mobiledata, size: 20),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onSurface,
+                          side: BorderSide(color: theme.colorScheme.outlineVariant),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                        const SizedBox(width: 10),
-                        _socialButton(
-                          theme,
-                          Icons.apple,
-                          () async {
-                            try {
-                              await ref.read(authProvider.notifier).signInWithApple();
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('$e'), backgroundColor: Colors.red),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                        const SizedBox(width: 10),
-                        _socialButton(
-                          theme,
-                          Icons.facebook,
-                          () async {
-                            try {
-                              await ref.read(authProvider.notifier).signInWithFacebook();
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('$e'), backgroundColor: Colors.red),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -748,24 +723,4 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _socialButton(
-    ThemeData theme,
-    IconData icon,
-    VoidCallback onPressed,
-  ) {
-    return Container(
-      width: 48,
-      height: 40,
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(10),
-        color: theme.colorScheme.surfaceContainerLow,
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 20, color: theme.colorScheme.onSurfaceVariant),
-        padding: EdgeInsets.zero,
-      ),
-    );
-  }
 }

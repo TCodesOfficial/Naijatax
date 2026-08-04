@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/theme/theme_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
@@ -415,8 +416,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF15803D),
+                      decoration: BoxDecoration(
+                        color: theme.brightness == Brightness.dark
+                            ? AppColors.darkSuccess
+                            : AppColors.success,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -424,7 +427,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     Flexible(
                       child: Text(
                         'Assistant Online',
-                        style: theme.textTheme.labelSmall?.copyWith(color: const Color(0xFF15803D)),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.brightness == Brightness.dark
+                              ? AppColors.darkSuccess
+                              : AppColors.success,
+                        ),
                       ),
                     ),
                   ],

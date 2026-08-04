@@ -524,7 +524,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'Or continue with',
+                            'Or sign in with',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                               letterSpacing: 0.5,
@@ -536,11 +536,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Social logins
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _socialButton(theme, Icons.g_mobiledata, 'Google', () async {
+                    // Google sign-in button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
                           try {
                             await ref.read(authProvider.notifier).signInWithGoogle();
                           } catch (e) {
@@ -550,32 +551,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               );
                             }
                           }
-                        }),
-                        const SizedBox(width: 12),
-                        _socialButton(theme, Icons.apple, 'Apple', () async {
-                          try {
-                            await ref.read(authProvider.notifier).signInWithApple();
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
-                              );
-                            }
-                          }
-                        }),
-                        const SizedBox(width: 12),
-                        _socialButton(theme, Icons.facebook, 'Facebook', () async {
-                          try {
-                            await ref.read(authProvider.notifier).signInWithFacebook();
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
-                              );
-                            }
-                          }
-                        }),
-                      ],
+                        },
+                        icon: const Icon(Icons.g_mobiledata, size: 22),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onSurface,
+                          side: BorderSide(color: theme.colorScheme.outlineVariant),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 14),
 
@@ -608,24 +594,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
   }
 
-  Widget _socialButton(
-    ThemeData theme,
-    IconData icon,
-    String label,
-    VoidCallback onPressed,
-  ) {
-    return Container(
-      width: 56,
-      height: 48,
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(12),
-        color: theme.colorScheme.surfaceContainerLow,
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 22, color: theme.colorScheme.onSurfaceVariant),
-      ),
-    );
-  }
 }

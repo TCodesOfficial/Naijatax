@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/theme_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/forum_provider.dart';
 import '../../widgets/animated_button.dart';
@@ -178,10 +179,10 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                                               100,
                                             ),
                                           ),
-                                          child: const Text(
+                                          child: Text(
                                             'Best Answer',
                                             style: TextStyle(
-                                              color: Color(0xFF15803D),
+                                              color: theme.colorScheme.onTertiaryContainer,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),

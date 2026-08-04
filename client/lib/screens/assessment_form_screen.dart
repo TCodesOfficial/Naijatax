@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/theme/theme_colors.dart';
 import '../providers/tax_provider.dart';
 import '../services/api_service.dart';
 import '../services/pdf_service.dart';
@@ -296,7 +297,9 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                     _resultRow(
                       'Annual Net Take-Home',
                       _naira.format(taxState.profile!.netIncome),
-                      valueColor: const Color(0xFF15803D),
+                      valueColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkSuccess
+                          : AppColors.success,
                       bold: true,
                     ),
                     _resultRow(

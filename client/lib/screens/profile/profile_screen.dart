@@ -157,7 +157,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFB91C1C)),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
             child: const Text('Remove'),
           ),
         ],
@@ -538,11 +540,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               icon: const Icon(Icons.logout),
               label: const Text('Logout'),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFB91C1C),
+                foregroundColor: theme.colorScheme.error,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: const BorderSide(color: Color(0xFFB91C1C)),
+                  side: BorderSide(color: theme.colorScheme.error),
                 ),
               ),
             ),

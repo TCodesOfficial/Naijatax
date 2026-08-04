@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/theme_colors.dart';
 import '../../providers/vat_provider.dart';
 
 class VatItemsScreen extends ConsumerStatefulWidget {
@@ -207,11 +208,14 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
   }
 
   Widget _buildLegend(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return Row(
       children: [
-        _legendDot(theme, const Color(0xFF15803D), 'Zero-Rated'),
+        _legendDot(theme,
+            isDark ? AppColors.darkSuccess : AppColors.success, 'Zero-Rated'),
         const SizedBox(width: 10),
-        _legendDot(theme, const Color(0xFFB45309), 'Exempt'),
+        _legendDot(theme,
+            isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309), 'Exempt'),
         const SizedBox(width: 10),
         _legendDot(theme, theme.colorScheme.primary, 'Standard'),
       ],
@@ -236,10 +240,11 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
   }
 
   Widget _vatItemTile(ThemeData theme, VatItem item) {
+    final isDark = theme.brightness == Brightness.dark;
     final statusColor = item.status == 'ZERO_RATED'
-        ? const Color(0xFF15803D)
+        ? (isDark ? AppColors.darkSuccess : AppColors.success)
         : item.status == 'EXEMPT'
-            ? const Color(0xFFB45309)
+            ? (isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309))
             : theme.colorScheme.primary;
 
     final statusLabel = item.status == 'ZERO_RATED'
