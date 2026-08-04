@@ -25,6 +25,8 @@ class AppLogo extends StatelessWidget {
       return Image.asset(
         AppConstants.logoLongAsset,
         height: size,
+        cacheWidth: (size * 2).toInt(),
+        cacheHeight: (size * 2).toInt(),
         errorBuilder: (_, __, ___) => Icon(
           Icons.account_balance,
           size: size,
@@ -37,6 +39,8 @@ class AppLogo extends StatelessWidget {
       AppConstants.logoSquareAsset,
       width: size,
       height: size,
+      cacheWidth: (size * 2).toInt(),
+      cacheHeight: (size * 2).toInt(),
       errorBuilder: (_, __, ___) => Icon(
         Icons.account_balance,
         size: size,

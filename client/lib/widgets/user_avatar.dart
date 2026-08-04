@@ -66,6 +66,8 @@ class UserAvatar extends StatelessWidget {
                 imageUrl: avatarUrl!,
                 width: radius * 2,
                 height: radius * 2,
+                memCacheWidth: (radius * 2).toInt(),
+                memCacheHeight: (radius * 2).toInt(),
                 fit: BoxFit.cover,
                 placeholder: (context, url) => _buildFallback(ic, icSize),
                 errorBuilder: (context, url, error) => _buildFallback(ic, icSize),

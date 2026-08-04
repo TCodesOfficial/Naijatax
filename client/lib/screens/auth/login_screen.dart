@@ -556,6 +556,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           'assets/images/google_logo.png',
                           width: 20,
                           height: 20,
+                          cacheWidth: 40,
+                          cacheHeight: 40,
                         ),
                         label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(

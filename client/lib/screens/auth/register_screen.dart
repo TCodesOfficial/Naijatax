@@ -563,6 +563,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           'assets/images/google_logo.png',
                           width: 18,
                           height: 18,
+                          cacheWidth: 36,
+                          cacheHeight: 36,
                         ),
                         label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(

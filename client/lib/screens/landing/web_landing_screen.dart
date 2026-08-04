@@ -280,7 +280,9 @@ class WebLandingScreen extends StatelessWidget {
         horizontal: isDesktop ? 60 : 24,
         vertical: 40,
       ),
-      color: theme.colorScheme.primary,
+      color: theme.colorScheme.primaryContainer.withValues(
+        alpha: theme.brightness == Brightness.dark ? 0.4 : 1.0,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),
@@ -340,7 +342,7 @@ class WebLandingScreen extends StatelessWidget {
     return Container(
       height: 40,
       width: 1,
-      color: Colors.white.withValues(alpha: 0.3),
+      color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.25),
     );
   }
 
@@ -688,6 +690,14 @@ class WebLandingScreen extends StatelessWidget {
   Widget _buildFooter(BuildContext context, ThemeData theme) {
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width >= 900;
+    final isDark = theme.brightness == Brightness.dark;
+    final footerText = isDark ? Colors.white : theme.colorScheme.onSurface;
+    final footerTextFaint = isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : theme.colorScheme.onSurfaceVariant;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.15)
+        : theme.colorScheme.outlineVariant;
 
     return Container(
       width: double.infinity,
@@ -695,7 +705,9 @@ class WebLandingScreen extends StatelessWidget {
         horizontal: isDesktop ? 40 : 20,
         vertical: 32,
       ),
-      color: theme.colorScheme.surfaceContainerLowest,
+      color: isDark
+          ? theme.colorScheme.surfaceContainerLowest
+          : theme.colorScheme.surfaceContainerLow,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -715,7 +727,7 @@ class WebLandingScreen extends StatelessWidget {
                                 child: Text(
                                   AppConstants.appName,
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.white,
+                                    color: footerText,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -728,20 +740,20 @@ class WebLandingScreen extends StatelessWidget {
                           spacing: 12,
                           runSpacing: 8,
                           children: [
-                            _footerLink(theme, 'Privacy Policy', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/privacy.html'),
-                            _footerLink(theme, 'Terms of Service', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/terms.html'),
-                            _footerLink(theme, 'Contact', 'mailto:support@naijataxenlighten.com'),
+                            _footerLink(theme, 'Privacy Policy', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/privacy.html', footerTextFaint),
+                            _footerLink(theme, 'Terms of Service', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/terms.html', footerTextFaint),
+                            _footerLink(theme, 'Contact', 'mailto:support@naijataxenlighten.com', footerTextFaint),
                           ],
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    Divider(color: Colors.white.withValues(alpha: 0.15)),
+                    Divider(color: dividerColor),
                     const SizedBox(height: 16),
                     Text(
                       '© 2026 ${AppConstants.appName}. Built for the 2025 Nigeria Tax Act reforms.',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: footerTextFaint,
                       ),
                     ),
                   ],
@@ -756,7 +768,7 @@ class WebLandingScreen extends StatelessWidget {
                         Text(
                           AppConstants.appName,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
+                            color: footerText,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -768,26 +780,26 @@ class WebLandingScreen extends StatelessWidget {
                       runSpacing: 8,
                       alignment: WrapAlignment.center,
                       children: [
-                        _footerLink(theme, 'Privacy Policy', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/privacy.html'),
-                        _footerLink(theme, 'Terms of Service', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/terms.html'),
-                        _footerLink(theme, 'Contact', 'mailto:support@naijataxenlighten.com'),
+                        _footerLink(theme, 'Privacy Policy', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/privacy.html', footerTextFaint),
+                        _footerLink(theme, 'Terms of Service', 'https://tcodesofficial.github.io/naijatax-enlighten-legal/terms.html', footerTextFaint),
+                        _footerLink(theme, 'Contact', 'mailto:support@naijataxenlighten.com', footerTextFaint),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Divider(color: Colors.white.withValues(alpha: 0.15)),
+                    Divider(color: dividerColor),
                     const SizedBox(height: 12),
                     Text(
                       '© 2026 ${AppConstants.appName}.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: footerTextFaint,
                       ),
                     ),
                     Text(
                       'Built for the 2025 Nigeria Tax Act reforms.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: footerTextFaint,
                       ),
                     ),
                   ],
@@ -797,7 +809,7 @@ class WebLandingScreen extends StatelessWidget {
     );
   }
 
-  Widget _footerLink(ThemeData theme, String text, String url) {
+  Widget _footerLink(ThemeData theme, String text, String url, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: InkWell(
@@ -805,7 +817,7 @@ class WebLandingScreen extends StatelessWidget {
         child: Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: color,
           ),
         ),
       ),
