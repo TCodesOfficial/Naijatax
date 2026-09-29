@@ -61,7 +61,8 @@ app.use((req, _res, next) => {
 
 // ─── Base Health Route for UptimeRobot ───────────────────────────────────────
 // ✅ FIXED: Moved here so it executes before the 404 catcher intercepts it!
-app.get("/", (req: Request, res: Response) => {
+app.get("/", async (req: Request, res: Response) => {
+  await prisma.$queryRaw`SELECT 1`;
   res.status(200).json({ success: true, message: "Server is running" });
 });
 
