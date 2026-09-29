@@ -1,12 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import sanitizeHtml from 'sanitize-html';
-import { env } from './config/env.js';
-import { prisma } from './config/database.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import apiRouter from './routes/index.js';
+import express, { Request, Response } from "express"; // ✅ FIXED: Added Response here
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import sanitizeHtml from "sanitize-html";
+import { env } from "./config/env.js";
+import { prisma } from "./config/database.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import apiRouter from "./routes/index.js";
 
 const app = express();
 
@@ -16,33 +16,53 @@ const limiter = rateLimit({
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: { code: 'RATE_LIMITED', message: 'Too many requests. Please try again later.' } },
+  message: {
+    success: false,
+    error: {
+      code: "RATE_LIMITED",
+      message: "Too many requests. Please try again later.",
+    },
+  },
 });
 app.use(limiter);
 
 // ─── Security & Parsing Middleware ───────────────────────────────────────────
 app.use(helmet());
-app.use(cors({
-  origin: env.CORS_ORIGINS.includes('*') ? true : env.CORS_ORIGINS,
-  credentials: true,
-}));
-app.use(express.json({ limit: '100kb' }));
+app.use(
+  cors({
+    origin: env.CORS_ORIGINS.includes("*") ? true : env.CORS_ORIGINS,
+    credentials: true,
+  }),
+);
+app.use(express.json({ limit: "100kb" }));
 
 // ─── Input Sanitization Middleware ───────────────────────────────────────────
 const sanitize = (obj: unknown): unknown => {
-  if (typeof obj === 'string') return sanitizeHtml(obj, { allowedTags: [], allowedAttributes: {} });
+  if (typeof obj === "string")
+    return sanitizeHtml(obj, { allowedTags: [], allowedAttributes: {} });
   if (Array.isArray(obj)) return obj.map(sanitize);
   if (obj instanceof Date) return obj;
-  if (obj && typeof obj === 'object') {
-    return Object.fromEntries(Object.entries(obj as Record<string, unknown>).map(([k, v]) => [k, sanitize(v)]));
+  if (obj && typeof obj === "object") {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([k, v]) => [
+        k,
+        sanitize(v),
+      ]),
+    );
   }
   return obj;
 };
 app.use((req, _res, next) => {
-  if (req.body && typeof req.body === 'object') {
+  if (req.body && typeof req.body === "object") {
     req.body = sanitize(req.body);
   }
   next();
+});
+
+// ─── Base Health Route for UptimeRobot ───────────────────────────────────────
+// ✅ FIXED: Moved here so it executes before the 404 catcher intercepts it!
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({ success: true, message: "Server is running" });
 });
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
@@ -52,7 +72,10 @@ app.use(env.API_PREFIX, apiRouter);
 app.use((_req, res) => {
   res.status(404).json({
     success: false,
-    error: { code: 'NOT_FOUND', message: 'The requested endpoint does not exist.' },
+    error: {
+      code: "NOT_FOUND",
+      message: "The requested endpoint does not exist.",
+    },
   });
 });
 
@@ -64,10 +87,10 @@ async function runApp() {
   try {
     await prisma.$connect();
     app.listen(env.PORT, () => {
-      // Server started silently
+      console.log(`Server is running on port ${env.PORT}`);
     });
   } catch (error) {
-    console.error('Failed to connect to database:', error);
+    console.error("Failed to connect to database:", error);
     await prisma.$disconnect();
     process.exit(1);
   }

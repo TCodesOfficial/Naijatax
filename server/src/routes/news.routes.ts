@@ -17,7 +17,7 @@ router.get('/inflation', async (_req, res) => {
     const startYear = endYear - years + 1;
     const url = `https://api.worldbank.org/v2/country/NGA/indicator/FP.CPI.TOTL.ZG?format=json&per_page=${years * 3}&date=${startYear}:${endYear}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
     const data = await response.json();

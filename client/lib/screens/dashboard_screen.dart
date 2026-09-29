@@ -29,25 +29,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      final auth = ref.read(authProvider);
-      if (auth.status == AuthStatus.authenticated) {
-        ref.read(taxProvider.notifier).fetchFromServer();
-      }
-      ref.read(articlesProvider.notifier).fetchArticles();
-      // Defer non-critical calls
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (!mounted) return;
-        ref.read(articlesProvider.notifier).fetchMetrics();
-        ref.read(inflationProvider.notifier).fetch();
-      });
-    });
+    Future.microtask(() => _loadData());
+  }
+
+  void _loadData() {
+    final auth = ref.read(authProvider);
+    if (auth.status == AuthStatus.authenticated) {
+      ref.read(taxProvider.notifier).fetchFromServer();
+    }
+    ref.read(articlesProvider.notifier).fetchArticles();
+    ref.read(inflationProvider.notifier).fetch();
+    ref.read(articlesProvider.notifier).fetchMetrics();
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (prev, next) {
-      // Tax data is already fetched in initState; no duplicate needed here
+      if (next.status == AuthStatus.authenticated &&
+          (prev == null || prev.status != AuthStatus.authenticated)) {
+        _loadData();
+      }
     });
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;

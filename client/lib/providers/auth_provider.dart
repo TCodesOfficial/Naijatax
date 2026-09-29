@@ -136,16 +136,27 @@ class AuthNotifier extends Notifier<AuthState> {
           if (session != null) {
             final user = session.user;
             if (event == AuthChangeEvent.signedIn) {
-              await StorageService.clearUserCache();
-              // Only fetch onboarded on fresh sign-in, not token refresh
-              final onboarded = await _fetchOnboarded();
-              await StorageService.setSetting('onboarded', onboarded);
+              // Emit immediately with cached onboarded (non-blocking)
+              final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
               _emit(
                 AuthState(
                   status: AuthStatus.authenticated,
-                  user: _userFromSession(user, onboarded: onboarded),
+                  user: _userFromSession(user, onboarded: cachedOnboarded),
                 ),
               );
+              // Fetch real onboarded in background (non-blocking)
+              StorageService.clearUserCache();
+              _fetchOnboarded().then((onboarded) async {
+                await StorageService.setSetting('onboarded', onboarded);
+                if (state.user?.id == user.id && state.user?.onboarded != onboarded) {
+                  _emit(
+                    AuthState(
+                      status: state.status,
+                      user: _userFromSession(user, onboarded: onboarded),
+                    ),
+                  );
+                }
+              });
             } else {
               // Token refresh: use cached onboarded, don't make API call
               final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;

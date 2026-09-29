@@ -4,8 +4,8 @@ import 'api_service.dart';
 
 class InflationService {
   static final _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 15),
-    receiveTimeout: const Duration(seconds: 15),
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
     headers: {'Accept': 'application/json'},
   ));
 
@@ -58,9 +58,9 @@ class InflationService {
           }
         }
         return [];
-      } on DioException {
+      }       on DioException {
         if (attempt < 2) {
-          await Future.delayed(const Duration(seconds: 2));
+          await Future.delayed(const Duration(seconds: 1));
           continue;
         }
         rethrow;
