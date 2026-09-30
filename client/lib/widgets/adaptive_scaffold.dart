@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
@@ -62,7 +62,18 @@ class AdaptiveScaffold extends ConsumerWidget {
                   displayName,
                   size.width,
                 ),
-                Expanded(child: navigationShell),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+                    child: navigationShell,
+                  ),
+                ),
               ],
             ),
           ),
@@ -366,8 +377,11 @@ class AdaptiveScaffold extends ConsumerWidget {
     );
   }
 
-  // ─── Enhanced Bottom Navigation Bar (mobile) ──────────────────────────────
+  // ─── Salomon Bottom Navigation Bar (5 Core Destinations) ──────────────────
   Widget _buildBottomNav(BuildContext context, ThemeData theme) {
+    final currentIndex = navigationShell.currentIndex;
+    final salomonIndex = currentIndex >= 0 && currentIndex <= 4 ? currentIndex : 0;
+
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -376,79 +390,53 @@ class AdaptiveScaffold extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 20,
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+            blurRadius: 16,
             offset: const Offset(0, -4),
           ),
         ],
       ),
       child: SafeArea(
         child: Padding(
-          // Add breathing room around the bottom nav so the selected tab
-          // doesn't look jammed against the screen edge.
-          padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-          child: GNav(
-            selectedIndex: switch (navigationShell.currentIndex) {
-              0 => 0,
-              1 => 1,
-              2 => 3,
-              3 => 4,
-              4 => 5,
-              5 => 2,
-              _ => 0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SalomonBottomBar(
+            currentIndex: salomonIndex,
+            onTap: (index) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
             },
-            onTabChange: (index) => _onBottomNavTap(context, index),
-            gap: 3,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-            tabBorderRadius: 20,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            backgroundColor: Colors.transparent,
-            activeColor: theme.colorScheme.onSecondaryContainer,
-            color: theme.colorScheme.onSurfaceVariant,
-            tabBackgroundColor: theme.colorScheme.secondaryContainer,
-            iconSize: 17,
-            textStyle: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSecondaryContainer,
-            ),
-            tabs: [
-              GButton(
-                icon: navigationShell.currentIndex == 0
-                    ? Icons.home
-                    : Icons.home_outlined,
-                text: 'Home',
+            items: [
+              SalomonBottomBarItem(
+                icon: const Icon(Icons.home_outlined),
+                activeIcon: const Icon(Icons.home),
+                title: const Text('Home'),
+                selectedColor: theme.colorScheme.primary,
               ),
-              GButton(
-                icon: navigationShell.currentIndex == 1
-                    ? Icons.calculate
-                    : Icons.calculate_outlined,
-                text: 'Calculator',
+              SalomonBottomBarItem(
+                icon: const Icon(Icons.calculate_outlined),
+                activeIcon: const Icon(Icons.calculate),
+                title: const Text('Calculator'),
+                selectedColor: theme.colorScheme.primary,
               ),
-              GButton(
-                icon: navigationShell.currentIndex == 5
-                    ? Icons.menu_book
-                    : Icons.menu_book_outlined,
-                text: 'Learn',
+              SalomonBottomBarItem(
+                icon: const Icon(Icons.smart_toy_outlined),
+                activeIcon: const Icon(Icons.smart_toy),
+                title: const Text('Assistant'),
+                selectedColor: theme.colorScheme.secondary,
               ),
-              GButton(
-                icon: navigationShell.currentIndex == 2
-                    ? Icons.smart_toy
-                    : Icons.smart_toy_outlined,
-                text: 'Assistant',
+              SalomonBottomBarItem(
+                icon: const Icon(Icons.groups_outlined),
+                activeIcon: const Icon(Icons.groups),
+                title: const Text('Community'),
+                selectedColor: theme.colorScheme.tertiary,
               ),
-              GButton(
-                icon: navigationShell.currentIndex == 3
-                    ? Icons.groups
-                    : Icons.groups_outlined,
-                text: 'Community',
-              ),
-              GButton(
-                icon: navigationShell.currentIndex == 4
-                    ? Icons.person
-                    : Icons.person_outline,
-                text: 'Profile',
+              SalomonBottomBarItem(
+                icon: const Icon(Icons.person_outline),
+                activeIcon: const Icon(Icons.person),
+                title: const Text('Profile'),
+                selectedColor: theme.colorScheme.primary,
               ),
             ],
           ),
@@ -457,12 +445,10 @@ class AdaptiveScaffold extends ConsumerWidget {
     );
   }
 
-  static const _posToBranch = [0, 1, 5, 2, 3, 4];
-
   void _onBottomNavTap(BuildContext context, int index) {
     navigationShell.goBranch(
-      _posToBranch[index],
-      initialLocation: _posToBranch[index] == navigationShell.currentIndex,
+      index,
+      initialLocation: index == navigationShell.currentIndex,
     );
   }
 }

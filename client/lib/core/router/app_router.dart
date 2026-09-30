@@ -54,16 +54,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── LOADING: Don't redirect while auth state is resolving ──────────
       if (authState.status == AuthStatus.loading) return null;
 
-      // ── RULE 1: Authenticated/guest users on auth routes → skip away ─────
-      if (isAuthenticatedLike && isAuthRoute) {
-        // Guests skip onboarding entirely — go straight to dashboard
-        if (isGuest) return '/dashboard';
-        // Signup → onboarding, Login → dashboard
-        if (location == '/register') return '/onboarding';
+      // ── RULE 1: Authenticated/guest users on auth routes or landing → go straight to dashboard ─────
+      if (isAuthenticatedLike && (isAuthRoute || isLanding)) {
         return '/dashboard';
       }
-      // ── RULE 2: Already completed onboarding or guest → skip landing/onboarding ─
-      if ((hasOnboarded || isGuest) && (isLanding || isOnboarding)) {
+
+      // ── RULE 2: Already completed onboarding or guest → skip onboarding ─
+      if ((hasOnboarded || isGuest) && isOnboarding) {
         return '/dashboard';
       }
 
@@ -87,18 +84,41 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/landing',
-        builder: (context, state) => _isNativePlatform
-            ? const MobileLandingScreen()
-            : const WebLandingScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: _isNativePlatform
+              ? const MobileLandingScreen()
+              : const WebLandingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const OnboardingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/login',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const LoginScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
+      ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const RegisterScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+        ),
       ),
 
       // Adaptive Shell with 6 branches (5 bottom nav + 1 desktop-only)

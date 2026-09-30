@@ -316,6 +316,9 @@ class WebLandingScreen extends StatelessWidget {
   }
 
   Widget _statItem(ThemeData theme, String value, String label) {
+    final textColor = theme.brightness == Brightness.dark
+        ? Colors.white
+        : theme.colorScheme.onPrimaryContainer;
     return Column(
       children: [
         Text(
@@ -323,14 +326,14 @@ class WebLandingScreen extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 32,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: textColor.withValues(alpha: 0.8),
             letterSpacing: 1,
           ),
         ),
@@ -382,7 +385,7 @@ class WebLandingScreen extends StatelessWidget {
                 crossAxisCount: isDesktop ? 4 : 2,
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
-                childAspectRatio: isDesktop ? 1.0 : 1.1,
+                childAspectRatio: isDesktop ? 1.0 : 0.95,
                 children: [
                   _featureCard(
                     theme,
@@ -468,15 +471,13 @@ class WebLandingScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
+          Text(
+            description,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
             ),
           ),
         ],

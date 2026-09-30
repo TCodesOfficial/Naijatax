@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express"; // ✅ FIXED: Added Response here
 import cors from "cors";
 import helmet from "helmet";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
 import { env } from "./config/env.js";
@@ -27,6 +28,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // ─── Security & Parsing Middleware ───────────────────────────────────────────
+app.use(compression());
 app.use(helmet());
 app.use(
   cors({

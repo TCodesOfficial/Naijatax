@@ -536,7 +536,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           SizedBox(
             width: double.infinity,
             child: TextButton.icon(
-              onPressed: () => ref.read(authProvider.notifier).signOut(),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Confirm Logout'),
+                    content: const Text('Are you sure you want to sign out of your account?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  ref.read(authProvider.notifier).signOut();
+                }
+              },
               icon: const Icon(Icons.logout),
               label: const Text('Logout'),
               style: TextButton.styleFrom(
