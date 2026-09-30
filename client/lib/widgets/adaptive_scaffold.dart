@@ -445,10 +445,4 @@ class AdaptiveScaffold extends ConsumerWidget {
     );
   }
 
-  void _onBottomNavTap(BuildContext context, int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
-    );
-  }
 }
