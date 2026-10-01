@@ -222,6 +222,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
       Future.microtask(_scrollToBottom);
     } catch (e) {
+      debugPrint('🔴 RAW CLIENT AI ERROR: $e');
+      if (e is DioException) {
+        debugPrint('🔴 RAW DIO ERROR RESPONSE: ${e.response?.data}');
+      }
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
       String errorMsg;
       if (e is DioException) {

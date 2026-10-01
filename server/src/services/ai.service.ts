@@ -7,16 +7,13 @@ import { NIGERIAN_TAX_CONTEXT } from '../config/prompts.js';
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
 // Using the standard stable production model identifier
-const MODEL_NAME = 'gemini-3.5-flash';
+const MODEL_NAME = 'gemini-3.8-flash';
 
 interface GeminiMessage {
   role: 'user' | 'model';
   parts: { text: string }[];
 }
 
-/**
- * Core internal wrapper utilizing the official SDK to fetch inferences
- */
 async function callGemini(
   messages: GeminiMessage[],
   systemInstruction?: string,
@@ -39,6 +36,7 @@ async function callGemini(
 
       return response.text || 'I apologize, I am unable to process your request at this time.';
     } catch (error: any) {
+      console.error('🔴 RAW GEMINI AI API ERROR:', error);
       // Gracefully catch standard transient rate limits (429) or busy server flags (503)
       const status = error?.status || error?.statusCode;
       const isTransient = status === 429 || status === 503 || error?.message?.includes('429');
