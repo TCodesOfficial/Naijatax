@@ -15,6 +15,8 @@ const envSchema = z.object({
     .describe('Supabase project URL for fetching JWT signing keys'),
   GEMINI_API_KEY: z.string().min(10, 'GEMINI_API_KEY is required. Get one from https://aistudio.google.com/apikey')
     .describe('Gemini API key for AI chatbot and bank statement parsing'),
+  GROQ_API_KEY: z.string().optional()
+    .describe('Optional Groq API key — used as an AI fallback when Gemini is unavailable (https://console.groq.com/keys)'),
   API_PREFIX: z.string().default('/api/v1'),
   CORS_ORIGINS: z.string().default('*')
     .describe('Comma-separated list of allowed CORS origins, or * for all'),

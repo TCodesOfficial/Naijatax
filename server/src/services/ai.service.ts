@@ -20,75 +20,192 @@ const AI_BUSY_FALLBACK =
   'The AI assistant is receiving too many requests right now. Please wait a few seconds and try again.';
 const AI_TIMEOUT_MSG = 'The AI took too long to respond. Please try again.';
 
+// ---- Provider fallback chain -------------------------------------------------
+// 1. Gemini primary -> 2. Groq (different provider, independent capacity)
+//    -> 3. Gemini again in case the spike has passed.
+type ProviderSlot = { kind: 'gemini'; model: string } | { kind: 'groq'; model: string };
+
+const GROQ_MODEL = 'openai/gpt-oss-120b';
+
+function buildProviderChain(): ProviderSlot[] {
+  if (env.GROQ_API_KEY) {
+    return [
+      { kind: 'gemini', model: MODEL_NAME },
+      { kind: 'groq', model: GROQ_MODEL },
+      { kind: 'gemini', model: 'gemini-3.6-flash' },
+    ];
+  }
+  return [
+    { kind: 'gemini', model: MODEL_NAME },
+    { kind: 'gemini', model: 'gemini-3.6-flash' },
+    { kind: 'gemini', model: 'gemini-3.5-flash-lite' },
+  ];
+}
+
+// Groq fallback via its OpenAI-compatible endpoint (Node's built-in fetch).
+async function callGroq(
+  messages: GeminiMessage[],
+  systemInstruction: string | undefined,
+  options: { temperature?: number; maxOutputTokens?: number },
+  timeoutMs: number,
+): Promise<string> {
+  const openAiMessages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction) openAiMessages.push({ role: 'system', content: systemInstruction });
+  for (const m of messages) {
+    openAiMessages.push({
+      role: m.role === 'model' ? 'assistant' : 'user',
+      content: m.parts.map((p) => p.text).join(''),
+    });
+  }
+
+  let resp: Response;
+  try {
+    resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: openAiMessages,
+        temperature: options.temperature ?? 0.3,
+        // Headroom so gpt-oss reasoning never truncates the visible answer.
+        max_tokens: Math.max(2048, options.maxOutputTokens ?? 0),
+        ...(GROQ_MODEL.includes('gpt-oss') ? { reasoning_effort: 'low' } : {}),
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error: any) {
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') throw new Error('GROQ_TIMEOUT');
+    throw error;
+  }
+
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => '');
+    const err: any = new Error(`GROQ_HTTP_${resp.status} ${body.slice(0, 300)}`);
+    err.status = resp.status;
+    throw err;
+  }
+
+  const data: any = await resp.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text || typeof text !== 'string') {
+    console.log('🟡 EMPTY GROQ RESPONSE:', JSON.stringify(data).slice(0, 500));
+    throw new Error('EMPTY_RESPONSE');
+  }
+  return text;
+}
+
+// Single Gemini call with a hard per-attempt timeout. Throws on timeout /
+// empty response so the chain dispatcher can advance to the next slot.
+async function callGeminiModel(
+  model: string,
+  messages: GeminiMessage[],
+  systemInstruction: string | undefined,
+  options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string },
+  timeoutMs: number,
+): Promise<string> {
+  const geminiPromise = ai.models.generateContent({
+    model,
+    contents: messages,
+    config: {
+      temperature: options.temperature ?? 0.3,
+      maxOutputTokens: options.maxOutputTokens ?? 1024,
+      systemInstruction: systemInstruction,
+      responseMimeType: options.responseMimeType,
+    },
+  });
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('GEMINI_TIMEOUT')), timeoutMs),
+  );
+  const response = (await Promise.race([geminiPromise, timeoutPromise])) as Awaited<
+    ReturnType<typeof ai.models.generateContent>
+  >;
+
+  if (!response.text) {
+    console.log(
+      '🟡 EMPTY GEMINI RESPONSE:',
+      JSON.stringify({
+        finishReason: response.candidates?.[0]?.finishReason,
+        safetyRatings: response.candidates?.[0]?.safetyRatings,
+        promptFeedback: response.promptFeedback,
+      }),
+    );
+    throw new Error('EMPTY_RESPONSE');
+  }
+  return response.text;
+}
+
 async function callGemini(
   messages: GeminiMessage[],
   systemInstruction?: string,
   options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string } = {},
-  maxRetries = 3,
 ): Promise<string> {
+  const chain = buildProviderChain();
   // Shared budget: always finish well before the client's 20s receive timeout.
   const deadline = Date.now() + 18_000;
+  let lastFailure: 'timeout' | 'busy' = 'busy';
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  for (let attempt = 0; attempt < chain.length; attempt++) {
+    const slot = chain[attempt];
     const remaining = deadline - Date.now();
-    if (remaining < 3_000) return AI_BUSY_FALLBACK;
+    if (remaining < 3_000) break;
+    const label = `${slot.kind}/${slot.model}`;
 
     try {
-      // Per-attempt guard so retries can never push past the shared deadline.
-      const geminiPromise = ai.models.generateContent({
-        model: MODEL_NAME,
-        contents: messages,
-        config: {
-          temperature: options.temperature ?? 0.3,
-          maxOutputTokens: options.maxOutputTokens ?? 1024,
-          systemInstruction: systemInstruction,
-          responseMimeType: options.responseMimeType,
-        },
-      });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('GEMINI_TIMEOUT')), Math.min(17_000, remaining)),
-      );
-      const response = (await Promise.race([geminiPromise, timeoutPromise])) as Awaited<
-        ReturnType<typeof ai.models.generateContent>
-      >;
-
-      if (!response.text) {
-        console.log(
-          '🟡 EMPTY GEMINI RESPONSE:',
-          JSON.stringify({
-            finishReason: response.candidates?.[0]?.finishReason,
-            safetyRatings: response.candidates?.[0]?.safetyRatings,
-            promptFeedback: response.promptFeedback,
-          }),
-        );
-        return AI_BUSY_FALLBACK;
-      }
-      return response.text;
+      const t0 = Date.now();
+      const text =
+        slot.kind === 'groq'
+          ? await callGroq(messages, systemInstruction, options, Math.min(remaining, 9_000))
+          : await callGeminiModel(slot.model, messages, systemInstruction, options, Math.min(remaining, 13_000));
+      console.log(`✅ AI OK via ${label} in ${Date.now() - t0}ms`);
+      return text;
     } catch (error: any) {
-      console.error('🔴 RAW GEMINI AI API ERROR:', error);
+      const msg: string = error?.message ?? '';
+      const isTimeout = msg === 'GEMINI_TIMEOUT' || msg === 'GROQ_TIMEOUT';
+      const isEmpty = msg === 'EMPTY_RESPONSE';
 
-      if (error?.message === 'GEMINI_TIMEOUT') return AI_TIMEOUT_MSG;
+      if (!isTimeout && !isEmpty) console.error(`🔴 RAW ${slot.kind.toUpperCase()} AI API ERROR:`, error);
 
-      const status = error?.status || error?.statusCode;
-      const is429 = status === 429 || error?.message?.includes('429');
-      const is503 = status === 503 || error?.message?.includes('503');
-      const isTransient = is429 || is503;
-
-      if (isTransient && attempt < maxRetries) {
-        // 429 must clear the rate-limit window; 503 only needs a short pause.
-        const delay = is429 ? (attempt === 1 ? 4_000 : 8_000) : 2_000 * attempt;
-        if (Date.now() + delay + 3_000 > deadline) return AI_BUSY_FALLBACK;
-        await new Promise((resolve) => setTimeout(resolve, delay));
+      if (isTimeout) {
+        lastFailure = 'timeout';
+        continue;
+      }
+      if (isEmpty) {
+        lastFailure = 'busy';
         continue;
       }
 
-      if (isTransient) return AI_BUSY_FALLBACK;
+      const status = error?.status ?? error?.statusCode;
+      const is429 = status === 429 || msg.includes('429');
+      const is503 = status === 503 || msg.includes('503');
+      const isTransient = is429 || is503 || (typeof status === 'number' && status >= 500);
 
-      throw error;
+      if (!isTransient) {
+        // Groq problems (bad key, bad model, 4xx) must never kill the request —
+        // fall through to the next slot. Gemini non-transient errors still
+        // surface as 500 so config problems stay visible.
+        if (slot.kind === 'groq') {
+          lastFailure = 'busy';
+          continue;
+        }
+        throw error;
+      }
+
+      lastFailure = 'busy';
+
+      const next = chain[attempt + 1];
+      if (next && next.kind === slot.kind) {
+        // Same provider next (no-Groq chain): 429 needs the rate window,
+        // 503 spikes usually clear in a second. Cross-provider skips the wait.
+        const delay = is429 ? 4_000 : 1_000;
+        if (Date.now() + delay + 3_000 <= deadline) await new Promise((r) => setTimeout(r, delay));
+      }
     }
   }
 
-  return AI_BUSY_FALLBACK;
+  return lastFailure === 'timeout' ? AI_TIMEOUT_MSG : AI_BUSY_FALLBACK;
 }
 
 /**
