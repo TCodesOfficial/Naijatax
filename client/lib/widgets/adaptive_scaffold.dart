@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 import '../core/constants/app_constants.dart';
 import '../providers/auth_provider.dart';
@@ -377,71 +377,54 @@ class AdaptiveScaffold extends ConsumerWidget {
     );
   }
 
-  // ─── Salomon Bottom Navigation Bar (5 Core Destinations) ──────────────────
+  // ─── Curved Bottom Navigation Bar (5 Core Destinations) ───────────────────
   Widget _buildBottomNav(BuildContext context, ThemeData theme) {
     final currentIndex = navigationShell.currentIndex;
-    final salomonIndex = currentIndex >= 0 && currentIndex <= 4 ? currentIndex : 0;
+    final navIndex = currentIndex >= 0 && currentIndex <= 4 ? currentIndex : 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+    final inactiveColor = theme.colorScheme.onSurfaceVariant;
+
+    return CurvedNavigationBar(
+      index: navIndex,
+      onTap: (index) {
+        navigationShell.goBranch(
+          index,
+          initialLocation: index == navigationShell.currentIndex,
+        );
+      },
+      height: 60,
+      color: theme.colorScheme.surface,
+      buttonBackgroundColor: theme.colorScheme.primary,
+      backgroundColor: Colors.transparent,
+      animationDuration: const Duration(milliseconds: 350),
+      animationCurve: Curves.easeInOut,
+      items: <Widget>[
+        Icon(
+          navIndex == 0 ? Icons.home : Icons.home_outlined,
+          size: 26,
+          color: navIndex == 0 ? Colors.white : inactiveColor,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: SalomonBottomBar(
-            currentIndex: salomonIndex,
-            onTap: (index) {
-              navigationShell.goBranch(
-                index,
-                initialLocation: index == navigationShell.currentIndex,
-              );
-            },
-            items: [
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.home_outlined),
-                activeIcon: const Icon(Icons.home),
-                title: const Text('Home'),
-                selectedColor: theme.colorScheme.primary,
-              ),
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.calculate_outlined),
-                activeIcon: const Icon(Icons.calculate),
-                title: const Text('Calculator'),
-                selectedColor: theme.colorScheme.primary,
-              ),
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.smart_toy_outlined),
-                activeIcon: const Icon(Icons.smart_toy),
-                title: const Text('Assistant'),
-                selectedColor: theme.colorScheme.secondary,
-              ),
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.groups_outlined),
-                activeIcon: const Icon(Icons.groups),
-                title: const Text('Community'),
-                selectedColor: theme.colorScheme.tertiary,
-              ),
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.person_outline),
-                activeIcon: const Icon(Icons.person),
-                title: const Text('Profile'),
-                selectedColor: theme.colorScheme.primary,
-              ),
-            ],
-          ),
+        Icon(
+          navIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
+          size: 26,
+          color: navIndex == 1 ? Colors.white : inactiveColor,
         ),
-      ),
+        Icon(
+          navIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
+          size: 26,
+          color: navIndex == 2 ? Colors.white : inactiveColor,
+        ),
+        Icon(
+          navIndex == 3 ? Icons.groups : Icons.groups_outlined,
+          size: 26,
+          color: navIndex == 3 ? Colors.white : inactiveColor,
+        ),
+        Icon(
+          navIndex == 4 ? Icons.person : Icons.person_outline,
+          size: 26,
+          color: navIndex == 4 ? Colors.white : inactiveColor,
+        ),
+      ],
     );
   }
 

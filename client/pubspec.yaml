@@ -20,8 +20,7 @@ dependencies:
   go_router: ^17.3.0
   flutter_web_plugins:
     sdk: flutter
-  google_nav_bar: ^5.0.6
-  salomon_bottom_bar: ^3.3.1
+  curved_navigation_bar: ^1.0.6
 
   # ── Networking ──────────────────────────────────────────────────────────────
   dio: ^5.7.0

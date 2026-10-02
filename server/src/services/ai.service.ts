@@ -22,21 +22,33 @@ async function callGemini(
 ): Promise<string> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Utilizing the native SDK's content generation method
-      const response = await ai.models.generateContent({
+      // Hard server-side guard: never let the Gemini call hang past ~17s
+      // so we always respond before the client's 20s receive timeout.
+      const geminiPromise = ai.models.generateContent({
         model: MODEL_NAME,
         contents: messages,
         config: {
           temperature: options.temperature ?? 0.3,
-          maxOutputTokens: options.maxOutputTokens ?? 2048,
+          maxOutputTokens: options.maxOutputTokens ?? 1024,
           systemInstruction: systemInstruction,
           responseMimeType: options.responseMimeType,
         },
       });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('GEMINI_TIMEOUT_17S')), 17_000),
+      );
+      const response = (await Promise.race([geminiPromise, timeoutPromise])) as Awaited<
+        ReturnType<typeof ai.models.generateContent>
+      >;
 
       return response.text || 'I apologize, I am unable to process your request at this time.';
     } catch (error: any) {
       console.error('🔴 RAW GEMINI AI API ERROR:', error);
+
+      if (error?.message === 'GEMINI_TIMEOUT_17S') {
+        return 'The AI took too long to respond. Please try again.';
+      }
+
       // Gracefully catch standard transient rate limits (429) or busy server flags (503)
       const status = error?.status || error?.statusCode;
       const isTransient = status === 429 || status === 503 || error?.message?.includes('429');
@@ -97,16 +109,18 @@ function toGeminiMessages(
 
 export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
   if (sessionId) {
+    // Only fetch the session shell — messages are fetched separately with a
+    // capped take, so including them here wasted a large DB transfer.
     const session = await prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
-      include: { messages: { orderBy: { createdAt: 'asc' } } }
+      select: { id: true, userId: true, title: true, createdAt: true, updatedAt: true },
     });
     if (session) return session;
   }
 
   return await prisma.chatSession.create({
     data: { userId, title },
-    include: { messages: true }
+    select: { id: true, userId: true, title: true, createdAt: true, updatedAt: true },
   });
 }
 
@@ -137,18 +151,25 @@ export async function deleteSession(sessionId: string, userId: string) {
 }
 
 export async function sendChatMessage(userId: string, content: string, sessionId?: string) {
+  const t0 = Date.now();
+
   const session = await getOrCreateChatSession(userId, sessionId, content.substring(0, 40));
+  const tSession = Date.now();
 
-  const history = await prisma.chatMessage.findMany({
-    where: { sessionId: session.id },
-    orderBy: { createdAt: 'desc' },
-    take: 5
-  });
+  // Fetch the last 10 messages (enough context, light payload) and save the
+  // user's message in parallel — both only need the session id.
+  const [history, _userMsg] = await Promise.all([
+    prisma.chatMessage.findMany({
+      where: { sessionId: session.id },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+    prisma.chatMessage.create({
+      data: { sessionId: session.id, role: 'user', content },
+    }),
+  ]);
   history.reverse();
-
-  await prisma.chatMessage.create({
-    data: { sessionId: session.id, role: 'user', content }
-  });
+  const tHistory = Date.now();
 
   const geminiMessages = toGeminiMessages(
     history.map((msg) => ({ role: msg.role, content: msg.content })),
@@ -157,8 +178,9 @@ export async function sendChatMessage(userId: string, content: string, sessionId
 
   const responseContent = await callGemini(geminiMessages, NIGERIAN_TAX_CONTEXT, {
     temperature: 0.3,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 1024,
   });
+  const tGemini = Date.now();
 
   const isBusy = responseContent.includes('busy processing') || responseContent.includes('unable to process');
 
@@ -170,10 +192,16 @@ export async function sendChatMessage(userId: string, content: string, sessionId
     }
   });
 
-  await prisma.chatSession.update({
-    where: { id: session.id },
-    data: { updatedAt: new Date() }
-  });
+  // Fire-and-forget: session ordering touch shouldn't block the user's reply.
+  prisma.chatSession
+    .update({ where: { id: session.id }, data: { updatedAt: new Date() } })
+    .catch(() => {});
+
+  const t1 = Date.now();
+  console.log(
+    `[AI] session: ${tSession - t0}ms | history+saveUser: ${tHistory - tSession}ms | ` +
+    `GEMINI: ${tGemini - tHistory}ms | saveReply: ${t1 - tGemini}ms | TOTAL: ${t1 - t0}ms`,
+  );
 
   return { sessionId: session.id, sessionTitle: session.title, message: aiMessage };
 }

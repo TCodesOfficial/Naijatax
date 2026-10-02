@@ -72,7 +72,13 @@ class ApiService {
       {String? sessionId}) async {
     final data = <String, dynamic>{'content': content};
     if (sessionId != null) data['sessionId'] = sessionId;
-    final res = await _dio.post('/ai/message', data: data);
+    // AI generation needs more headroom than regular endpoints: 20s here
+    // (server hard-caps Gemini at ~17s and answers before this fires).
+    final res = await _dio.post(
+      '/ai/message',
+      data: data,
+      options: Options(receiveTimeout: const Duration(seconds: 20)),
+    );
     return res.data['data'] as Map<String, dynamic>;
   }
 

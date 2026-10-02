@@ -229,21 +229,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
       String errorMsg;
       if (e is DioException) {
+        // Prefer the server's own clean message (our server always returns
+        // user-friendly text in error.message) — raw details stay in console.
+        String? serverMsg;
+        final rawData = e.response?.data;
+        if (rawData is Map) {
+          final err = rawData['error'];
+          if (err is Map) serverMsg = err['message'] as String?;
+        }
         final statusCode = e.response?.statusCode;
-        if (statusCode == 401) {
-          errorMsg = 'Session expired. Please log in again.';
+        if (serverMsg != null && serverMsg.isNotEmpty) {
+          errorMsg = serverMsg;
+        } else if (statusCode == 401) {
+          errorMsg = 'Your session has expired. Please log out and log in again.';
         } else if (statusCode == 429) {
-          errorMsg = 'AI is busy. Please try again in a moment.';
+          errorMsg =
+              'The AI assistant is receiving too many messages right now. Please wait a moment and try again.';
         } else if (e.type == DioExceptionType.connectionTimeout ||
             e.type == DioExceptionType.receiveTimeout) {
-          errorMsg = 'Server is taking too long to respond. Try again.';
+          errorMsg =
+              'The AI assistant didn\'t respond within 20 seconds. This can happen when many people are using it at once — please try again.';
         } else if (e.type == DioExceptionType.connectionError) {
-          errorMsg = 'Cannot reach the server. Check your connection.';
+          errorMsg =
+              'Cannot reach the NaijaTax server. Please check your internet connection and try again.';
         } else {
-          errorMsg = 'Something went wrong. Please try again.';
+          errorMsg =
+              'Something unexpected went wrong while contacting the AI assistant. Please try again.';
         }
       } else {
-        errorMsg = 'Sorry, I couldn\'t process your request. Please try again.';
+        errorMsg =
+            'Sorry, I couldn\'t process your request just now. Please try again in a moment.';
       }
       setState(() {
         _messages.add({
