@@ -188,7 +188,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final res = await ApiService.instance.sendChatMessage(msg, sessionId: _sessionId);
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
       final content = res['message']['content'] as String;
-      final isBusy = content.contains('busy processing') || content.contains('unable to process');
+      // Must match the server's stored busy message (plus legacy variants)
+      // so the Retry snackbar fires instead of a dead-end chat bubble.
+      final isBusy = content.contains('receiving too many requests') ||
+          content.contains('temporarily busy') ||
+          content.contains('busy processing') ||
+          content.contains('unable to process');
       setState(() {
         final newSessionId = res['sessionId'] as String?;
         if (_sessionId == null && newSessionId != null) {

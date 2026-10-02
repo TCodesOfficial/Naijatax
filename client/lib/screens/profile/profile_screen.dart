@@ -53,6 +53,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
   }
 
+  // On web, XFile.path is a blob URI (no extension) — derive the extension
+  // safely from the real filename, whitelisted, defaulting to jpg.
+  String _safeImageExt(String name, String path) {
+    String? from(String src) {
+      final dot = src.lastIndexOf('.');
+      if (dot < 0 || dot >= src.length - 1) return null;
+      final ext = src.substring(dot + 1).toLowerCase().replaceAll(RegExp('[^a-z0-9]'), '');
+      const allowed = {'jpg', 'jpeg', 'png', 'webp'};
+      return allowed.contains(ext) ? ext : null;
+    }
+
+    return from(name) ?? from(path) ?? 'jpg';
+  }
+
   Future<void> _pickAndUploadAvatar() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -105,16 +119,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       setState(() => _isUploading = true);
 
       final bytes = await picked.readAsBytes();
-      final ext = picked.path.split('.').last;
-      final fileName = '${ref.read(authProvider).user?.id ?? "guest"}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final ext = _safeImageExt(picked.name, picked.path);
+      final userId = ref.read(authProvider).user?.id;
+      final fileName = '${userId ?? "guest"}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      // Upload under a per-user folder so _deleteAvatar's list(path: userId) finds it
+      final uploadPath = userId != null ? '$userId/$fileName' : fileName;
 
       final client = Supabase.instance.client;
       await client.storage.from('avatars').uploadBinary(
-        fileName,
+        uploadPath,
         bytes,
         fileOptions: const FileOptions(upsert: true),
       );
-      final publicUrl = client.storage.from('avatars').getPublicUrl(fileName);
+      final publicUrl = client.storage.from('avatars').getPublicUrl(uploadPath);
 
       if (!mounted) return;
       ref.read(authProvider.notifier).updateAvatar(publicUrl);

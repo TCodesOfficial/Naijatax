@@ -14,16 +14,27 @@ interface GeminiMessage {
   parts: { text: string }[];
 }
 
+// Friendly fallbacks (kept as constants so server busy-mapping and the
+// client's busy-detection stay in sync).
+const AI_BUSY_FALLBACK =
+  'The AI assistant is receiving too many requests right now. Please wait a few seconds and try again.';
+const AI_TIMEOUT_MSG = 'The AI took too long to respond. Please try again.';
+
 async function callGemini(
   messages: GeminiMessage[],
   systemInstruction?: string,
   options: { temperature?: number; maxOutputTokens?: number; responseMimeType?: string } = {},
-  maxRetries = 2,
+  maxRetries = 3,
 ): Promise<string> {
+  // Shared budget: always finish well before the client's 20s receive timeout.
+  const deadline = Date.now() + 18_000;
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining < 3_000) return AI_BUSY_FALLBACK;
+
     try {
-      // Hard server-side guard: never let the Gemini call hang past ~17s
-      // so we always respond before the client's 20s receive timeout.
+      // Per-attempt guard so retries can never push past the shared deadline.
       const geminiPromise = ai.models.generateContent({
         model: MODEL_NAME,
         contents: messages,
@@ -35,39 +46,49 @@ async function callGemini(
         },
       });
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('GEMINI_TIMEOUT_17S')), 17_000),
+        setTimeout(() => reject(new Error('GEMINI_TIMEOUT')), Math.min(17_000, remaining)),
       );
       const response = (await Promise.race([geminiPromise, timeoutPromise])) as Awaited<
         ReturnType<typeof ai.models.generateContent>
       >;
 
-      return response.text || 'I apologize, I am unable to process your request at this time.';
+      if (!response.text) {
+        console.log(
+          '🟡 EMPTY GEMINI RESPONSE:',
+          JSON.stringify({
+            finishReason: response.candidates?.[0]?.finishReason,
+            safetyRatings: response.candidates?.[0]?.safetyRatings,
+            promptFeedback: response.promptFeedback,
+          }),
+        );
+        return AI_BUSY_FALLBACK;
+      }
+      return response.text;
     } catch (error: any) {
       console.error('🔴 RAW GEMINI AI API ERROR:', error);
 
-      if (error?.message === 'GEMINI_TIMEOUT_17S') {
-        return 'The AI took too long to respond. Please try again.';
-      }
+      if (error?.message === 'GEMINI_TIMEOUT') return AI_TIMEOUT_MSG;
 
-      // Gracefully catch standard transient rate limits (429) or busy server flags (503)
       const status = error?.status || error?.statusCode;
-      const isTransient = status === 429 || status === 503 || error?.message?.includes('429');
+      const is429 = status === 429 || error?.message?.includes('429');
+      const is503 = status === 503 || error?.message?.includes('503');
+      const isTransient = is429 || is503;
 
       if (isTransient && attempt < maxRetries) {
-        const delay = Math.pow(2, attempt) * 1000;
+        // 429 must clear the rate-limit window; 503 only needs a short pause.
+        const delay = is429 ? (attempt === 1 ? 4_000 : 8_000) : 2_000 * attempt;
+        if (Date.now() + delay + 3_000 > deadline) return AI_BUSY_FALLBACK;
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
 
-      if (isTransient) {
-        return 'AI is busy processing other requests. Please try again in a moment.';
-      }
+      if (isTransient) return AI_BUSY_FALLBACK;
 
       throw error;
     }
   }
 
-  return 'I apologize, I am unable to process your request at this time.';
+  return AI_BUSY_FALLBACK;
 }
 
 /**
@@ -182,13 +203,16 @@ export async function sendChatMessage(userId: string, content: string, sessionId
   });
   const tGemini = Date.now();
 
-  const isBusy = responseContent.includes('busy processing') || responseContent.includes('unable to process');
+  const isBusy =
+    responseContent === AI_BUSY_FALLBACK ||
+    responseContent.includes('busy processing') ||
+    responseContent.includes('unable to process');
 
   const aiMessage = await prisma.chatMessage.create({
     data: {
       sessionId: session.id,
       role: 'assistant',
-      content: isBusy ? 'I apologize, the AI service is temporarily busy. Please try again in a moment.' : responseContent,
+      content: isBusy ? AI_BUSY_FALLBACK : responseContent,
     }
   });
 

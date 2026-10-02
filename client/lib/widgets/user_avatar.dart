@@ -21,10 +21,15 @@ class UserAvatar extends StatelessWidget {
     this.iconColor,
   });
 
-  bool get hasValidUrl =>
-      avatarUrl != null &&
-      avatarUrl!.trim().isNotEmpty &&
-      (avatarUrl!.startsWith('http://') || avatarUrl!.startsWith('https://'));
+  bool get hasValidUrl {
+    final u = avatarUrl?.trim();
+    if (u == null || u.isEmpty) return false;
+    if (!u.startsWith('http://') && !u.startsWith('https://')) return false;
+    // Reject corrupted keys (e.g. a blob URI accidentally baked into the
+    // object name during upload) so we fall back instead of spamming 400s.
+    if (u.contains('blob:') || u.contains('localhost') || u.contains('127.0.0.1')) return false;
+    return true;
+  }
 
   String get _initials {
     if (displayName == null || displayName!.trim().isEmpty) return '';
