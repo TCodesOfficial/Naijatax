@@ -279,7 +279,12 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
     }
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isDesktop ? 24 : 16),
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 24 : 16,
+        isDesktop ? 24 : 16,
+        isDesktop ? 24 : 16,
+        isDesktop ? 24 : 92,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

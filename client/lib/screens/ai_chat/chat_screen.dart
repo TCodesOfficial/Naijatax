@@ -291,7 +291,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatBody = Scaffold(
       key: _scaffoldKey,
       drawer: isGuest ? null : _buildDrawer(theme, displayName),
-      body: Column(
+      // Clears the floating bottom nav (extendBody injects bottom MediaQuery).
+      body: SafeArea(
+        top: false,
+        child: Column(
         children: [
           _buildChatHeader(theme, isGuest),
           Expanded(
@@ -390,7 +393,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
 

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../core/constants/app_constants.dart';
 import '../core/theme/theme_colors.dart';
 import '../core/utils/app_formatter.dart';
 import '../models/tax_profile.dart';
@@ -53,6 +54,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     final authState = ref.watch(authProvider);
     final taxState = ref.watch(taxProvider);
@@ -65,7 +67,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return RepaintBoundary(
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+        padding: EdgeInsets.fromLTRB(
+          isMobile ? 16.0 : 24.0,
+          isMobile ? 16.0 : 24.0,
+          isMobile ? 16.0 : 24.0,
+          hasBottomNav
+              ? (isMobile ? 16.0 : 24.0) + 76.0
+              : (isMobile ? 16.0 : 24.0),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

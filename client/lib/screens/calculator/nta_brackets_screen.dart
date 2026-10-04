@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 
 class NtaBracketsScreen extends ConsumerStatefulWidget {
@@ -71,11 +72,17 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final amounts = _bandAmounts;
     final maxAmount = amounts.isNotEmpty ? amounts.reduce(max) : 1.0;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

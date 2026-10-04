@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/app_constants.dart';
 import '../../models/article_model.dart';
 import '../../providers/article_provider.dart';
 
@@ -28,6 +29,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final articlesState = ref.watch(articlesProvider);
 
     final filteredArticles = _selectedFilter == 'All'
@@ -35,7 +37,12 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         : articlesState.articles.where((a) => a.category == _selectedFilter).toList();
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

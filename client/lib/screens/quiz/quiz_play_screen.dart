@@ -174,7 +174,10 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
     final q = questions[_questionIdx];
 
     return Scaffold(
-      body: Column(
+      // Clears the floating bottom nav (extendBody injects bottom MediaQuery).
+      body: SafeArea(
+        top: false,
+        child: Column(
         children: [
           // ─── Task-Focused Header ──────────────────────────────────────────
           Container(
@@ -378,7 +381,8 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

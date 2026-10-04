@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../providers/vat_provider.dart';
 
@@ -38,10 +39,16 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
     final filteredItems = vatState.filteredItems;
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return SingleChildScrollView(
       controller: _scrollController,
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

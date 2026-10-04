@@ -230,9 +230,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ? (authState.user!.displayName ?? authState.user!.email?.split('@').first ?? 'User')
         : 'Guest User';
     final String email = authState.user?.email ?? '';
+    final size = MediaQuery.of(context).size;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return ListView(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        hasBottomNav ? 92 : 16,
+      ),
       children: [
         // ─── Profile Card ────────────────────────────────────────────────
         Card(

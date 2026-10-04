@@ -32,7 +32,12 @@ class _SupportCenterScreenState extends ConsumerState<SupportCenterScreen> {
     final isDesktop = size.width >= 900;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isDesktop ? 24 : 16),
+      padding: EdgeInsets.fromLTRB(
+        isDesktop ? 24 : 16,
+        isDesktop ? 24 : 16,
+        isDesktop ? 24 : 16,
+        isDesktop ? 24 : 92,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

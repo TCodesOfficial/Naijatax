@@ -46,6 +46,10 @@ class AdaptiveScaffold extends ConsumerWidget {
         : 'Guest';
 
     return Scaffold(
+      // Let the active tab's content extend behind the bottom nav so the
+      // transparent bar shows the screen through it (Flutter docs: this is
+      // the flag for non-rectangular/curved bars).
+      extendBody: true,
       body: Row(
         children: [
           if (isDesktop)
@@ -383,49 +387,84 @@ class AdaptiveScaffold extends ConsumerWidget {
     final navIndex = currentIndex >= 0 && currentIndex <= 4 ? currentIndex : 0;
 
     final inactiveColor = theme.colorScheme.onSurfaceVariant;
+    const labels = ['Home', 'Calculator', 'AI Assistant', 'Community', 'Profile'];
 
-    return CurvedNavigationBar(
-      index: navIndex,
-      onTap: (index) {
-        navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        );
-      },
-      height: 60,
-      color: theme.colorScheme.surface,
-      buttonBackgroundColor: theme.colorScheme.primary,
-      backgroundColor: Colors.transparent,
-      animationDuration: const Duration(milliseconds: 350),
-      animationCurve: Curves.easeInOut,
-      items: <Widget>[
-        Icon(
-          navIndex == 0 ? Icons.home : Icons.home_outlined,
-          size: 26,
-          color: navIndex == 0 ? Colors.white : inactiveColor,
+    // The bar itself is fully transparent (no strip background); the active
+    // tab's raised circle is the only filled element. Labels live in a static
+    // overlay layer so they never float with the icons.
+    return Stack(
+      clipBehavior: Clip.none, // raised active circle overflows above the bar
+      children: [
+        CurvedNavigationBar(
+          index: navIndex,
+          onTap: (index) {
+            navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            );
+          },
+          height: 75,
+          color: Colors.transparent,
+          buttonBackgroundColor: theme.colorScheme.primary,
+          backgroundColor: Colors.transparent,
+          animationDuration: const Duration(milliseconds: 350),
+          animationCurve: Curves.easeInOut,
+          items: <Widget>[
+            Icon(
+              navIndex == 0 ? Icons.home : Icons.home_outlined,
+              size: 26,
+              color: navIndex == 0 ? Colors.white : inactiveColor,
+            ),
+            Icon(
+              navIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
+              size: 26,
+              color: navIndex == 1 ? Colors.white : inactiveColor,
+            ),
+            Icon(
+              navIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
+              size: 26,
+              color: navIndex == 2 ? Colors.white : inactiveColor,
+            ),
+            Icon(
+              navIndex == 3 ? Icons.groups : Icons.groups_outlined,
+              size: 26,
+              color: navIndex == 3 ? Colors.white : inactiveColor,
+            ),
+            Icon(
+              navIndex == 4 ? Icons.person : Icons.person_outline,
+              size: 26,
+              color: navIndex == 4 ? Colors.white : inactiveColor,
+            ),
+          ],
         ),
-        Icon(
-          navIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
-          size: 26,
-          color: navIndex == 1 ? Colors.white : inactiveColor,
-        ),
-        Icon(
-          navIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
-          size: 26,
-          color: navIndex == 2 ? Colors.white : inactiveColor,
-        ),
-        Icon(
-          navIndex == 3 ? Icons.groups : Icons.groups_outlined,
-          size: 26,
-          color: navIndex == 3 ? Colors.white : inactiveColor,
-        ),
-        Icon(
-          navIndex == 4 ? Icons.person : Icons.person_outline,
-          size: 26,
-          color: navIndex == 4 ? Colors.white : inactiveColor,
+        // Static labels: never animate, taps pass through to the bar below.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 6,
+          child: IgnorePointer(
+            child: Row(
+              children: List.generate(labels.length, (i) {
+                final active = navIndex == i;
+                return Expanded(
+                  child: Center(
+                    child: Text(
+                      labels[i],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                        color: active ? theme.colorScheme.primary : inactiveColor,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
         ),
       ],
     );
   }
-
 }

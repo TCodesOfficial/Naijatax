@@ -86,7 +86,10 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
           ? const Center(child: CircularProgressIndicator())
           : topic == null
           ? const Center(child: Text('Discussion not found.'))
-          : Column(
+          // Clears the floating bottom nav (extendBody injects bottom MediaQuery).
+          : SafeArea(
+              top: false,
+              child: Column(
               children: [
                 // ─── Topic Header Card ──────────────────────────────────
                 Expanded(
@@ -236,6 +239,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                 ),
               ],
             ),
+          ),
     );
   }
 }

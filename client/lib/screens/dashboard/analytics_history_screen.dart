@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../providers/tax_provider.dart';
 import '../../services/pdf_service.dart';
@@ -15,6 +16,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final taxState = ref.watch(taxProvider);
     final naira = NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
 
@@ -26,7 +28,12 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
     ];
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 24),
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        isMobile ? 16 : 24,
+        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

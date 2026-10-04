@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/constants/app_constants.dart';
 import '../core/theme/theme_colors.dart';
 import '../providers/tax_provider.dart';
 import '../services/api_service.dart';
@@ -123,9 +124,16 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final taxState = ref.watch(taxProvider);
+    final size = MediaQuery.of(context).size;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        hasBottomNav ? 92 : 16,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

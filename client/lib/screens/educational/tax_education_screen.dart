@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/app_constants.dart';
 import '../../providers/article_provider.dart';
 import '../../models/article_model.dart';
 
@@ -85,6 +86,8 @@ class _TaxEducationScreenState extends ConsumerState<TaxEducationScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final articlesState = ref.watch(articlesProvider);
+    final size = MediaQuery.of(context).size;
+    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return Scaffold(
       body: articlesState.isLoading
@@ -92,7 +95,12 @@ class _TaxEducationScreenState extends ConsumerState<TaxEducationScreen> {
           : articlesState.articles.isEmpty
               ? const Center(child: Text('No educational articles available right now.'))
               : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    hasBottomNav ? 92 : 16,
+                  ),
                   itemCount: articlesState.articles.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, idx) {
