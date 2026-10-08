@@ -47,8 +47,8 @@ class AdaptiveScaffold extends ConsumerWidget {
 
     return Scaffold(
       // Let the active tab's content extend behind the bottom nav so the
-      // transparent bar shows the screen through it (Flutter docs: this is
-      // the flag for non-rectangular/curved bars).
+      // curved cut-out regions above the strip show the screen through them
+      // (Flutter docs: this is the flag for non-rectangular/curved bars).
       extendBody: true,
       body: Row(
         children: [
@@ -389,9 +389,10 @@ class AdaptiveScaffold extends ConsumerWidget {
     final inactiveColor = theme.colorScheme.onSurfaceVariant;
     const labels = ['Home', 'Calculator', 'AI Assistant', 'Community', 'Profile'];
 
-    // The bar itself is fully transparent (no strip background); the active
-    // tab's raised circle is the only filled element. Labels live in a static
-    // overlay layer so they never float with the icons.
+    // The strip is painted with the theme's surface color (follows light/dark
+    // mode); only the cut-out regions above the curve stay transparent so the
+    // screen shows through them. Labels live in a static overlay layer so they
+    // never float with the icons.
     return Stack(
       clipBehavior: Clip.none, // raised active circle overflows above the bar
       children: [
@@ -404,7 +405,7 @@ class AdaptiveScaffold extends ConsumerWidget {
             );
           },
           height: 75,
-          color: Colors.transparent,
+          color: theme.colorScheme.surface,
           buttonBackgroundColor: theme.colorScheme.primary,
           backgroundColor: Colors.transparent,
           animationDuration: const Duration(milliseconds: 350),
