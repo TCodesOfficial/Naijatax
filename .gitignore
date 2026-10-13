@@ -5,8 +5,8 @@
 /stitch_design/
 .$Updated ERD.drawio.bkp
 NaijaTax_System_Documentation.md
-package-lock.json
-package.json
+/package-lock.json
+/package.json
 project Diagrams
 # Generic OS & System Files
 .DS_Store
