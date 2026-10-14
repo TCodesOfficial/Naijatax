@@ -1,17 +1,16 @@
-import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/theme_colors.dart';
 import '../providers/tax_provider.dart';
-import '../services/api_service.dart';
 import '../services/pdf_service.dart';
-import '../widgets/animated_button.dart';
-import '../widgets/custom_text_field.dart';
+import '../widgets/calculation_history_list.dart';
 import '../widgets/tax_charts_widget.dart';
+import 'calculator/amounts_form.dart';
+import 'calculator/percentage_form.dart';
 
 class AssessmentFormScreen extends ConsumerStatefulWidget {
   const AssessmentFormScreen({super.key});
@@ -22,102 +21,31 @@ class AssessmentFormScreen extends ConsumerStatefulWidget {
 }
 
 class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _incomeController = TextEditingController();
-  final _rentController = TextEditingController();
-  final _pensionController = TextEditingController(text: '8');
-  final _turnoverController = TextEditingController();
-  final _assetsController = TextEditingController();
-
-  bool _isUploading = false;
-  String? _uploadError;
+  int _mode = 0; // 0 = Amounts, 1 = Percentages
 
   final _naira =
       NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
 
   @override
-  void dispose() {
-    _incomeController.dispose();
-    _rentController.dispose();
-    _pensionController.dispose();
-    _turnoverController.dispose();
-    _assetsController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(taxProvider.notifier).fetchHistory());
   }
 
-  void _calculate() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final monthlyIncome = double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
-      final rentPaid = double.tryParse(_rentController.text.replaceAll(',', '')) ?? 0;
-      final pensionRate = (double.tryParse(_pensionController.text) ?? 8) / 100;
-      final turnover = double.tryParse(_turnoverController.text.replaceAll(',', '')) ?? 0;
-      final assets = double.tryParse(_assetsController.text.replaceAll(',', '')) ?? 0;
-
-      ref.read(taxProvider.notifier).calculate(
-            monthlyIncome: monthlyIncome,
-            rentPaid: rentPaid,
-            pensionRate: pensionRate,
-            turnover: turnover,
-            assets: assets,
-          );
-    }
-  }
-
-  Future<void> _pickAndParseStatement() async {
-    setState(() {
-      _isUploading = true;
-      _uploadError = null;
-    });
-
-    try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx'],
-      );
-
-      if (result == null || result.files.isEmpty) {
-        setState(() => _isUploading = false);
-        return;
-      }
-
-      final file = result.files.first;
-      final bytes = await file.readAsBytes();
-      final dioFile = MultipartFile.fromBytes(bytes, filename: file.name);
-
-      final parsed = await ApiService.instance.parseStatement(dioFile);
-
-      // Auto-fill form values with parsed values
-      if (parsed['monthlyIncome'] != null) {
-        _incomeController.text = parsed['monthlyIncome'].toString();
-      }
-      if (parsed['rentPaid'] != null) {
-        _rentController.text = parsed['rentPaid'].toString();
-      }
-      if (parsed['pensionRate'] != null) {
-        // Decimal value back to percent
-        _pensionController.text =
-            ((parsed['pensionRate'] as double) * 100).toStringAsFixed(0);
-      }
-
-      setState(() {
-        _isUploading = false;
-      });
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Statement parsed and inputs pre-filled!'),
-            backgroundColor: Colors.green),
-      );
-
-      _calculate();
-    } catch (e) {
-      setState(() {
-        _isUploading = false;
-        _uploadError = 'Parsing failed: ${e.toString()}';
-      });
-    }
+  void _calculateAmounts({
+    required double monthlyIncome,
+    required double rentPaid,
+    required double pensionRate,
+    required double turnover,
+    required double assets,
+  }) {
+    ref.read(taxProvider.notifier).calculate(
+          monthlyIncome: monthlyIncome,
+          rentPaid: rentPaid,
+          pensionRate: pensionRate,
+          turnover: turnover,
+          assets: assets,
+        );
   }
 
   @override
@@ -126,6 +54,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
     final taxState = ref.watch(taxProvider);
     final size = MediaQuery.of(context).size;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
+    final history = taxState.history.take(5).toList();
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -137,116 +66,54 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ─── Direct Inputs Form ───────────────────────────────────────────
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Tax Parameters',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: _incomeController,
-                      label: 'Monthly Gross Income (₦)',
-                      hintText: 'e.g. 250,000',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      useThousandsSeparator: true,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Income is required';
-                        if (double.tryParse(v.replaceAll(',', '')) == null) return 'Enter a valid number';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextField(
-                      controller: _rentController,
-                      label: 'Rent Paid Annually (₦)',
-                      hintText: 'e.g. 500,000',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      useThousandsSeparator: true,
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextField(
-                      controller: _pensionController,
-                      label: 'Pension Contribution Rate (%)',
-                      hintText: 'e.g. 8',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextField(
-                      controller: _turnoverController,
-                      label: 'Business Turnover / Revenue (₦) - Optional',
-                      hintText: 'e.g. 10,000,000',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      useThousandsSeparator: true,
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextField(
-                      controller: _assetsController,
-                      label: 'Business Net Assets (₦) - Optional',
-                      hintText: 'e.g. 5,000,000',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      useThousandsSeparator: true,
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AnimatedButton(
-                            onPressed: _calculate,
-                            text: 'Calculate Tax',
-                            isLoading: taxState.status == TaxStatus.loading,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        IconButton(
-                          onPressed: _pickAndParseStatement,
-                          tooltip: 'Upload bank statement PDF',
-                          icon: _isUploading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.upload_file),
-                          style: IconButton.styleFrom(
-                            backgroundColor:
-                                theme.colorScheme.surfaceContainerHigh,
-                            foregroundColor: theme.colorScheme.primary,
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_uploadError != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _uploadError!,
-                        style: TextStyle(
-                            color: theme.colorScheme.error, fontSize: 13),
-                      ),
-                    ],
-                  ],
-                ),
+          // ─── Mode switcher ────────────────────────────────────────────
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(
+                value: 0,
+                icon: Icon(Icons.payments_outlined),
+                label: Text('Amounts'),
+              ),
+              ButtonSegment(
+                value: 1,
+                icon: Icon(Icons.percent_rounded),
+                label: Text('Percentages'),
+              ),
+            ],
+            selected: {_mode},
+            onSelectionChanged: (s) => setState(() => _mode = s.first),
+            showSelectedIcon: false,
+            style: ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              backgroundColor: WidgetStateProperty.resolveWith((states) =>
+                  states.contains(WidgetState.selected)
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainerLow),
+              foregroundColor: WidgetStateProperty.resolveWith((states) =>
+                  states.contains(WidgetState.selected)
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant),
+              textStyle: WidgetStatePropertyAll(
+                theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
+          const SizedBox(height: 16),
+
+          // ─── Forms (state-safe switch with slide/fade) ────────────────
+          _ModePane(
+            mode: _mode,
+            children: [
+              AmountsForm(
+                isLoading: taxState.status == TaxStatus.loading,
+                onCalculate: _calculateAmounts,
+              ),
+              const PercentageForm(),
+            ],
+          ),
           const SizedBox(height: 20),
 
-          // ─── Results Output ──────────────────────────────────────────────
+          // ─── Results ──────────────────────────────────────────────────
           if (taxState.status == TaxStatus.error)
             Card(
               color: theme.colorScheme.errorContainer,
@@ -322,7 +189,44 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
             ),
             const SizedBox(height: 20),
             TaxChartsWidget(profile: taxState.profile!),
+            const SizedBox(height: 20),
           ],
+
+          // ─── Recent calculations ──────────────────────────────────────
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Calculations',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (history.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: () => context.push('/calculator/history'),
+                          icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                          label: const Text('View all'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (taxState.historyLoading && history.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else
+                    CalculationHistoryList(items: history),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -353,6 +257,73 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Keeps both forms alive (typed values preserved) and animates the
+/// visible one with a direction-aware slide + fade on mode switch.
+class _ModePane extends StatefulWidget {
+  final int mode;
+  final List<Widget> children;
+
+  const _ModePane({required this.mode, required this.children});
+
+  @override
+  State<_ModePane> createState() => _ModePaneState();
+}
+
+class _ModePaneState extends State<_ModePane>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  double _direction = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _ModePane oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.mode != oldWidget.mode) {
+      _direction = widget.mode > oldWidget.mode ? 1 : -1;
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final curved = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+
+    return AnimatedBuilder(
+      animation: curved,
+      builder: (context, _) {
+        return Opacity(
+          opacity: curved.value,
+          child: Transform.translate(
+            offset: Offset(_direction * 24 * (1 - curved.value), 0),
+            child: IndexedStack(
+              index: widget.mode,
+              children: widget.children,
+            ),
+          ),
+        );
+      },
     );
   }
 }

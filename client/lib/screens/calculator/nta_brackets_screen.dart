@@ -16,18 +16,20 @@ class NtaBracketsScreen extends ConsumerStatefulWidget {
 class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
   double _annualIncome = 3500000;
 
-  // NTA 2025 bands (annual)
+  // Nigeria Tax Act 2025 progressive bands — mirrors the server's
+  // tax.service.ts widths exactly (first ₦800k of taxable income is 0%).
   final _bands = [
-     _Band('Exempt (≤₦800k)', 0.0, 800000),
-     _Band('₦800k–₦3.8M', 0.15, 3000000),
-     _Band('₦3.8M–₦6.8M', 0.20, 3000000),
-     _Band('₦6.8M–₦20.8M', 0.22, 14000000),
-     _Band('Above ₦20.8M', 0.25, double.infinity),
+    _Band('₦0–₦800k', 0.0, 800000),
+    _Band('₦800k–₦3M', 0.15, 2200000),
+    _Band('₦3M–₦12M', 0.18, 9000000),
+    _Band('₦12M–₦25M', 0.21, 13000000),
+    _Band('₦25M–₦50M', 0.23, 25000000),
+    _Band('Above ₦50M', 0.25, double.infinity),
   ];
 
-  // NTA 2025: flat ₦800k exemption (replaces old CRA)
-  double get _cra => 800000;
-  double get _chargeableIncome => max(0, _annualIncome - _cra);
+  // First ₦800k of income is taxed at 0% (built into the bands above).
+  double get _taxFreeThreshold => min(_annualIncome, 800000.0);
+  double get _chargeableIncome => _annualIncome;
 
   double get _totalTax {
     double remaining = _chargeableIncome;
@@ -38,8 +40,7 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
       tax += bandLimit * band.rate;
       remaining -= bandLimit;
     }
-    final minTax = _annualIncome * 0.01;
-    return max(tax, minTax);
+    return tax;
   }
 
   double get _effectiveRate => _annualIncome > 0 ? (_totalTax / _annualIncome) * 100 : 0;
@@ -167,17 +168,17 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
             ),
             const SizedBox(height: 20),
             Slider(
-              value: _annualIncome,
+              value: _annualIncome.clamp(0, 60000000),
               min: 0,
-              max: 15000000,
-              divisions: 100,
+              max: 60000000,
+              divisions: 120,
               onChanged: (v) => setState(() => _annualIncome = v),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('₦0', style: theme.textTheme.labelSmall),
-                Text('₦15M+', style: theme.textTheme.labelSmall),
+                Text('₦60M+', style: theme.textTheme.labelSmall),
               ],
             ),
             const SizedBox(height: 24),
@@ -190,11 +191,11 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
                 Theme.of(context).brightness == Brightness.dark
                     ? AppColors.darkError
                     : AppColors.govRed),
-            _statRow(theme, 'Consolidated Relief (CRA)', _naira(_cra),
+            _statRow(theme, 'First ₦800k (0% band)', _naira(_taxFreeThreshold),
                 Theme.of(context).brightness == Brightness.dark
                     ? AppColors.darkSuccess
                     : AppColors.success),
-            _statRow(theme, 'Chargeable Income', _naira(_chargeableIncome), theme.colorScheme.onSurface),
+            _statRow(theme, 'Taxable Income', _naira(_chargeableIncome), theme.colorScheme.onSurface),
             _statRow(theme, 'Monthly Take-Home', _naira(_monthlyTakeHome), theme.colorScheme.primary),
           ],
         ),
@@ -247,7 +248,8 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Nigeria uses a progressive tax system. Higher income portions are taxed at higher rates.',
+              'Nigeria uses a progressive tax system. The first ₦800k of taxable '
+              'income is taxed at 0%, and higher portions are taxed at higher rates.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.5,
@@ -270,7 +272,7 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3 + (_bands.indexOf(b) * 0.12)),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3 + (_bands.indexOf(b) * 0.1)),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -282,14 +284,6 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
                 ],
               ),
             )),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text('Generate Full Report'),
-              ),
-            ),
           ],
         ),
       ),

@@ -470,23 +470,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> updateAvatar(String avatarUrl) async {
-    final current = state.user;
-    if (current == null) return;
-    _emit(
-      AuthState(
-        status: state.status,
-        user: UserModel(
-          id: current.id,
-          email: current.email,
-          phone: current.phone,
-          displayName: current.displayName,
-          role: current.role,
-          avatarUrl: avatarUrl,
-          onboarded: current.onboarded,
-          createdAt: current.createdAt,
-        ),
-      ),
-    );
+    _applyLocalUser(avatarUrl: avatarUrl);
     try {
       await ApiService.instance.updateAvatar(avatarUrl);
       await _client.auth.updateUser(
@@ -499,6 +483,130 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> deleteAvatar() async {
     await updateAvatar('');
+  }
+
+  /// Updates only the provided fields of the local user, preserving the rest.
+  void _applyLocalUser({
+    String? displayName,
+    String? phone,
+    String? address,
+    String? avatarUrl,
+  }) {
+    final current = state.user;
+    if (current == null) return;
+    _emit(
+      AuthState(
+        status: state.status,
+        user: UserModel(
+          id: current.id,
+          email: current.email,
+          phone: phone ?? current.phone,
+          displayName: displayName ?? current.displayName,
+          role: current.role,
+          avatarUrl: avatarUrl ?? current.avatarUrl,
+          address: address ?? current.address,
+          onboarded: current.onboarded,
+          createdAt: current.createdAt,
+        ),
+      ),
+    );
+  }
+
+  /// Pulls the DB profile (address etc.) and merges into local state.
+  Future<void> fetchMe() async {
+    if (!state.isAuthenticated) return;
+    try {
+      final data = await ApiService.instance.getMe();
+      _applyLocalUser(
+        displayName: data['displayName'] as String?,
+        phone: data['phone'] as String?,
+        address: data['address'] as String?,
+        avatarUrl: data['avatarUrl'] as String?,
+      );
+    } catch (_) {
+      // Offline / server unreachable — keep local state
+    }
+  }
+
+  /// Updates the display name in Supabase metadata + the server DB.
+  /// Returns null on success, an error message otherwise.
+  Future<String?> updateDisplayName(String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'Name cannot be empty';
+    if (state.user == null) return 'Not signed in';
+
+    try {
+      await _client.auth.updateUser(
+        UserAttributes(data: {'display_name': trimmed}),
+      );
+    } catch (e) {
+      return 'Could not update name: $e';
+    }
+    _applyLocalUser(displayName: trimmed);
+    try {
+      await ApiService.instance.updateProfile(displayName: trimmed);
+    } catch (_) {
+      // DB sync failed — metadata already updated
+    }
+    return null;
+  }
+
+  /// Saves the residential address to the server DB only.
+  Future<String?> updateAddress(String address) async {
+    if (state.user == null) return 'Not signed in';
+    try {
+      final data = await ApiService.instance.updateProfile(address: address);
+      _applyLocalUser(address: data['address'] as String? ?? address);
+      return null;
+    } catch (e) {
+      return 'Could not save address: $e';
+    }
+  }
+
+  /// Triggers a phone-change OTP to [phone] via Supabase.
+  /// Returns null on success (code sent), an error message otherwise.
+  Future<String?> changePhone(String phone) async {
+    if (state.user == null) return 'Not signed in';
+    try {
+      await _client.auth.updateUser(UserAttributes(phone: phone));
+      _emit(
+        AuthState(
+          status: state.status,
+          user: state.user,
+          pendingPhone: phone,
+        ),
+      );
+      return null;
+    } catch (e) {
+      return 'Could not send code: $e';
+    }
+  }
+
+  /// Verifies the OTP sent by [changePhone] and persists the new phone.
+  Future<String?> verifyPhoneChange(String phone, String otp) async {
+    if (state.user == null) return 'Not signed in';
+    try {
+      await _client.auth.verifyOTP(
+        phone: phone,
+        token: otp,
+        type: OtpType.phoneChange,
+      );
+    } catch (e) {
+      return 'Invalid code: $e';
+    }
+    _applyLocalUser(phone: phone);
+    _emit(
+      AuthState(
+        status: state.status,
+        user: state.user,
+      ),
+    );
+    try {
+      await ApiService.instance.updateProfile(phone: phone);
+    } catch (_) {
+      // DB sync failed — Supabase already updated
+    }
+    return null;
   }
 }
 

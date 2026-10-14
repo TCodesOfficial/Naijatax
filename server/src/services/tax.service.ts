@@ -224,6 +224,10 @@ export interface TaxAssessmentInput {
   turnover?: number;
   assets?: number;
   isMonthly?: boolean;
+  /** Flat income-tax rate (0–1) chosen in percentage mode. */
+  flatRate?: number;
+  /** Custom rent-relief rate (0–1), e.g. 0.20 = 20%. */
+  rentReliefRate?: number;
 }
 
 export interface TaxAssessmentResult {
@@ -254,9 +258,11 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
   const pensionRate = input.pensionRate ?? 0.08;
   const rentPaid = input.rentPaid ?? 0;
   const pensionDeduction = annualGross * pensionRate;
-  const rentRelief = Math.min(rentPaid * 0.20, 500000);
+  const rentRelief = Math.min(rentPaid * (input.rentReliefRate ?? 0.20), 500000);
   
   const taxableIncome = Math.max(0, annualGross - pensionDeduction - rentRelief);
+
+  const flatRate = input.flatRate;
 
   /**
    * FIX: Define the explicit "width" (chunk size) of each tax band.
@@ -275,32 +281,43 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
   let computedTax = 0;
   const breakdown: TaxAssessmentResult['breakdown'] = [];
 
-  // Loop systematically processes exact bracket allocations
-  for (const bracket of brackets) {
-    if (remainingIncome <= 0) break;
+  if (flatRate != null) {
+    // ── Percentage mode: single user-selected flat rate on taxable income ──
+    computedTax = taxableIncome * flatRate;
+    breakdown.push({
+      bracket: `Flat ${(flatRate * 100).toFixed(0).replace(/\.0$/, '')}% (selected)`,
+      rate: flatRate,
+      taxableAmount: taxableIncome,
+      tax: computedTax,
+    });
+  } else {
+    // Loop systematically processes exact bracket allocations
+    for (const bracket of brackets) {
+      if (remainingIncome <= 0) break;
 
-    const taxableAmount = Math.min(remainingIncome, bracket.width);
-    const taxForBracket = taxableAmount * bracket.rate;
-    
-    computedTax += taxForBracket;
+      const taxableAmount = Math.min(remainingIncome, bracket.width);
+      const taxForBracket = taxableAmount * bracket.rate;
 
-    if (taxableAmount > 0) {
-      breakdown.push({
-        bracket: bracket.label,
-        rate: bracket.rate,
-        taxableAmount,
-        tax: taxForBracket
-      });
+      computedTax += taxForBracket;
+
+      if (taxableAmount > 0) {
+        breakdown.push({
+          bracket: bracket.label,
+          rate: bracket.rate,
+          taxableAmount,
+          tax: taxForBracket
+        });
+      }
+      remainingIncome -= taxableAmount;
     }
-    remainingIncome -= taxableAmount;
+
+    // If no taxable items were pushed (e.g. income is 0), populate a fallback row
+    if (breakdown.length === 0) {
+      breakdown.push({ bracket: 'Exempt (Taxable income is ₦0)', rate: 0.0, taxableAmount: 0, tax: 0 });
+    }
   }
 
-  // If no taxable items were pushed (e.g. income is 0), populate a fallback row
-  if (breakdown.length === 0) {
-    breakdown.push({ bracket: 'Exempt (Taxable income is ₦0)', rate: 0.0, taxableAmount: 0, tax: 0 });
-  }
-
-  const isExempt = taxableIncome <= 800000;
+  const isExempt = flatRate != null ? flatRate === 0 : taxableIncome <= 800000;
   const netIncome = annualGross - computedTax - pensionDeduction;
 
   // ─── Comparative Old Law Analytics (Cleaned Up) ───────────────────────────
@@ -356,7 +373,9 @@ export async function saveTaxProfile(
   pensionRate: number, 
   rentPaid: number,
   turnover: number = 0,
-  assets: number = 0
+  assets: number = 0,
+  flatRate: number | null = null,
+  rentReliefRate: number | null = null
 ) {
   return await prisma.taxProfile.create({
     data: {
@@ -371,6 +390,8 @@ export async function saveTaxProfile(
       citExemption: result.citExemption,
       turnover,
       assets,
+      flatRate,
+      rentReliefRate,
     },
   });
 }

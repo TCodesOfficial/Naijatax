@@ -27,6 +27,8 @@ class TaxBreakdown {
 }
 
 class TaxProfile {
+  final String? id;
+  final DateTime? createdAt;
   final double monthlyIncome;
   final double annualGross;
   final double pensionDeduction;
@@ -40,6 +42,8 @@ class TaxProfile {
   final List<TaxBreakdown> breakdown;
 
   const TaxProfile({
+    this.id,
+    this.createdAt,
     required this.monthlyIncome,
     required this.annualGross,
     required this.pensionDeduction,
@@ -54,6 +58,10 @@ class TaxProfile {
   });
 
   factory TaxProfile.fromJson(Map<String, dynamic> json) => TaxProfile(
+        id: json['id'] as String?,
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'].toString())
+            : null,
         monthlyIncome: _parseNum(json['monthlyIncome']),
         annualGross: _parseNum(json['annualGross']),
         pensionDeduction: _parseNum(json['pensionDeduction']) != 0

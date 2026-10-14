@@ -1,5 +1,17 @@
 import { prisma } from '../config/database.js';
 
+const userSelect = {
+  id: true,
+  email: true,
+  phone: true,
+  displayName: true,
+  avatarUrl: true,
+  address: true,
+  onboarded: true,
+  role: true,
+  createdAt: true,
+} as const;
+
 export async function updateAvatarUrl(userId: string, avatarUrl: string) {
   return await prisma.user.update({
     where: { id: userId },
@@ -28,4 +40,28 @@ export async function getOnboardedStatus(userId: string) {
     select: { onboarded: true },
   });
   return user?.onboarded ?? false;
+}
+
+export async function getUserProfile(userId: string) {
+  return await prisma.user.findUnique({
+    where: { id: userId },
+    select: userSelect,
+  });
+}
+
+export interface UpdateUserProfileInput {
+  displayName?: string;
+  phone?: string;
+  address?: string;
+}
+
+export async function updateUserProfile(userId: string, data: UpdateUserProfileInput) {
+  // Upsert-safe: create the row if it somehow doesn't exist yet
+  // (e.g. user signed up before this server existed).
+  return await prisma.user.upsert({
+    where: { id: userId },
+    update: data,
+    create: { id: userId, ...data },
+    select: userSelect,
+  });
 }

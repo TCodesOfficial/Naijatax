@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -144,6 +145,16 @@ class AppTheme {
         dividerTheme: const DividerThemeData(
             color: AppColors.outlineVariant, thickness: 1, space: 1),
         scaffoldBackgroundColor: AppColors.background,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          },
+        ),
       );
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────
@@ -331,6 +342,18 @@ class AppTheme {
         // ── Icon ──────────────────────────────────────────────────────────
         iconTheme: const IconThemeData(
           color: AppColors.darkTextSubtle,
+        ),
+
+        // ── Page transitions (fallback for non-GoRouter routes) ──────────
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          },
         ),
       );
 }

@@ -8,6 +8,8 @@ import '../../screens/ai_chat/chat_screen.dart';
 import '../../screens/assessment_form_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../../screens/calculator/calculation_detail_screen.dart';
+import '../../screens/calculator/calculation_history_screen.dart';
 import '../../screens/calculator/nta_brackets_screen.dart';
 import '../../screens/dashboard/analytics_history_screen.dart';
 import '../../screens/dashboard_screen.dart';
@@ -20,6 +22,7 @@ import '../../screens/landing/web_landing_screen.dart';
 import '../../screens/learn/tax_reform_screen.dart';
 import '../../screens/news/latest_news_screen.dart';
 import '../../screens/onboarding/onboarding_screen.dart';
+import '../../screens/profile/personal_details_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/profile/verify_account_screen.dart';
 import '../../screens/quiz/quiz_history_screen.dart';
@@ -27,6 +30,8 @@ import '../../screens/quiz/quiz_play_screen.dart';
 import '../../screens/support/support_center_screen.dart';
 import '../../screens/vat/vat_items_screen.dart';
 import '../../widgets/adaptive_scaffold.dart';
+import '../../models/tax_profile.dart';
+import 'transitions.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -84,40 +89,32 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/landing',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
           child: _isNativePlatform
               ? const MobileLandingScreen()
               : const WebLandingScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              FadeTransition(opacity: animation, child: child),
         ),
       ),
       GoRoute(
         path: '/onboarding',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
           child: const OnboardingScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              FadeTransition(opacity: animation, child: child),
         ),
       ),
       GoRoute(
         path: '/login',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
           child: const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              FadeTransition(opacity: animation, child: child),
         ),
       ),
       GoRoute(
         path: '/register',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
           child: const RegisterScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              FadeTransition(opacity: animation, child: child),
         ),
       ),
 
@@ -175,15 +172,24 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'education',
-                    builder: (context, state) => const TaxEducationScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const TaxEducationScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'news',
-                    builder: (context, state) => const LatestNewsScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const LatestNewsScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'analytics',
-                    builder: (context, state) => const AnalyticsHistoryScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const AnalyticsHistoryScreen(),
+                    ),
                   ),
                 ],
               ),
@@ -199,7 +205,30 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'nta-brackets',
-                    builder: (context, state) => const NtaBracketsScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const NtaBracketsScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'history',
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const CalculationHistoryScreen(),
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        pageBuilder: (context, state) => appTransitionPage(
+                          state: state,
+                          child: CalculationDetailScreen(
+                            profile: state.extra is TaxProfile
+                                ? state.extra as TaxProfile
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -225,10 +254,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: ':id',
-                    builder: (context, state) {
-                      final id = state.pathParameters['id']!;
-                      return TopicDetailScreen(topicId: id);
-                    },
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: TopicDetailScreen(
+                        topicId: state.pathParameters['id']!,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -244,15 +275,31 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'support',
-                    builder: (context, state) => const SupportCenterScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const SupportCenterScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'documents',
-                    builder: (context, state) => const DocumentsVaultScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const DocumentsVaultScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'verify',
-                    builder: (context, state) => const VerifyAccountScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const VerifyAccountScreen(),
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'personal-details',
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const PersonalDetailsScreen(),
+                    ),
                   ),
                 ],
               ),
@@ -268,11 +315,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'quiz',
-                    builder: (context, state) => const QuizPlayScreen(),
+                    pageBuilder: (context, state) => appTransitionPage(
+                      state: state,
+                      child: const QuizPlayScreen(),
+                    ),
                     routes: [
                       GoRoute(
                         path: 'history',
-                        builder: (context, state) => const QuizHistoryScreen(),
+                        pageBuilder: (context, state) => appTransitionPage(
+                          state: state,
+                          child: const QuizHistoryScreen(),
+                        ),
                       ),
                     ],
                   ),

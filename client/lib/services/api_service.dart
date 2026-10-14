@@ -165,6 +165,24 @@ class ApiService {
   }
 
   // ── User Profile ──────────────────────────────────────────────────────
+  Future<Map<String, dynamic>> getMe() async {
+    final res = await _dio.get('/users/me');
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateProfile({
+    String? displayName,
+    String? phone,
+    String? address,
+  }) async {
+    final data = <String, dynamic>{};
+    if (displayName != null) data['displayName'] = displayName;
+    if (phone != null) data['phone'] = phone;
+    if (address != null) data['address'] = address;
+    final res = await _dio.patch('/users/profile', data: data);
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> updateAvatar(String avatarUrl) async {
     final res = await _dio.patch('/users/avatar', data: {'avatarUrl': avatarUrl});
     return res.data['data'] as Map<String, dynamic>;

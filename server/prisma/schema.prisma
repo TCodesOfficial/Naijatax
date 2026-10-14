@@ -13,6 +13,7 @@ model User {
   phone        String?       @unique // Phone number for phone-based auth
   displayName  String?       @map("display_name") // User's display name
   avatarUrl    String?       @map("avatar_url") // User's profile photo URL
+  address      String? // Optional residential address
   onboarded    Boolean       @default(false) // Whether user has completed onboarding
   role         String        @default("USER") // USER or ADMIN
   createdAt    DateTime      @default(now())
@@ -40,6 +41,8 @@ model TaxProfile {
   citExemption  String   @default("EXEMPT") @map("cit_exemption") 
   turnover      Decimal  @default(0.00) @map("turnover") @db.Decimal(15, 2)
   assets        Decimal  @default(0.00) @map("assets") @db.Decimal(15, 2)
+  flatRate       Decimal? @map("flat_rate") @db.Decimal(6, 4) // User-selected flat rate (percentage mode)
+  rentReliefRate Decimal? @map("rent_relief_rate") @db.Decimal(6, 4) // Custom rent-relief rate
   createdAt     DateTime @default(now()) @map("created_at")
   @@index([userId, createdAt])
   @@map("tax_profiles")

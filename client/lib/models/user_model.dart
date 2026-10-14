@@ -5,6 +5,7 @@ class UserModel {
   final String? displayName;
   final String role;
   final String? avatarUrl;
+  final String? address;
   final bool onboarded;
   final DateTime createdAt;
 
@@ -15,6 +16,7 @@ class UserModel {
     this.displayName,
     this.role = 'USER',
     this.avatarUrl,
+    this.address,
     this.onboarded = false,
     required this.createdAt,
   });
@@ -26,6 +28,7 @@ class UserModel {
         displayName: json['displayName'] as String?,
         role: json['role'] as String? ?? 'USER',
         avatarUrl: json['avatarUrl'] as String?,
+        address: json['address'] as String?,
         onboarded: json['onboarded'] as bool? ?? false,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
@@ -37,6 +40,7 @@ class UserModel {
         'displayName': displayName,
         'role': role,
         'avatarUrl': avatarUrl,
+        'address': address,
         'onboarded': onboarded,
         'createdAt': createdAt.toIso8601String(),
       };

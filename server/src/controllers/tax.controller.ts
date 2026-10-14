@@ -104,6 +104,8 @@ const taxCalculationSchema = z.object({
   turnover: z.number().nonnegative().optional().default(0),
   assets: z.number().nonnegative().optional().default(0),
   isMonthly: z.boolean().optional().default(true),
+  flatRate: z.number().min(0).max(1).optional(),
+  rentReliefRate: z.number().min(0).max(1).optional(),
 });
 
 export const calculateTax = asyncHandler(async (req: Request, res: Response) => {
@@ -118,7 +120,9 @@ export const calculateTax = asyncHandler(async (req: Request, res: Response) => 
       parsedBody.pensionRate, 
       parsedBody.rentPaid,
       parsedBody.turnover,
-      parsedBody.assets
+      parsedBody.assets,
+      parsedBody.flatRate ?? null,
+      parsedBody.rentReliefRate ?? null
     );
   }
 
@@ -139,6 +143,8 @@ export const fetchLatestProfile = asyncHandler(async (req: Request, res: Respons
     // Safe fallbacks to prevent errors if older profiles have empty fields
     turnover: Number(profile.turnover ?? 0),
     assets: Number(profile.assets ?? 0),
+    flatRate: profile.flatRate != null ? Number(profile.flatRate) : undefined,
+    rentReliefRate: profile.rentReliefRate != null ? Number(profile.rentReliefRate) : undefined,
   });
   successResponse(res, result);
 });
@@ -157,6 +163,8 @@ export const fetchTaxHistory = asyncHandler(async (req: Request, res: Response) 
       pensionRate: Number(p.pensionRate),
       turnover: Number(p.turnover ?? 0),
       assets: Number(p.assets ?? 0),
+      flatRate: p.flatRate != null ? Number(p.flatRate) : undefined,
+      rentReliefRate: p.rentReliefRate != null ? Number(p.rentReliefRate) : undefined,
     }),
   }));
   successResponse(res, results);

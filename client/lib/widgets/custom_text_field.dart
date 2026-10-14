@@ -50,6 +50,7 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
   final Widget? prefixIcon;
+  final Widget? suffix;
   final ValueChanged<String>? onChanged;
   final int? maxLength;
   final bool useThousandsSeparator;
@@ -64,6 +65,7 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.suffixIcon,
     this.prefixIcon,
+    this.suffix,
     this.onChanged,
     this.maxLength,
     this.useThousandsSeparator = false,
@@ -100,6 +102,7 @@ class CustomTextField extends StatelessWidget {
             hintText: hintText,
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
+            suffix: suffix,
             counterText: '',
           ),
         ),

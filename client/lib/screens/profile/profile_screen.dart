@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/avatar_service.dart';
 import '../../services/biometric_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
 import '../../widgets/user_avatar.dart';
@@ -53,111 +52,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
   }
 
-  // On web, XFile.path is a blob URI (no extension) — derive the extension
-  // safely from the real filename, whitelisted, defaulting to jpg.
-  String _safeImageExt(String name, String path) {
-    String? from(String src) {
-      final dot = src.lastIndexOf('.');
-      if (dot < 0 || dot >= src.length - 1) return null;
-      final ext = src.substring(dot + 1).toLowerCase().replaceAll(RegExp('[^a-z0-9]'), '');
-      const allowed = {'jpg', 'jpeg', 'png', 'webp'};
-      return allowed.contains(ext) ? ext : null;
-    }
-
-    return from(name) ?? from(path) ?? 'jpg';
-  }
-
   Future<void> _pickAndUploadAvatar() async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Theme.of(ctx).colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Text(
-                'Change Profile Photo',
-                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
-                title: const Text('Take Photo'),
-                onTap: () => Navigator.pop(ctx, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Choose from Gallery'),
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-              ),
-              ],
-            ),
-          ),
-        ),
-    );
-
+    final source = await AvatarService.pickSource(context);
     if (source == null || !mounted) return;
 
-    try {
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(source: source, maxWidth: 512, maxHeight: 512, imageQuality: 80);
-      if (picked == null || !mounted) return;
+    setState(() => _isUploading = true);
+    final userId = ref.read(authProvider).user?.id;
+    final result = await AvatarService.pickAndUpload(source, userId: userId);
+    if (!mounted) return;
+    setState(() => _isUploading = false);
 
-      setState(() => _isUploading = true);
-
-      final bytes = await picked.readAsBytes();
-      final ext = _safeImageExt(picked.name, picked.path);
-      final userId = ref.read(authProvider).user?.id;
-      final fileName = '${userId ?? "guest"}_${DateTime.now().millisecondsSinceEpoch}.$ext';
-      // Upload under a per-user folder so _deleteAvatar's list(path: userId) finds it
-      final uploadPath = userId != null ? '$userId/$fileName' : fileName;
-
-      final client = Supabase.instance.client;
-      await client.storage.from('avatars').uploadBinary(
-        uploadPath,
-        bytes,
-        fileOptions: const FileOptions(upsert: true),
+    if (result.ok && result.url != null) {
+      await ref.read(authProvider.notifier).updateAvatar(result.url!);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Profile photo updated!'), backgroundColor: Colors.green),
+        );
+      }
+    } else if (result.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.error!), backgroundColor: Colors.red),
       );
-      final publicUrl = client.storage.from('avatars').getPublicUrl(uploadPath);
-
-      if (!mounted) return;
-      ref.read(authProvider.notifier).updateAvatar(publicUrl);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated!'), backgroundColor: Colors.green),
-        );
-      }
-    } on StorageException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: ${e.message}'), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        final msg = e.toString().contains('Supabase')
-            ? 'Photo upload unavailable in demo mode'
-            : 'Upload failed: $e';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isUploading = false);
     }
   }
 
@@ -185,38 +101,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (confirm != true || !mounted) return;
 
     setState(() => _isUploading = true);
-    try {
-      final client = Supabase.instance.client;
-      final userId = ref.read(authProvider).user?.id;
-      if (userId != null) {
-        final files = await client.storage.from('avatars').list(path: userId);
-        if (files.isNotEmpty) {
-          final paths = files.map((f) => '$userId/${f.name}').toList();
-          await client.storage.from('avatars').remove(paths);
-        }
-      }
+    final userId = ref.read(authProvider).user?.id;
+    final result = await AvatarService.deleteAll(userId);
+    if (!mounted) return;
+    setState(() => _isUploading = false);
 
-      ref.read(authProvider.notifier).deleteAvatar();
-
+    if (result.ok) {
+      await ref.read(authProvider.notifier).deleteAvatar();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo removed'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('Profile photo removed'), backgroundColor: Colors.green),
         );
       }
-    } on StorageException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: ${e.message}'), backgroundColor: Colors.red),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isUploading = false);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(result.error ?? 'Delete failed'),
+            backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -408,7 +311,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           icon: Icons.person_outlined,
           title: 'Personal Details',
           subtitle: 'Update your name, contact info, and address.',
-          onTap: () {},
+          onTap: () {
+            if (authState.isGuest) {
+              showGuestRestrictionDialog(context);
+            } else {
+              context.push('/profile/personal-details');
+            }
+          },
+        ),
+        _settingsTile(
+          theme,
+          icon: Icons.history_outlined,
+          title: 'Calculation History',
+          subtitle: 'Review all your past tax assessments.',
+          onTap: () => context.push('/calculator/history'),
         ),
         _settingsTile(
           theme,
@@ -520,12 +436,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           icon: Icons.help_outline,
           title: 'Support Center',
           subtitle: 'Get help with using the app.',
-          trailing: _comingSoonBadge(theme),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('This feature is coming soon!')),
-            );
-          },
+          onTap: () => context.push('/profile/support'),
         ),
         _settingsTile(
           theme,

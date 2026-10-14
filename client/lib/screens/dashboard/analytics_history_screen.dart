@@ -5,27 +5,35 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
+import '../../models/tax_profile.dart';
 import '../../providers/tax_provider.dart';
 import '../../services/pdf_service.dart';
 
-class AnalyticsHistoryScreen extends ConsumerWidget {
+class AnalyticsHistoryScreen extends ConsumerStatefulWidget {
   const AnalyticsHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AnalyticsHistoryScreen> createState() =>
+      _AnalyticsHistoryScreenState();
+}
+
+class _AnalyticsHistoryScreenState
+    extends ConsumerState<AnalyticsHistoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(taxProvider.notifier).fetchHistory());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final taxState = ref.watch(taxProvider);
     final naira = NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
-
-    // Sample historical data
-    final history = [
-      _CalcHistory('12 Oct 2024', 'Annual PAYE', 8500000.0, 1250400.0),
-      _CalcHistory('5 Jun 2024', 'Monthly PAYE', 700000.0, 104200.0),
-      _CalcHistory('15 Jan 2024', 'Annual PAYE', 7800000.0, 1140000.0),
-    ];
+    final history = taxState.history;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -59,7 +67,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     _taxTrendsCard(theme),
                     const SizedBox(height: 16),
-                    _historyTable(theme, history, naira, isMobile, taxState),
+                    _historyTable(theme, history, naira, isMobile),
                   ],
                 )
               : Column(
@@ -73,7 +81,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    _historyTable(theme, history, naira, isMobile, taxState),
+                    _historyTable(theme, history, naira, isMobile),
                   ],
                 ),
         ],
@@ -82,31 +90,42 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
   }
 
   Widget _incomeAllocationCard(ThemeData theme, TaxState taxState) {
-    final gross = taxState.profile?.annualGross ?? 8500000.0;
-    final tax = taxState.profile?.computedTax ?? 1250400.0;
-    final pension = gross * 0.08;
-    final net = gross - tax - pension;
+    final gross = taxState.profile?.annualGross ?? 0.0;
+    final tax = taxState.profile?.computedTax ?? 0.0;
+    final pension = taxState.profile?.pensionDeduction ?? 0.0;
+    final net = taxState.profile?.netIncome ?? 0.0;
 
-    final sections = [
-      PieChartSectionData(
-        value: net,
-        color: theme.colorScheme.primary,
-        radius: 50,
-        title: '',
-      ),
-      PieChartSectionData(
-        value: tax,
-        color: AppColors.govRed,
-        radius: 50,
-        title: '',
-      ),
-      PieChartSectionData(
-        value: pension,
-        color: theme.colorScheme.tertiary,
-        radius: 50,
-        title: '',
-      ),
-    ];
+    final hasData = gross > 0;
+
+    final sections = hasData
+        ? [
+            PieChartSectionData(
+              value: net > 0 ? net : 0.01,
+              color: theme.colorScheme.primary,
+              radius: 50,
+              title: '',
+            ),
+            PieChartSectionData(
+              value: tax > 0 ? tax : 0.01,
+              color: AppColors.govRed,
+              radius: 50,
+              title: '',
+            ),
+            PieChartSectionData(
+              value: pension > 0 ? pension : 0.01,
+              color: theme.colorScheme.tertiary,
+              radius: 50,
+              title: '',
+            ),
+          ]
+        : [
+            PieChartSectionData(
+              value: 1,
+              color: theme.colorScheme.outlineVariant,
+              radius: 50,
+              title: '',
+            ),
+          ];
 
     return Card(
       child: Container(
@@ -148,17 +167,21 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      'Total Gross: ₦${(gross / 1000000).toStringAsFixed(1)}M',
+                      hasData
+                          ? 'Total Gross: ₦${(gross / 1000000).toStringAsFixed(1)}M'
+                          : 'Run a calculation to see your allocation',
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _legendItem(theme, 'Net Pay', '${((net / gross) * 100).toStringAsFixed(0)}%', theme.colorScheme.primary),
-                  _legendItem(theme, 'Income Tax (PAYE)', '${((tax / gross) * 100).toStringAsFixed(0)}%', AppColors.govRed),
-                  _legendItem(theme, 'Pension', '${((pension / gross) * 100).toStringAsFixed(0)}%', theme.colorScheme.tertiary),
+                  if (hasData) ...[
+                    const SizedBox(height: 16),
+                    _legendItem(theme, 'Net Pay', '${((net / gross) * 100).toStringAsFixed(0)}%', theme.colorScheme.primary),
+                    _legendItem(theme, 'Income Tax (PAYE)', '${((tax / gross) * 100).toStringAsFixed(0)}%', AppColors.govRed),
+                    _legendItem(theme, 'Pension', '${((pension / gross) * 100).toStringAsFixed(0)}%', theme.colorScheme.tertiary),
+                  ],
                 ],
               ),
             ),
@@ -190,14 +213,21 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
   }
 
   Widget _taxTrendsCard(ThemeData theme) {
-    const spots = [
-      FlSpot(0, 800000),
-      FlSpot(1, 920000),
-      FlSpot(2, 1050000),
-      FlSpot(3, 1140000),
-      FlSpot(4, 1250400),
-    ];
-    const labels = ['2020', '2021', '2022', '2023', '2024'];
+    // Real trend: computed tax of the last 5 saved calculations (oldest → newest)
+    final taxState = ref.watch(taxProvider);
+    final items = taxState.history.take(5).toList().reversed.toList();
+    final spots = <FlSpot>[];
+    final labels = <String>[];
+    final dateFormat = DateFormat('MMM yy');
+    for (var i = 0; i < items.length; i++) {
+      spots.add(FlSpot(i.toDouble(), items[i].computedTax));
+      final dt = items[i].createdAt;
+      labels.add(dt != null ? dateFormat.format(dt.toLocal()) : '');
+    }
+    final hasTrend = spots.length >= 2;
+    final maxY = spots.isEmpty
+        ? 100000.0
+        : spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
 
     return Card(
       child: Container(
@@ -235,7 +265,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Last 5 Years',
+                          'Last ${items.length} run${items.length == 1 ? '' : 's'}',
                           style: theme.textTheme.labelSmall,
                         ),
                       ),
@@ -244,65 +274,74 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   SizedBox(
                     height: 180,
-                    child: LineChart(
-                      LineChartData(
-                        gridData: FlGridData(
-                          show: true,
-                          drawVerticalLine: false,
-                          horizontalInterval: 250000,
-                          getDrawingHorizontalLine: (value) => FlLine(
-                            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                            strokeWidth: 1,
-                          ),
-                        ),
-                        titlesData: FlTitlesData(
-                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                final idx = value.toInt();
-                                if (idx >= 0 && idx < labels.length) {
-                                  return Text(labels[idx], style: theme.textTheme.labelSmall);
-                                }
-                                return const SizedBox();
-                              },
+                    child: hasTrend
+                        ? LineChart(
+                            LineChartData(
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                horizontalInterval: maxY > 0 ? maxY / 4 : 1,
+                                getDrawingHorizontalLine: (value) => FlLine(
+                                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                  strokeWidth: 1,
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      final idx = value.toInt();
+                                      if (idx >= 0 && idx < labels.length && labels[idx].isNotEmpty) {
+                                        return Text(labels[idx], style: theme.textTheme.labelSmall);
+                                      }
+                                      return const SizedBox();
+                                    },
+                                  ),
+                                ),
+                              ),
+                              borderData: FlBorderData(show: false),
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: spots,
+                                  isCurved: true,
+                                  color: theme.colorScheme.primary,
+                                  barWidth: 3,
+                                  belowBarData: BarAreaData(
+                                    show: true,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        theme.colorScheme.primary.withValues(alpha: 0.3),
+                                        theme.colorScheme.primary.withValues(alpha: 0.0),
+                                      ],
+                                    ),
+                                  ),
+                                  dotData: FlDotData(
+                                    show: true,
+                                    getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
+                                      radius: 4,
+                                      color: theme.colorScheme.primary,
+                                      strokeWidth: 2,
+                                      strokeColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: spots,
-                            isCurved: true,
-                            color: theme.colorScheme.primary,
-                            barWidth: 3,
-                            belowBarData: BarAreaData(
-                              show: true,
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  theme.colorScheme.primary.withValues(alpha: 0.3),
-                                  theme.colorScheme.primary.withValues(alpha: 0.0),
-                                ],
+                          )
+                        : Center(
+                            child: Text(
+                              'Run 2+ calculations to see your tax trend',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            dotData: FlDotData(
-                              show: true,
-                              getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
-                                radius: 4,
-                                color: theme.colorScheme.primary,
-                                strokeWidth: 2,
-                                strokeColor: Colors.white,
-                              ),
-                            ),
                           ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -313,7 +352,46 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _historyTable(ThemeData theme, List<_CalcHistory> history, NumberFormat naira, bool isMobile, TaxState taxState) {
+  String _typeLabel(TaxProfile p) {
+    final first = p.breakdown.isNotEmpty ? p.breakdown.first.bracket : '';
+    if (first.startsWith('Flat')) return first;
+    if (p.isExempt) return 'Exempt';
+    return 'Annual PAYE';
+  }
+
+  String _dateLabel(TaxProfile p) {
+    final dt = p.createdAt;
+    if (dt == null) return 'On this device';
+    return DateFormat('d MMM yyyy').format(dt.toLocal());
+  }
+
+  Widget _historyTable(ThemeData theme, List<TaxProfile> history, NumberFormat naira, bool isMobile) {
+    if (history.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Past Calculations',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  'No calculations yet — run your first assessment.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -327,7 +405,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             if (isMobile)
               Column(
-                children: history.map((h) => _historyMobileCard(theme, h, naira, taxState)).toList(),
+                children: history.map((h) => _historyMobileCard(theme, h, naira)).toList(),
               )
             else
               Table(
@@ -362,7 +440,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(h.date, style: theme.textTheme.bodySmall),
+                        child: Text(_dateLabel(h), style: theme.textTheme.bodySmall),
                       ),
                       Container(
                         margin: const EdgeInsets.symmetric(vertical: 10),
@@ -372,18 +450,18 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          h.type,
+                          _typeLabel(h),
                           style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.primary),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(naira.format(h.gross), style: theme.textTheme.bodySmall),
+                        child: Text(naira.format(h.annualGross), style: theme.textTheme.bodySmall),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
-                          naira.format(h.tax),
+                          naira.format(h.computedTax),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: AppColors.govRed,
                             fontWeight: FontWeight.w600,
@@ -393,9 +471,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
                         tooltip: 'Download Tax Report',
-                        onPressed: taxState.profile != null
-                            ? () => PdfService.exportTaxReport(taxState.profile!)
-                            : null,
+                        onPressed: () => PdfService.exportTaxReport(h),
                       ),
                     ],
                   )),
@@ -407,7 +483,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _historyMobileCard(ThemeData theme, _CalcHistory h, NumberFormat naira, TaxState taxState) {
+  Widget _historyMobileCard(ThemeData theme, TaxProfile h, NumberFormat naira) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -415,19 +491,21 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(h.date, style: theme.textTheme.labelSmall),
-                const SizedBox(height: 4),
-                Text(h.type, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_dateLabel(h), style: theme.textTheme.labelSmall),
+                  const SizedBox(height: 4),
+                  Text(_typeLabel(h), style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  naira.format(h.tax),
+                  naira.format(h.computedTax),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.govRed,
                     fontWeight: FontWeight.w700,
@@ -436,9 +514,7 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
                   tooltip: 'Download Tax Report',
-                  onPressed: taxState.profile != null
-                      ? () => PdfService.exportTaxReport(taxState.profile!)
-                      : null,
+                  onPressed: () => PdfService.exportTaxReport(h),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -449,12 +525,4 @@ class AnalyticsHistoryScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _CalcHistory {
-  final String date;
-  final String type;
-  final double gross;
-  final double tax;
-  _CalcHistory(this.date, this.type, this.gross, this.tax);
 }

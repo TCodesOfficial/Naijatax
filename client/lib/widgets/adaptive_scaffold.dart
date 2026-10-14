@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/theme/theme_colors.dart';
 import '../providers/auth_provider.dart';
 import 'app_logo.dart';
 import 'user_avatar.dart';
@@ -20,7 +21,7 @@ class AdaptiveScaffoldDestination {
   });
 }
 
-class AdaptiveScaffold extends ConsumerWidget {
+class AdaptiveScaffold extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
   final List<AdaptiveScaffoldDestination> destinations;
 
@@ -31,7 +32,45 @@ class AdaptiveScaffold extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdaptiveScaffold> createState() => _AdaptiveScaffoldState();
+}
+
+class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _tabController;
+  double _tabDirection = 1;
+
+  StatefulNavigationShell get navigationShell => widget.navigationShell;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant AdaptiveScaffold oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newIndex = widget.navigationShell.currentIndex;
+    final oldIndex = oldWidget.navigationShell.currentIndex;
+    if (newIndex != oldIndex) {
+      _tabDirection = newIndex > oldIndex ? 1 : -1;
+      _tabController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width >= AppConstants.tabletBreakpoint;
@@ -67,14 +106,27 @@ class AdaptiveScaffold extends ConsumerWidget {
                   size.width,
                 ),
                 Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    switchInCurve: Curves.easeInOut,
-                    switchOutCurve: Curves.easeInOut,
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                  // State-safe tab switch: the shell subtree stays mounted
+                  // (IndexedStack under the hood) — only fade + micro-slide
+                  // the container when the branch index changes.
+                  child: AnimatedBuilder(
+                    animation: _tabController,
+                    builder: (context, child) {
+                      final curved = CurvedAnimation(
+                        parent: _tabController,
+                        curve: Curves.easeOutCubic,
+                      );
+                      return FadeTransition(
+                        opacity: curved,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: Offset(_tabDirection * 0.012, 0),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: child,
+                        ),
+                      );
+                    },
                     child: navigationShell,
                   ),
                 ),
@@ -389,10 +441,14 @@ class AdaptiveScaffold extends ConsumerWidget {
     final inactiveColor = theme.colorScheme.onSurfaceVariant;
     const labels = ['Home', 'Calculator', 'AI Assistant', 'Community', 'Profile'];
 
-    // The strip is painted with the theme's surface color (follows light/dark
-    // mode); only the cut-out regions above the curve stay transparent so the
-    // screen shows through them. Labels live in a static overlay layer so they
-    // never float with the icons.
+    // The strip is painted with a slightly-tinted surface so it stays
+    // visible in BOTH modes (in light mode the theme's surface is identical
+    // to the background); only the cut-out regions above the curve stay
+    // transparent so the screen shows through them. Labels live in a static
+    // overlay layer so they never float with the icons.
+    final stripColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.surface
+        : AppColors.surfaceContainer;
     return Stack(
       clipBehavior: Clip.none, // raised active circle overflows above the bar
       children: [
@@ -405,7 +461,7 @@ class AdaptiveScaffold extends ConsumerWidget {
             );
           },
           height: 75,
-          color: theme.colorScheme.surface,
+          color: stripColor,
           buttonBackgroundColor: theme.colorScheme.primary,
           backgroundColor: Colors.transparent,
           animationDuration: const Duration(milliseconds: 350),
