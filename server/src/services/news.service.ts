@@ -2,7 +2,8 @@ import Parser from 'rss-parser';
 import { prisma } from '../config/database.js';
 import { env } from '../config/env.js';
 
-const parser = new Parser();
+// Custom field: <source>Publisher</source> (Google News RSS uses it for attribution)
+const parser = new Parser({ customFields: { item: ['source'] } });
 
 // ─── In-Memory TTL Cache ─────────────────────────────────────────────────────
 class MemoryCache<T> {
@@ -29,15 +30,45 @@ class MemoryCache<T> {
 
 const cache = new MemoryCache<any>();
 
-// Multiple RSS feeds for Nigerian tax/finance news
-const RSS_FEEDS = [
+// ─── Feed sources ────────────────────────────────────────────────────────────
+// Direct category feeds (stable, publisher-provided) + Google News search
+// RSS (free, no API key, typically only minutes behind real-time).
+const GOOGLE_NEWS_RSS = 'https://news.google.com/rss/search';
+
+function googleNewsFeed(query: string, source: string) {
+  const q = encodeURIComponent(`${query} when:7d`);
+  return {
+    url: `${GOOGLE_NEWS_RSS}?q=${q}&hl=en-NG&gl=NG&ceid=NG:en`,
+    source,
+    isGoogleNews: true,
+  };
+}
+
+const RSS_FEEDS: Array<{ url: string; source: string; isGoogleNews?: boolean }> = [
   { url: 'https://nairametrics.com/category/taxation/feed/', source: 'Nairametrics' },
   { url: 'https://businessday.ng/category/tax/feed/', source: 'BusinessDay' },
   { url: 'https://www.punchng.com/topics/tax/feed/', source: 'Punch' },
   { url: 'https://www.vanguardngr.com/business/tax/feed/', source: 'Vanguard' },
   { url: 'https://www.thecable.ng/category/business/tax/feed/', source: 'TheCable' },
   { url: 'https://www.firs.gov.ng/feed/', source: 'FIRS Official' },
+  googleNewsFeed('"Nigeria Tax Act" OR "Nigeria tax reform" OR "Finance Act Nigeria"', 'Google News · Tax Act'),
+  googleNewsFeed('NRS OR "Nigeria Revenue Service" OR FIRS tax Nigeria', 'Google News · NRS/FIRS'),
+  googleNewsFeed('"Taiwo Oyedele" tax', 'Google News · Policy Committee'),
+  googleNewsFeed('PAYE OR VAT OR withholding tax Nigeria', 'Google News · PAYE/VAT'),
 ];
+
+// Optional extra feeds from env (comma-separated) — finally honored config.
+function extraFeeds(): Array<{ url: string; source: string; isGoogleNews?: boolean }> {
+  return (env.NEWS_RSS_FEED ?? '')
+    .split(',')
+    .map((u) => u.trim())
+    .filter(Boolean)
+    .map((url) => ({ url, source: 'NaijaTax Wire' }));
+}
+
+// ─── Sync mutex (overlapping runs are skipped) ──────────────────────────────
+let syncInFlight = false;
+const MAX_ARTICLES = 300;
 
 // Keywords for automatic categorization
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -59,49 +90,152 @@ function categorizeArticle(title: string, content: string, source: string): stri
   return 'COMPLIANCE';
 }
 
-function normalizeArticle(item: any, source: string): Omit<import('@prisma/client').TaxArticle, 'id' | 'createdAt'> {
-  const title = item.title || 'Untitled';
+// Google News titles read "Headline - Publisher"; strip the publisher suffix
+// so dedupe and display stay clean (publisher lives in the source column).
+function stripGoogleSuffix(title: string): string {
+  const stripped = title.replace(/\s+[-–—]\s+[^-–—]{2,60}$/, '');
+  return stripped.length >= 10 ? stripped : title;
+}
+
+function sourceOf(item: any, fallback: string): string {
+  const s = item?.source;
+  if (typeof s === 'string' && s.trim()) return s.trim().substring(0, 60);
+  if (s && typeof s === 'object' && typeof s._ === 'string' && s._.trim()) {
+    return s._.trim().substring(0, 60);
+  }
+  return fallback;
+}
+
+type NormalizedArticle = {
+  title: string;
+  summary: string;
+  content: string;
+  source: string;
+  category: string;
+  url: string;
+  isFeatured: boolean;
+  publishedAt: Date | null;
+};
+
+function normalizeArticle(item: any, feedSource: string, isGoogleNews: boolean): NormalizedArticle | null {
+  if (!item.title) return null;
+  const rawTitle = isGoogleNews ? stripGoogleSuffix(item.title) : item.title;
   const content = item.content || item.contentSnippet || '';
-  const summary = item.contentSnippet?.substring(0, 200) + '...' || 'No summary available';
+  const summary = item.contentSnippet
+    ? item.contentSnippet.substring(0, 200) + (item.contentSnippet.length > 200 ? '...' : '')
+    : 'No summary available';
   const url = item.link || '';
-  const category = categorizeArticle(title, content, source);
+  const source = isGoogleNews ? sourceOf(item, feedSource) : feedSource;
+
+  const publishedRaw = item.isoDate || item.pubDate;
+  let publishedAt: Date | null = null;
+  if (publishedRaw) {
+    const parsed = new Date(publishedRaw);
+    if (!Number.isNaN(parsed.getTime())) publishedAt = parsed;
+  }
+
   return {
-    title: title.substring(0, 255),
+    title: rawTitle.substring(0, 255),
     summary: summary.substring(0, 500),
     content: content || summary,
     source,
-    category,
+    category: categorizeArticle(rawTitle, content, source),
     url,
     isFeatured: false,
+    publishedAt,
   };
 }
 
+// Parse a feed; some hosts (e.g. Google News) reject rss-parser's default UA,
+// so fall back to a browser-UA fetch + parseString.
+async function parseFeed(url: string): Promise<any> {
+  try {
+    return await parser.parseURL(url);
+  } catch {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        Accept: 'application/rss+xml, application/xml, text/xml, */*',
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) throw new Error(`Feed HTTP ${res.status}`);
+    const xml = await res.text();
+    return parser.parseString(xml);
+  }
+}
+
 export async function syncTaxNews() {
-  let totalCount = 0;
-  for (const feed of RSS_FEEDS) {
-    try {
-      const feedData = await parser.parseURL(feed.url);
-      let count = 0;
-      for (const item of feedData.items) {
-        if (!item.title || !item.contentSnippet) continue;
-        const normalized = normalizeArticle(item, feed.source);
-        const existing = await prisma.taxArticle.findFirst({
-          where: { title: normalized.title },
-        });
-        if (!existing) {
+  if (syncInFlight) {
+    return { success: false, skipped: true, newArticlesCount: 0 };
+  }
+  syncInFlight = true;
+  const startedAt = Date.now();
+
+  try {
+    // One snapshot of existing articles → fast in-memory dedupe for the run.
+    const existing = await prisma.taxArticle.findMany({
+      select: { title: true, url: true },
+    });
+    const haveUrls = new Set(existing.map((e) => (e.url || '').toLowerCase()).filter(Boolean));
+    const haveTitles = new Set(existing.map((e) => e.title.toLowerCase().trim()));
+
+    let totalCount = 0;
+    const feeds = [...RSS_FEEDS, ...extraFeeds()];
+
+    for (const feed of feeds) {
+      try {
+        const feedData = await parseFeed(feed.url);
+        let count = 0;
+        for (const item of feedData.items ?? []) {
+          const normalized = normalizeArticle(item, feed.source, feed.isGoogleNews ?? false);
+          if (!normalized) continue;
+
+          const urlKey = normalized.url.toLowerCase();
+          const titleKey = normalized.title.toLowerCase().trim();
+          if ((urlKey && haveUrls.has(urlKey)) || haveTitles.has(titleKey)) continue;
+
           await prisma.taxArticle.create({ data: normalized });
+          if (urlKey) haveUrls.add(urlKey);
+          haveTitles.add(titleKey);
           count++;
         }
+        totalCount += count;
+        if (count > 0) console.log(`[NEWS] ${feed.source}: +${count}`);
+      } catch (error: any) {
+        console.warn(`[NEWS] Feed failed (${feed.source}): ${error?.message ?? error}`);
       }
-      totalCount += count;
-    } catch (error) {
-      // Skip failed feed silently
     }
+
+    // Keep the table lean: retain only the newest MAX_ARTICLES.
+    const total = await prisma.taxArticle.count();
+    if (total > MAX_ARTICLES) {
+      const overflow = await prisma.taxArticle.findMany({
+        orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
+        skip: MAX_ARTICLES,
+        select: { id: true },
+      });
+      if (overflow.length > 0) {
+        await prisma.taxArticle.deleteMany({
+          where: { id: { in: overflow.map((a) => a.id) } },
+        });
+      }
+    }
+
+    // Invalidate article cache after sync
+    cache.clear();
+    console.log(`[NEWS] Sync complete: +${totalCount} new in ${Date.now() - startedAt}ms`);
+    return { success: true, newArticlesCount: totalCount };
+  } finally {
+    syncInFlight = false;
   }
-  // Invalidate article cache after sync
-  cache.clear();
-  return { success: true, newArticlesCount: totalCount };
 }
+
+const ARTICLE_ORDER = [
+  { publishedAt: { sort: 'desc', nulls: 'last' } as const },
+  { createdAt: 'desc' as const },
+];
 
 export async function getPublicArticles(
   featuredOnly = false,
@@ -117,7 +251,7 @@ export async function getPublicArticles(
 
   const result = await prisma.taxArticle.findMany({
     where,
-    orderBy: { createdAt: 'desc' },
+    orderBy: ARTICLE_ORDER,
     take: limit,
     select: {
       id: true,
@@ -128,6 +262,7 @@ export async function getPublicArticles(
       category: true,
       url: true,
       isFeatured: true,
+      publishedAt: true,
       createdAt: true,
     },
   });
@@ -139,7 +274,7 @@ export async function getPublicArticles(
 export async function getTaxArticles(featuredOnly = false, limit = 50) {
   return await prisma.taxArticle.findMany({
     where: featuredOnly ? { isFeatured: true } : undefined,
-    orderBy: { createdAt: 'desc' },
+    orderBy: ARTICLE_ORDER,
     take: limit,
     select: {
       id: true,
@@ -149,6 +284,7 @@ export async function getTaxArticles(featuredOnly = false, limit = 50) {
       category: true,
       url: true,
       isFeatured: true,
+      publishedAt: true,
       createdAt: true,
     },
   });

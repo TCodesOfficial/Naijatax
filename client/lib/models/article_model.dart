@@ -8,6 +8,7 @@ class TaxArticle {
   final String? url;
   final bool isFeatured;
   final DateTime createdAt;
+  final DateTime? publishedAt;
 
   const TaxArticle({
     required this.id,
@@ -19,6 +20,7 @@ class TaxArticle {
     this.url,
     required this.isFeatured,
     required this.createdAt,
+    this.publishedAt,
   });
 
   factory TaxArticle.fromJson(Map<String, dynamic> json) => TaxArticle(
@@ -33,7 +35,13 @@ class TaxArticle {
         createdAt: json['createdAt'] != null
             ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
             : DateTime.now(),
+        publishedAt: json['publishedAt'] != null
+            ? DateTime.tryParse(json['publishedAt'] as String)
+            : null,
       );
+
+  /// Original publish time when known, otherwise when we stored it.
+  DateTime get effectiveDate => publishedAt ?? createdAt;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -45,5 +53,6 @@ class TaxArticle {
         'url': url,
         'isFeatured': isFeatured,
         'createdAt': createdAt.toIso8601String(),
+        'publishedAt': publishedAt?.toIso8601String(),
       };
 }

@@ -282,7 +282,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       IconButton(
                         icon: const Icon(Icons.picture_as_pdf_outlined, size: 22),
                         tooltip: 'Download Tax Report',
-                        onPressed: () => PdfService.exportTaxReport(profile),
+                        onPressed: () => PdfService.exportTaxReport(
+                          profile,
+                          userName: ref.read(authProvider).user?.displayName,
+                        ),
                       ),
                     ],
                   ),
@@ -940,7 +943,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               Flexible(
                 child: Text(
-                  'Recent News: NTA 2025',
+                  'Recent Tax News',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1042,7 +1045,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                _timeAgo(article.createdAt),
+                _timeAgo(article.effectiveDate),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

@@ -36,120 +36,124 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         ? articlesState.articles
         : articlesState.articles.where((a) => a.category == _selectedFilter).toList();
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        isMobile ? 16 : 24,
-        isMobile ? 16 : 24,
-        isMobile ? 16 : 24,
-        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Tax News & Updates',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
+    return RefreshIndicator(
+      onRefresh: () => ref.read(articlesProvider.notifier).fetchArticles(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          isMobile ? 16 : 24,
+          isMobile ? 16 : 24,
+          isMobile ? 16 : 24,
+          hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tax News & Updates',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          // Filter chips
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: filters.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, idx) {
-                final f = filters[idx];
-                final isActive = _selectedFilter == f;
-                return Tooltip(
-                  message: 'Filter by $f',
-                  child: ChoiceChip(
-                    label: Text(f),
-                    selected: isActive,
-                    onSelected: (_) {
-                      setState(() => _selectedFilter = f);
-                      ref.read(articlesProvider.notifier).setCategory(
-                        _selectedFilter == 'All' ? null : _selectedFilter,
-                      );
-                    },
-                    selectedColor: theme.colorScheme.primary,
-                    labelStyle: TextStyle(
-                      color: isActive ? Colors.white : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+            const SizedBox(height: 16),
+            // Filter chips
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: filters.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, idx) {
+                  final f = filters[idx];
+                  final isActive = _selectedFilter == f;
+                  return Tooltip(
+                    message: 'Filter by $f',
+                    child: ChoiceChip(
+                      label: Text(f),
+                      selected: isActive,
+                      onSelected: (_) {
+                        setState(() => _selectedFilter = f);
+                        ref.read(articlesProvider.notifier).setCategory(
+                          _selectedFilter == 'All' ? null : _selectedFilter,
+                        );
+                      },
+                      selectedColor: theme.colorScheme.primary,
+                      labelStyle: TextStyle(
+                        color: isActive ? Colors.white : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          if (articlesState.isLoading)
-            const Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(),
-            ))
-          else if (filteredArticles.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(40),
-                child: Center(
-                  child: Text(
-                    'No articles available.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 24),
+            if (articlesState.isLoading)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(),
+              ))
+            else if (filteredArticles.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Center(
+                    child: Text(
+                      'No articles available.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
+              )
+            else ...[
+              // Featured article
+              if (filteredArticles.isNotEmpty)
+                _featuredCard(theme, filteredArticles.first, isMobile),
+              const SizedBox(height: 20),
+              // News grid
+              Builder(
+                builder: (context) {
+                  final remaining = filteredArticles.length > 1
+                      ? filteredArticles.sublist(1)
+                      : <dynamic>[];
+                  if (remaining.isEmpty) return const SizedBox.shrink();
+                  return isMobile
+                      ? ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: remaining.length,
+                          itemBuilder: (context, index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _newsCard(theme, remaining[index]),
+                          ),
+                        )
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final crossAxisCount = constraints.maxWidth > 900 ? 3 : 2;
+                            final childAspectRatio = constraints.maxWidth > 900 ? 1.3 : 1.15;
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: childAspectRatio,
+                              ),
+                              itemCount: remaining.length,
+                              itemBuilder: (context, index) => _newsCard(theme, remaining[index]),
+                            );
+                          },
+                        );
+                },
               ),
-            )
-          else ...[
-            // Featured article
-            if (filteredArticles.isNotEmpty)
-              _featuredCard(theme, filteredArticles.first, isMobile),
-            const SizedBox(height: 20),
-            // News grid
-            Builder(
-              builder: (context) {
-                final remaining = filteredArticles.length > 1
-                    ? filteredArticles.sublist(1)
-                    : <dynamic>[];
-                if (remaining.isEmpty) return const SizedBox.shrink();
-                return isMobile
-                    ? ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: remaining.length,
-                        itemBuilder: (context, index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _newsCard(theme, remaining[index]),
-                        ),
-                      )
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final crossAxisCount = constraints.maxWidth > 900 ? 3 : 2;
-                          final childAspectRatio = constraints.maxWidth > 900 ? 1.3 : 1.15;
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: childAspectRatio,
-                            ),
-                            itemCount: remaining.length,
-                            itemBuilder: (context, index) => _newsCard(theme, remaining[index]),
-                          );
-                        },
-                      );
-              },
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -240,7 +244,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
     );
   }
 
-  Widget _featuredBadge(ThemeData theme, dynamic article) {
+  Widget _featuredBadge(ThemeData theme, TaxArticle article) {
     return Row(
       children: [
         Container(
@@ -256,7 +260,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         ),
         const SizedBox(width: 8),
         Text(
-          article.source,
+          '${article.source} · ${_timeAgo(article.effectiveDate)}',
           style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
@@ -277,18 +281,29 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  article.source,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      article.source,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _timeAgo(article.effectiveDate),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Text(
@@ -311,5 +326,14 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         ),
       ),
     );
+  }
+
+  String _timeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inDays > 7) return '${(diff.inDays / 7).floor()}w ago';
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
+    return 'Just now';
   }
 }

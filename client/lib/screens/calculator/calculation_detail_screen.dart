@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../models/tax_profile.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/pdf_service.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/tax_charts_widget.dart';
 
 /// Full detail of a single saved calculation: summary stats, PAYE rows,
 /// charts, bracket breakdown and PDF export.
-class CalculationDetailScreen extends StatelessWidget {
+class CalculationDetailScreen extends ConsumerWidget {
   final TaxProfile? profile;
 
   const CalculationDetailScreen({super.key, this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
@@ -24,6 +26,7 @@ class CalculationDetailScreen extends StatelessWidget {
         NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
     final dateFormat = DateFormat('d MMMM yyyy · h:mm a');
     final p = profile;
+    final userName = ref.read(authProvider).user?.displayName;
 
     if (p == null) {
       return SingleChildScrollView(
@@ -76,7 +79,7 @@ class CalculationDetailScreen extends StatelessWidget {
                 ),
               ),
               IconButton.filledTonal(
-                onPressed: () => PdfService.exportTaxReport(p),
+                onPressed: () => PdfService.exportTaxReport(p, userName: userName),
                 tooltip: 'Export as PDF',
                 icon: const Icon(Icons.picture_as_pdf_outlined),
               ),
@@ -194,7 +197,7 @@ class CalculationDetailScreen extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             child: FilledButton.icon(
-              onPressed: () => PdfService.exportTaxReport(p),
+              onPressed: () => PdfService.exportTaxReport(p, userName: userName),
               icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
               label: const Text('Export full report as PDF'),
             ),

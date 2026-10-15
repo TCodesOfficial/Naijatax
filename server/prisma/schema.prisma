@@ -149,8 +149,8 @@ model TaxArticle {
   category   String? // NTA_2025, PAYE, CIT, VAT, COMPLIANCE
   url        String?
   isFeatured Boolean  @default(false) @map("is_featured")
+  publishedAt DateTime? @map("published_at") // Original publish time from the feed
   createdAt  DateTime @default(now()) @map("created_at")
-
   @@index([category])
   @@index([createdAt(sort: Desc)])
   @@index([isFeatured, createdAt(sort: Desc)])

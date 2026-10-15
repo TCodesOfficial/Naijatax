@@ -65,7 +65,7 @@ class _TaxEducationScreenState extends ConsumerState<TaxEducationScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Published: ${DateFormat.yMMMd().format(art.createdAt)}',
+                  'Published: ${DateFormat.yMMMd().format(art.effectiveDate)}',
                   style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 const Divider(height: 32),
@@ -133,7 +133,7 @@ class _TaxEducationScreenState extends ConsumerState<TaxEducationScreen> {
                                     ),
                                   ),
                                   Text(
-                                    DateFormat.yMMMd().format(art.createdAt),
+                                    DateFormat.yMMMd().format(art.effectiveDate),
                                     style: theme.textTheme.bodySmall,
                                   ),
                                 ],

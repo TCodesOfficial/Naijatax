@@ -8,6 +8,7 @@ import { env } from "./config/env.js";
 import { prisma } from "./config/database.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import apiRouter from "./routes/index.js";
+import { syncTaxNews } from "./services/news.service.js";
 
 const app = express();
 
@@ -85,12 +86,27 @@ app.use((_req, res) => {
 // ─── Global Error Handler ────────────────────────────────────────────────────
 app.use(errorHandler);
 
+// ─── Real-time tax news auto-sync ───────────────────────────────────────────
+// Initial sync shortly after boot, then every 30 minutes. syncTaxNews has an
+// internal mutex so overlapping runs are skipped, and it never throws.
+const NEWS_SYNC_INTERVAL_MS = 30 * 60 * 1000;
+
+function scheduleNewsSync() {
+  setTimeout(() => {
+    syncTaxNews().catch((e) => console.warn("[NEWS] Startup sync failed:", e));
+  }, 10_000);
+  setInterval(() => {
+    syncTaxNews().catch((e) => console.warn("[NEWS] Scheduled sync failed:", e));
+  }, NEWS_SYNC_INTERVAL_MS);
+}
+
 // ─── Server Bootstrap ────────────────────────────────────────────────────────
 async function runApp() {
   try {
     await prisma.$connect();
     app.listen(env.PORT, () => {
       console.log(`Server is running on port ${env.PORT}`);
+      scheduleNewsSync();
     });
   } catch (error) {
     console.error("Failed to connect to database:", error);

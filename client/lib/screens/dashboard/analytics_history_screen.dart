@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../models/tax_profile.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/tax_provider.dart';
 import '../../services/pdf_service.dart';
 
@@ -471,7 +472,10 @@ class _AnalyticsHistoryScreenState
                       IconButton(
                         icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
                         tooltip: 'Download Tax Report',
-                        onPressed: () => PdfService.exportTaxReport(h),
+                        onPressed: () => PdfService.exportTaxReport(
+                          h,
+                          userName: ref.read(authProvider).user?.displayName,
+                        ),
                       ),
                     ],
                   )),
@@ -514,7 +518,10 @@ class _AnalyticsHistoryScreenState
                 IconButton(
                   icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
                   tooltip: 'Download Tax Report',
-                  onPressed: () => PdfService.exportTaxReport(h),
+                  onPressed: () => PdfService.exportTaxReport(
+                    h,
+                    userName: ref.read(authProvider).user?.displayName,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),

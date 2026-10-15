@@ -222,7 +222,10 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
       final userId = auth.user?.id;
       if (userId == null) return;
 
-      final pdfBytes = await PdfService.generateTaxReportBytes(taxState.profile!);
+      final pdfBytes = await PdfService.generateTaxReportBytes(
+        taxState.profile!,
+        userName: auth.user?.displayName,
+      );
       final fileName = '$userId/Tax_Report_${DateFormat.yMMMd().format(DateTime.now())}.pdf';
 
       await Supabase.instance.client.storage.from('documents').uploadBinary(

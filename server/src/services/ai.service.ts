@@ -241,6 +241,67 @@ function toGeminiMessages(
   return messages;
 }
 
+// ─── Personalisation context (first name + last 5 calculations) ─────────────
+// Privacy rules: only the first name and the user's OWN calculation figures are
+// shared with the model. Email, phone and address never leave the database.
+
+interface UserPersonalContext {
+  displayName: string | null;
+  recentCalculations: Array<{
+    createdAt: Date;
+    monthlyIncome: unknown;
+    annualGross: unknown;
+    taxableIncome?: unknown;
+    computedTax: unknown;
+    netIncome: unknown;
+    isExempt: boolean;
+    flatRate?: unknown;
+  }>;
+}
+
+function buildUserContext(ctx: UserPersonalContext | null): string {
+  if (!ctx) return '';
+
+  const firstName = (ctx.displayName ?? '').trim().split(/\s+/)[0];
+  const lines: string[] = ['', '--- About this user (for personalised answers only) ---'];
+
+  lines.push(
+    firstName
+      ? `- Their first name is ${firstName}. You may greet them by first name when it feels natural.`
+      : '- You do not know their name; just address them politely.',
+  );
+
+  const calcs = ctx.recentCalculations ?? [];
+  if (calcs.length === 0) {
+    lines.push('- They have no saved tax calculations yet. If relevant, suggest they try the Calculator tab.');
+  } else {
+    lines.push(`- Their most recent ${calcs.length} tax calculation${calcs.length === 1 ? '' : 's'} (newest first):`);
+    calcs.forEach((c, i) => {
+      const date = c.createdAt.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
+      const gross = Number(c.annualGross ?? 0);
+      const monthly = Number(c.monthlyIncome ?? 0);
+      const tax = Number(c.computedTax ?? 0);
+      const net = Number(c.netIncome ?? 0);
+      const nairaFmt = (v: number) => `₦${Math.round(v).toLocaleString('en-NG')}`;
+      const mode = c.flatRate != null ? `flat ${Math.round(Number(c.flatRate) * 100)}% selected` : 'progressive NTA 2025 bands';
+      const exempt = c.isExempt ? 'exempt (₦0 tax)' : `annual tax ${nairaFmt(tax)}`;
+      lines.push(
+        `   ${i + 1}. ${date}: monthly income ${nairaFmt(monthly)} (annual ${nairaFmt(gross)}), ${exempt}, take-home ${nairaFmt(net)} — ${mode}.`,
+      );
+    });
+    lines.push('- Cite these figures when they ask questions about "my tax", "my income", "my calculation" etc.');
+  }
+
+  lines.push(
+    '- Treat these as app-generated estimates, NOT filed or verified tax records.',
+    '- Never invent, guess or extrapolate figures that are not listed here.',
+    '- Never ask for, repeat, or store personal contact details (email, phone, address) — they are not available to you.',
+    '- If their question depends on details you do not have, say so honestly and suggest what they can do in the app.',
+  );
+
+  return lines.join('\n');
+}
+
 /* ==========================================
    Prisma Chat Session Persistent Layer Data Methods
    ========================================== */
@@ -295,8 +356,9 @@ export async function sendChatMessage(userId: string, content: string, sessionId
   const tSession = Date.now();
 
   // Fetch the last 10 messages (enough context, light payload) and save the
-  // user's message in parallel — both only need the session id.
-  const [history, _userMsg] = await Promise.all([
+  // user's message in parallel — plus personalisation data (first name + the
+  // user's own recent calculations; never contact details).
+  const [history, _userMsg, dbUser, recentCalculations] = await Promise.all([
     prisma.chatMessage.findMany({
       where: { sessionId: session.id },
       orderBy: { createdAt: 'desc' },
@@ -304,6 +366,24 @@ export async function sendChatMessage(userId: string, content: string, sessionId
     }),
     prisma.chatMessage.create({
       data: { sessionId: session.id, role: 'user', content },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { displayName: true },
+    }),
+    prisma.taxProfile.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        createdAt: true,
+        monthlyIncome: true,
+        annualGross: true,
+        computedTax: true,
+        netIncome: true,
+        isExempt: true,
+        flatRate: true,
+      },
     }),
   ]);
   history.reverse();
@@ -314,7 +394,14 @@ export async function sendChatMessage(userId: string, content: string, sessionId
     content,
   );
 
-  const responseContent = await callGemini(geminiMessages, NIGERIAN_TAX_CONTEXT, {
+  const systemInstruction =
+    NIGERIAN_TAX_CONTEXT +
+    buildUserContext({
+      displayName: dbUser?.displayName ?? null,
+      recentCalculations,
+    });
+
+  const responseContent = await callGemini(geminiMessages, systemInstruction, {
     temperature: 0.3,
     maxOutputTokens: 1024,
   });

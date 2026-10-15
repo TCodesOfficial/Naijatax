@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../core/constants/app_constants.dart';
 import '../core/theme/theme_colors.dart';
+import '../providers/auth_provider.dart';
 import '../providers/tax_provider.dart';
 import '../services/pdf_service.dart';
 import '../widgets/calculation_history_list.dart';
@@ -144,8 +145,10 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                         IconButton(
                           icon: const Icon(Icons.picture_as_pdf),
                           tooltip: 'Export Report as PDF',
-                          onPressed: () =>
-                              PdfService.exportTaxReport(taxState.profile!),
+                          onPressed: () => PdfService.exportTaxReport(
+                            taxState.profile!,
+                            userName: ref.read(authProvider).user?.displayName,
+                          ),
                         ),
                       ],
                     ),
