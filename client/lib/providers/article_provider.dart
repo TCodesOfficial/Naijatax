@@ -7,14 +7,12 @@ class ArticlesState {
   final bool isLoading;
   final List<TaxArticle> articles;
   final String? selectedCategory;
-  final Map<String, dynamic> metrics;
   final String? error;
 
   const ArticlesState({
     this.isLoading = false,
     this.articles = const [],
     this.selectedCategory,
-    this.metrics = const {},
     this.error,
   });
 
@@ -22,21 +20,17 @@ class ArticlesState {
     bool? isLoading,
     List<TaxArticle>? articles,
     String? selectedCategory,
-    Map<String, dynamic>? metrics,
     String? error,
   }) =>
       ArticlesState(
         isLoading: isLoading ?? this.isLoading,
         articles: articles ?? this.articles,
         selectedCategory: selectedCategory ?? this.selectedCategory,
-        metrics: metrics ?? this.metrics,
         error: error ?? this.error,
       );
 }
 
 class ArticlesNotifier extends Notifier<ArticlesState> {
-  static DateTime? _lastMetricsFetch;
-
   @override
   ArticlesState build() {
     final cached = StorageService.getCachedArticles();
@@ -51,24 +45,15 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
     try {
       final List<dynamic> data = await ApiService.instance.getPublicArticles(category: category);
       final list = data.map((e) => TaxArticle.fromJson(e as Map<String, dynamic>)).toList();
-      await StorageService.saveArticles(data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
+      // Cache only the unfiltered list — persisting a category subset made
+      // the home feed shrink permanently after browsing a filter.
+      if (category == null) {
+        await StorageService.saveArticles(
+            data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
+      }
       state = state.copyWith(isLoading: false, articles: list);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
-    }
-  }
-
-  Future<void> fetchMetrics() async {
-    if (_lastMetricsFetch != null &&
-        DateTime.now().difference(_lastMetricsFetch!).inSeconds < 300) {
-      return;
-    }
-    try {
-      final metricsData = await ApiService.instance.getEconomicMetrics();
-      state = state.copyWith(metrics: metricsData);
-      _lastMetricsFetch = DateTime.now();
-    } catch (_) {
-      // API unavailable — keep existing metrics
     }
   }
 

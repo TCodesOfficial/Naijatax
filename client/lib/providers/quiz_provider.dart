@@ -37,7 +37,14 @@ class QuizNotifier extends Notifier<QuizState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final List<dynamic> data = await ApiService.instance.getQuizQuestions(count: 7);
-      final questions = data.map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>)).toList();
+      final questions = <QuizQuestion>[];
+      for (final e in data) {
+        try {
+          if (e is Map) {
+            questions.add(QuizQuestion.fromJson(Map<String, dynamic>.from(e)));
+          }
+        } catch (_) {}
+      }
       state = state.copyWith(isLoading: false, questions: questions);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -48,20 +55,31 @@ class QuizNotifier extends Notifier<QuizState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final List<dynamic> data = await ApiService.instance.getScoreHistory();
-      final history = data.map((e) => QuizScore.fromJson(e as Map<String, dynamic>)).toList();
+      final history = <QuizScore>[];
+      for (final e in data) {
+        try {
+          if (e is Map) {
+            history.add(QuizScore.fromJson(Map<String, dynamic>.from(e)));
+          }
+        } catch (_) {}
+      }
       state = state.copyWith(isLoading: false, history: history);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> submitQuizScore(int score, int total) async {
+  Future<QuizScore> submitAnswers(List<QuizAnswer> answers) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await ApiService.instance.submitScore(score, total);
+      final data = await ApiService.instance
+          .submitScore(answers.map((a) => a.toJson()).toList());
+      final saved = QuizScore.fromJson(data);
       await fetchScoreHistory();
+      return saved;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false);
+      rethrow;
     }
   }
 }

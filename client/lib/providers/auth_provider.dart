@@ -46,6 +46,10 @@ class AuthState {
 
   bool get isGuest => status == AuthStatus.guest;
   bool get isAuthenticated => status == AuthStatus.authenticated;
+
+  /// Guests and signed-out users both hit the same feature restrictions.
+  bool get isRestricted =>
+      isGuest || status == AuthStatus.unauthenticated;
 }
 
 class AuthNotifier extends Notifier<AuthState> {
@@ -120,9 +124,14 @@ class AuthNotifier extends Notifier<AuthState> {
         return initialState;
       }
     } catch (_) {
-      return const AuthState(status: AuthStatus.unauthenticated);
+      // Supabase unavailable — fall through to guest/unauthenticated restore.
     }
     _listenToAuthChanges();
+    // A guest from the previous run stays a guest across restarts (a real
+    // session, checked above, always wins).
+    if (StorageService.getSetting<bool>('guest') == true) {
+      return const AuthState(status: AuthStatus.guest);
+    }
     return const AuthState(status: AuthStatus.unauthenticated);
   }
 
@@ -132,6 +141,7 @@ class AuthNotifier extends Notifier<AuthState> {
         final event = data.event;
         final session = data.session;
         if (event == AuthChangeEvent.signedIn ||
+            event == AuthChangeEvent.passwordRecovery ||
             event == AuthChangeEvent.tokenRefreshed) {
           if (session != null) {
             final user = session.user;
@@ -172,6 +182,9 @@ class AuthNotifier extends Notifier<AuthState> {
           await StorageService.clearAllUserData();
           ref.read(taxProvider.notifier).reset();
           await StorageService.setSetting('onboarded', false);
+          // A fresh sign-out must land on the login screen, not restore a
+          // guest session chosen earlier.
+          await StorageService.setSetting('guest', false);
           _onboardedCache = null;
           _onboardedCacheTime = null;
           _emit(const AuthState(status: AuthStatus.unauthenticated));
@@ -379,6 +392,76 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  // ─── Password recovery (email OTP) ──────────────────────────────────────
+  // Server has no auth endpoints — this flow talks to Supabase directly.
+
+  /// Sends a 6-digit recovery code to [email].
+  /// Returns null on success, a friendly message on failure.
+  Future<String?> sendPasswordResetOtp(String email) async {
+    try {
+      await _client.auth.resetPasswordForEmail(email.trim());
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Could not send the code. Please check your connection and try again.';
+    }
+  }
+
+  /// Verifies the recovery code and establishes a session (Supabase's
+  /// passwordRecovery/signedIn events may also fire — both are handled).
+  /// Returns null on success, a friendly message on failure.
+  Future<String?> verifyRecoveryOtp(String email, String token) async {
+    try {
+      final res = await _client.auth.verifyOTP(
+        email: email.trim(),
+        token: token.trim(),
+        type: OtpType.recovery,
+      );
+      final u = res.user;
+      if (res.session == null || u == null) {
+        return 'Invalid or expired code. Request a new one.';
+      }
+      await StorageService.clearUserCache();
+      final cachedOnboarded =
+          StorageService.getSetting<bool>('onboarded') ?? false;
+      _emit(
+        AuthState(
+          status: AuthStatus.authenticated,
+          user: _userFromSession(u, onboarded: cachedOnboarded),
+        ),
+      );
+      // Background sync of the onboarded flag (mirrors sign-in).
+      _fetchOnboarded().then((onboarded) async {
+        await StorageService.setSetting('onboarded', onboarded);
+        if (state.user?.id == u.id && state.user?.onboarded != onboarded) {
+          _emit(AuthState(
+            status: state.status,
+            user: _userFromSession(u, onboarded: onboarded),
+          ));
+        }
+      });
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Could not verify the code. Please try again.';
+    }
+  }
+
+  /// Sets the new password for the session created by [verifyRecoveryOtp].
+  /// Returns null on success, a friendly message on failure.
+  Future<String?> setNewPassword(String password) async {
+    try {
+      await _client.auth.updateUser(UserAttributes(password: password));
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Could not update the password. Please try again.';
+    }
+  }
+
   // ─── OAuth ──────────────────────────────────────────────────────────────
 
   Future<void> signInWithGoogle() async {
@@ -411,25 +494,8 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  Future<void> signInWithApple() async {
-    await _client.auth.signInWithOAuth(
-      OAuthProvider.apple,
-      redirectTo: _getRedirectUrl(),
-    );
-  }
-
-  Future<void> signInWithFacebook() async {
-    try {
-      await _client.auth.signInWithOAuth(
-        OAuthProvider.facebook,
-        redirectTo: _getRedirectUrl(),
-      );
-    } catch (e) {
-      throw 'Facebook sign-in failed. Please try again.';
-    }
-  }
-
-  void continueAsGuest() {
+  Future<void> continueAsGuest() async {
+    await StorageService.setSetting('guest', true);
     _emit(const AuthState(status: AuthStatus.guest));
   }
 
@@ -470,6 +536,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> updateAvatar(String avatarUrl) async {
+    final previous = state.user?.avatarUrl;
     _applyLocalUser(avatarUrl: avatarUrl);
     try {
       await ApiService.instance.updateAvatar(avatarUrl);
@@ -477,7 +544,8 @@ class AuthNotifier extends Notifier<AuthState> {
         UserAttributes(data: {'avatar_url': avatarUrl}),
       );
     } catch (_) {
-      // Server/metadata persist failed — local state already updated
+      // Persist failed — roll back so the UI matches the server.
+      _applyLocalUser(avatarUrl: previous ?? '');
     }
   }
 

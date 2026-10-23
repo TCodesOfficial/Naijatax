@@ -4,17 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../services/storage_service.dart';
 import '../../screens/ai_chat/chat_screen.dart';
-import '../../screens/assessment_form_screen.dart';
+import '../../screens/calculator/assessment_form_screen.dart';
+import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/reset_password_screen.dart';
 import '../../screens/calculator/calculation_detail_screen.dart';
 import '../../screens/calculator/calculation_history_screen.dart';
 import '../../screens/calculator/nta_brackets_screen.dart';
 import '../../screens/dashboard/analytics_history_screen.dart';
-import '../../screens/dashboard_screen.dart';
+import '../../screens/dashboard/dashboard_screen.dart';
 import '../../screens/documents/documents_vault_screen.dart';
-import '../../screens/educational/tax_education_screen.dart';
+import '../../screens/learn/tax_education_screen.dart';
 import '../../screens/forum/topic_detail_screen.dart';
 import '../../screens/forum/topic_list_screen.dart';
 import '../../screens/landing/mobile_landing_screen.dart';
@@ -46,13 +49,23 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: authNotifier.refreshNotifier,
     redirect: (context, state) async {
       final authState = ref.read(authProvider);
-      final hasOnboarded = authState.user?.onboarded ?? false;
       final location = state.matchedLocation;
       final isAuthenticatedLike =
           authState.isAuthenticated || authState.isGuest;
       final isGuest = authState.isGuest;
 
-      final isAuthRoute = location == '/login' || location == '/register';
+      // authState.user is null when signed out, so fall back to the persisted
+      // flag — otherwise returning-user rules could never fire (RULE 4 was dead).
+      final hasOnboarded = authState.user?.onboarded ??
+          (StorageService.getSetting<bool>('onboarded') ?? false);
+
+      // Password-reset screens are reachable while signed out, and must NOT
+      // bounce mid-flow when verifying the code logs the user in.
+      final isPasswordReset = location == '/forgot-password' ||
+          location == '/reset-password';
+      final isAuthRoute = location == '/login' ||
+          location == '/register' ||
+          isPasswordReset;
       final isOnboarding = location == '/onboarding';
       final isLanding = location == '/landing';
 
@@ -60,8 +73,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (authState.status == AuthStatus.loading) return null;
 
       // ── RULE 1: Authenticated/guest users on auth routes or landing → go straight to dashboard ─────
-      if (isAuthenticatedLike && (isAuthRoute || isLanding)) {
+      if (isAuthenticatedLike &&
+          (isAuthRoute || isLanding) &&
+          !isPasswordReset) {
         return '/dashboard';
+      }
+
+      // ── RULE 1b: Signed-in users must pass through onboarding ──────────
+      // Without this, landing/login redirects dropped fresh sign-ups straight
+      // onto the dashboard and onboarding was skipped entirely.
+      if (authState.isAuthenticated &&
+          !hasOnboarded &&
+          !isOnboarding &&
+          !isPasswordReset) {
+        return '/onboarding';
       }
 
       // ── RULE 2: Already completed onboarding or guest → skip onboarding ─
@@ -70,7 +95,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // ── RULE 4: Native returning users → skip landing to login ──────
-      // If user has onboarded before but session expired, go straight to login
+      // If the user onboarded before but the session expired, go straight to login
       if (_isNativePlatform &&
           !isAuthenticatedLike &&
           hasOnboarded &&
@@ -85,6 +110,42 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       return null;
+    },
+    errorBuilder: (context, state) {
+      // Unknown routes render a real 404 page instead of an exception screen.
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.explore_off_outlined,
+                    size: 64, color: Theme.of(context).colorScheme.outline),
+                const SizedBox(height: 16),
+                Text('Page not found',
+                    style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 8),
+                Text(
+                  'No screen exists at ${state.uri.path}',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () {
+                    final auth = ref.read(authProvider);
+                    context.go(auth.isAuthenticated || auth.isGuest
+                        ? '/dashboard'
+                        : '/landing');
+                  },
+                  child: const Text('Go Home'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     },
     routes: [
       GoRoute(
@@ -115,6 +176,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => appTransitionPage(
           state: state,
           child: const RegisterScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: const ForgotPasswordScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        pageBuilder: (context, state) => appTransitionPage(
+          state: state,
+          child: ResetPasswordScreen(
+            email: state.extra is String ? state.extra as String? : null,
+          ),
         ),
       ),
 
@@ -225,6 +302,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                             profile: state.extra is TaxProfile
                                 ? state.extra as TaxProfile
                                 : null,
+                            profileId: state.pathParameters['id'],
                           ),
                         ),
                       ),

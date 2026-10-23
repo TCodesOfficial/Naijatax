@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../core/constants/app_constants.dart';
 import '../core/theme/theme_colors.dart';
 import '../models/tax_profile.dart';
 
@@ -12,7 +13,7 @@ class TaxChartsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
 
     return Card(
       clipBehavior: Clip.antiAlias,

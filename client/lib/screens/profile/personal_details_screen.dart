@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_snack.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/avatar_service.dart';
 import '../../widgets/section_card.dart';
@@ -64,12 +65,7 @@ class _PersonalDetailsScreenState
 
   void _snack(String message, {bool success = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
-    );
+    showAppSnack(context, message, success: success, error: !success);
   }
 
   Future<bool> _confirm(String title, String message, String actionLabel) async {
@@ -249,7 +245,7 @@ class _PersonalDetailsScreenState
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     final displayName = user?.displayName ??

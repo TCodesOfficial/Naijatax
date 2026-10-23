@@ -21,26 +21,17 @@ export const updateAvatar = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const completeOnboardingHandler = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    return errorResponse(res, 'UNAUTHORIZED', 'Authentication required', 401);
-  }
-  const result = await completeOnboarding(req.user.id);
+  const result = await completeOnboarding(req.user!.id);
   successResponse(res, result);
 });
 
 export const getOnboardedStatusHandler = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    return errorResponse(res, 'UNAUTHORIZED', 'Authentication required', 401);
-  }
-  const onboarded = await getOnboardedStatus(req.user.id);
+  const onboarded = await getOnboardedStatus(req.user!.id);
   successResponse(res, { onboarded });
 });
 
 export const getMeHandler = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    return errorResponse(res, 'UNAUTHORIZED', 'Authentication required', 401);
-  }
-  const profile = await getUserProfile(req.user.id);
+  const profile = await getUserProfile(req.user!.id);
   if (!profile) {
     return errorResponse(res, 'NOT_FOUND', 'User profile not found', 404);
   }
@@ -59,10 +50,7 @@ const updateProfileSchema = z
   );
 
 export const updateProfileHandler = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    return errorResponse(res, 'UNAUTHORIZED', 'Authentication required', 401);
-  }
   const data = updateProfileSchema.parse(req.body);
-  const updated = await updateUserProfile(req.user.id, data);
+  const updated = await updateUserProfile(req.user!.id, data);
   successResponse(res, updated);
 });

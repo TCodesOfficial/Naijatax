@@ -15,7 +15,7 @@ class WebLandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
+    final isDesktop = size.width >= AppConstants.tabletBreakpoint;
 
     return Scaffold(
       appBar: AppBar(
@@ -690,7 +690,7 @@ class WebLandingScreen extends StatelessWidget {
   // ─── Footer ──────────────────────────────────────────────────────────────
   Widget _buildFooter(BuildContext context, ThemeData theme) {
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
+    final isDesktop = size.width >= AppConstants.tabletBreakpoint;
     final isDark = theme.brightness == Brightness.dark;
     final footerText = isDark ? Colors.white : theme.colorScheme.onSurface;
     final footerTextFaint = isDark

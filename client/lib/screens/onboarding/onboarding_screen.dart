@@ -41,6 +41,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 

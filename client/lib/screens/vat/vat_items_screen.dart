@@ -38,7 +38,7 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
     final vatState = ref.watch(vatProvider);
     final filteredItems = vatState.filteredItems;
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return SingleChildScrollView(
@@ -80,8 +80,12 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.clear, size: 18),
                         onPressed: () {
+                          _debounce?.cancel();
                           _searchController.clear();
                           ref.read(vatProvider.notifier).setSearchQuery('');
+                          // clear() doesn't fire onChanged — rebuild so the
+                          // suffix (clear) icon disappears immediately.
+                          setState(() {});
                         },
                       ),
                     )

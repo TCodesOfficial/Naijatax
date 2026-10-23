@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_formatter.dart';
+import '../../core/utils/app_snack.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/tax_provider.dart';
 import '../../services/api_service.dart';
@@ -22,9 +25,11 @@ class DocumentsVaultScreen extends ConsumerStatefulWidget {
 class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
   List<FileObject> _files = [];
   bool _isLoading = true;
+  bool _filesError = false;
   bool _isUploading = false;
   List<Map<String, dynamic>> _taxHistory = [];
   bool _isLoadingHistory = true;
+  bool _guestDialogShown = false;
 
   @override
   void initState() {
@@ -43,7 +48,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
     }
 
     final auth = ref.read(authProvider);
-    if (auth.isGuest || auth.status == AuthStatus.unauthenticated) return;
+    if (auth.isRestricted) return;
 
     try {
       final serverData = await ApiService.instance.getTaxHistory();
@@ -70,7 +75,12 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
 
   Future<void> _loadFiles() async {
     final auth = ref.read(authProvider);
-    if (auth.isGuest || auth.status == AuthStatus.unauthenticated) return;
+    if (auth.isRestricted) {
+      // Guest visits never fetch — stop the initial spinner instead of
+      // leaving the card loading forever.
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -80,9 +90,19 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
           .storage
           .from('documents')
           .list(path: userId);
-      if (mounted) setState(() => _files = files);
+      if (mounted) {
+        setState(() {
+          _files = files;
+          _filesError = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() => _files = []);
+      if (mounted) {
+        setState(() {
+          _files = [];
+          _filesError = true;
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -90,7 +110,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
 
   Future<void> _uploadFile() async {
     final auth = ref.read(authProvider);
-    if (auth.isGuest || auth.status == AuthStatus.unauthenticated) {
+    if (auth.isRestricted) {
       showGuestRestrictionDialog(context);
       return;
     }
@@ -103,6 +123,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
 
     final file = result.files.first;
     final bytes = await file.readAsBytes();
+    if (!mounted) return;
 
     setState(() => _isUploading = true);
     try {
@@ -121,22 +142,16 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File uploaded successfully'), backgroundColor: Colors.green),
-        );
+        showAppSnack(context, 'File uploaded successfully', success: true);
         await _loadFiles();
       }
     } on StorageException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: ${e.message}'), backgroundColor: Colors.red),
-        );
+        showAppSnack(context, 'Upload failed: ${e.message}', error: true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red),
-        );
+        showAppSnack(context, 'Upload failed: $e', error: true);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -155,15 +170,11 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
         bytes: Uint8List.fromList(bytes),
       );
       if (saved == null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Download cancelled')),
-        );
+        showAppSnack(context, 'Download cancelled');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed: $e'), backgroundColor: Colors.red),
-        );
+        showAppSnack(context, 'Download failed: $e', error: true);
       }
     }
   }
@@ -191,16 +202,12 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
       if (userId == null) return;
       await Supabase.instance.client.storage.from('documents').remove(['$userId/${file.name}']);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File deleted'), backgroundColor: Colors.green),
-        );
+        showAppSnack(context, 'File deleted', success: true);
         await _loadFiles();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
-        );
+        showAppSnack(context, 'Delete failed: $e', error: true);
       }
     }
   }
@@ -209,9 +216,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
     final taxState = ref.read(taxProvider);
     if (taxState.profile == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No tax data available. Calculate tax first.'), backgroundColor: Colors.orange),
-        );
+        showAppSnack(context, 'No tax data available. Calculate tax first.');
       }
       return;
     }
@@ -235,16 +240,12 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tax report generated and saved!'), backgroundColor: Colors.green),
-        );
+        showAppSnack(context, 'Tax report generated and saved!', success: true);
         await _loadFiles();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate report: $e'), backgroundColor: Colors.red),
-        );
+        showAppSnack(context, 'Failed to generate report: $e', error: true);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -272,13 +273,17 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
+    final isDesktop = size.width >= AppConstants.tabletBreakpoint;
     final authState = ref.watch(authProvider);
 
-    if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showGuestRestrictionDialog(context);
-      });
+    if (authState.isRestricted) {
+      // Post-frame dialogs re-fire on every rebuild otherwise.
+      if (!_guestDialogShown) {
+        _guestDialogShown = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) showGuestRestrictionDialog(context);
+        });
+      }
     }
 
     return SingleChildScrollView(
@@ -386,22 +391,39 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      Icon(Icons.folder_open, size: 48, color: theme.colorScheme.outline),
+                      Icon(
+                        _filesError ? Icons.error_outline : Icons.folder_open,
+                        size: 48,
+                        color: _filesError
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.outline,
+                      ),
                       const SizedBox(height: 12),
                       Text(
-                        'No bank statements uploaded yet.',
+                        _filesError
+                            ? 'Couldn\'t load your files.'
+                            : 'No bank statements uploaded yet.',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: _filesError
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Upload PDF or CSV bank statements for tax analysis.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.outline,
+                      if (_filesError)
+                        OutlinedButton.icon(
+                          onPressed: _loadFiles,
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Retry'),
+                        )
+                      else
+                        Text(
+                          'Upload PDF or CSV bank statements for tax analysis.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
                 ),
@@ -597,12 +619,6 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
     final computedTax = (calc['computedTax'] as num?)?.toDouble() ?? 0;
     final netIncome = (calc['netIncome'] as num?)?.toDouble() ?? 0;
 
-    String naira(double v) {
-      if (v >= 1000000) return '₦${(v / 1000000).toStringAsFixed(1)}M';
-      if (v >= 1000) return '₦${(v / 1000).toStringAsFixed(0)}K';
-      return '₦${v.toStringAsFixed(0)}';
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -635,7 +651,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Income: ${naira(monthlyIncome * 12)}  •  Tax: ${naira(computedTax)}',
+                  'Income: ${AppFormatter.nairaShort(monthlyIncome * 12)}  •  Tax: ${AppFormatter.nairaShort(computedTax)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -644,7 +660,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
             ),
           ),
           Text(
-            naira(netIncome),
+            AppFormatter.nairaShort(netIncome),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w700,

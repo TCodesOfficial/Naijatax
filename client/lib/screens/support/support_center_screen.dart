@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_snack.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/animated_button.dart';
 
@@ -15,21 +19,48 @@ class _SupportCenterScreenState extends ConsumerState<SupportCenterScreen> {
   String _selectedIssueType = '';
   final _subjectController = TextEditingController();
   final _descController = TextEditingController();
-  final _searchController = TextEditingController();
+
+  static const _supportEmail = 'support@naijataxenlighten.com';
 
   @override
   void dispose() {
     _subjectController.dispose();
     _descController.dispose();
-    _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitTicket() async {
+    final issue =
+        _selectedIssueType.isEmpty ? 'General' : _selectedIssueType;
+    final subject = _subjectController.text.trim();
+    final body = _descController.text.trim();
+    if (subject.isEmpty) {
+      showAppSnack(context, 'Please add a subject first.');
+      return;
+    }
+    final uri = Uri.parse(
+      'mailto:$_supportEmail'
+      '?subject=${Uri.encodeComponent('[$issue] $subject')}'
+      '&body=${Uri.encodeComponent(body)}',
+    );
+    final ok = await launchUrl(uri);
+    if (!mounted) return;
+    if (ok) {
+      showAppSnack(
+          context, 'Opening your email app to send the ticket…', success: true);
+    } else {
+      showAppSnack(
+          context,
+          'Could not open your email app. Please email us at $_supportEmail',
+          error: true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
+    final isDesktop = size.width >= AppConstants.tabletBreakpoint;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -51,23 +82,12 @@ class _SupportCenterScreenState extends ConsumerState<SupportCenterScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Find answers, connect with tax professionals, or let our AI guide you.',
+            'Chat with the AI tax assistant or email our support team.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search help articles...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
           isDesktop
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,36 +113,64 @@ class _SupportCenterScreenState extends ConsumerState<SupportCenterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Quick Actions
-        Row(
-          children: [
-            Expanded(
-              child: _quickActionCard(
-                theme,
-                icon: Icons.smart_toy_outlined,
-                title: 'AI Assistant',
-                subtitle: 'Ask our AI tax expert',
-                bgColor: theme.colorScheme.primaryContainer,
-                iconColor: theme.colorScheme.onPrimaryContainer,
+        // Quick action — opens the real in-app AI assistant.
+        Card(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => context.go('/chat'),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.smart_toy_outlined,
+                      color: theme.colorScheme.onPrimaryContainer,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'AI Assistant',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Ask our AI tax expert — available 24/7',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _quickActionCard(
-                theme,
-                icon: Icons.support_agent_outlined,
-                title: 'Contact Expert',
-                subtitle: 'Speak with a professional',
-                bgColor: theme.colorScheme.surfaceContainerLow,
-                iconColor: theme.colorScheme.tertiary,
-                borderColor: theme.colorScheme.tertiaryContainer,
-              ),
-            ),
-          ],
+          ),
         ),
         const SizedBox(height: 24),
         Text(
-          'FAQ Categories',
+          'Help Topics',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -137,63 +185,14 @@ class _SupportCenterScreenState extends ConsumerState<SupportCenterScreen> {
     );
   }
 
-  Widget _quickActionCard(
-    ThemeData theme, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color bgColor,
-    required Color iconColor,
-    Color? borderColor,
-  }) {
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: borderColor ?? theme.colorScheme.outlineVariant,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: iconColor, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _faqTile(ThemeData theme, IconData icon, String title, String subtitle) {
+    // Informational only — no FAQ pages exist yet, so no tap target/chevron.
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon, color: theme.colorScheme.primary),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle, style: theme.textTheme.bodySmall),
-        trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
-        onTap: () {},
       ),
     );
   }
@@ -249,18 +248,13 @@ class _SupportCenterScreenState extends ConsumerState<SupportCenterScreen> {
             ),
             const SizedBox(height: 20),
             AnimatedButton(
-              onPressed: () {
-                final issue = _selectedIssueType.isEmpty ? 'General' : _selectedIssueType;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Support ticket submitted ($issue)')),
-                );
-              },
-              text: 'Submit Ticket',
+              onPressed: _submitTicket,
+              text: 'Email Support',
               icon: const Icon(Icons.send, size: 16),
             ),
             const SizedBox(height: 12),
             Text(
-              'Our support team typically responds within 24 hours.',
+              'Opens your email app with the details prefilled — we\'ll reply by email.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

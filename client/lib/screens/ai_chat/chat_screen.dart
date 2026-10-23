@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/theme_colors.dart';
+import '../../core/utils/app_snack.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/guest_restriction_dialog.dart';
@@ -31,6 +32,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   MarkdownStyleSheet? _cachedStyleSheet;
+  Brightness? _cachedBrightness;
   DateTime? _lastScrollTime;
 
   @override
@@ -56,6 +58,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         });
       }
     } catch (e) {
+      debugPrint('Failed to load chat sessions: $e');
       if (mounted) setState(() => _isLoadingSessions = false);
     }
   }
@@ -83,9 +86,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load conversation')),
-        );
+        showAppSnack(context, 'Failed to load conversation');
       }
     }
   }
@@ -104,6 +105,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _deleteSession(String sessionId) async {
     try {
       await ApiService.instance.deleteSession(sessionId);
+      if (!mounted) return;
       setState(() {
         _sessions.removeWhere((s) => s['id'] == sessionId);
         if (_sessionId == sessionId) {
@@ -114,9 +116,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete conversation')),
-        );
+        showAppSnack(context, 'Failed to delete conversation');
       }
     }
   }
@@ -135,7 +135,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   MarkdownStyleSheet _getStyleSheet(ThemeData theme) {
-    return _cachedStyleSheet ??= MarkdownStyleSheet(
+    // Theme switches rebuild the screen but this closure-captured style was
+    // built once — invalidate it when light/dark changes.
+    if (_cachedStyleSheet != null && _cachedBrightness == theme.brightness) {
+      return _cachedStyleSheet!;
+    }
+    _cachedBrightness = theme.brightness;
+    return _cachedStyleSheet = MarkdownStyleSheet(
       p: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15, height: 1.5),
       code: TextStyle(
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
@@ -168,7 +174,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _sendMessage({String? text}) async {
     final authState = ref.read(authProvider);
-    if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
+    if (authState.isRestricted) {
       showGuestRestrictionDialog(context);
       return;
     }
@@ -186,6 +192,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     try {
       final res = await ApiService.instance.sendChatMessage(msg, sessionId: _sessionId);
+      if (!mounted) return;
       final replyTime = DateFormat('h:mm a').format(DateTime.now());
       final content = res['message']['content'] as String;
       // Must match the server's stored busy message (plus legacy variants)
@@ -205,7 +212,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             'updatedAt': DateTime.now().toIso8601String(),
           });
         }
-        _sessionId = newSessionId;
         if (!isBusy) {
           _messages.add({'role': 'assistant', 'content': content, 'time': replyTime});
         }
@@ -213,15 +219,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
       if (isBusy && mounted) {
         final busyTheme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(content),
-            backgroundColor: busyTheme.colorScheme.errorContainer,
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: busyTheme.colorScheme.onErrorContainer,
-              onPressed: () => _sendMessage(text: msg),
-            ),
+        showAppSnack(
+          context,
+          content,
+          error: true,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: busyTheme.colorScheme.onErrorContainer,
+            onPressed: () => _sendMessage(text: msg),
           ),
         );
       }
@@ -265,14 +270,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         errorMsg =
             'Sorry, I couldn\'t process your request just now. Please try again in a moment.';
       }
-      setState(() {
-        _messages.add({
-          'role': 'assistant',
-          'content': errorMsg,
-          'time': replyTime,
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'role': 'assistant',
+            'content': errorMsg,
+            'time': replyTime,
+          });
+          _isLoading = false;
         });
-        _isLoading = false;
-      });
+      }
       Future.microtask(_scrollToBottom);
     }
   }
@@ -281,7 +288,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
-    final isGuest = authState.isGuest || authState.status == AuthStatus.unauthenticated;
+    final isGuest = authState.isRestricted;
     final displayName = authState.user != null
         ? (authState.user!.displayName ??
               authState.user!.email?.split('@').first ??
@@ -358,7 +365,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     enabled: !isGuest,
                     decoration: InputDecoration(
                       hintText: isGuest ? 'Log in to chat with AI...' : 'Ask about the 2025 Tax Act...',
-                      prefixIcon: Tooltip(message: 'Attach file', child: const Icon(Icons.attach_file, size: 20)),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onSubmitted: (_) => _sendMessage(),

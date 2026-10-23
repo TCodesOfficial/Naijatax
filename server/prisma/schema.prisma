@@ -21,6 +21,7 @@ model User {
   taxProfiles  TaxProfile[]
   forumTopics  ForumTopic[]
   forumReplies ForumReply[]
+  forumVotes   ForumVote[]
   quizScores   QuizScore[]
   chatSessions ChatSession[]
 
@@ -119,11 +120,26 @@ model ForumTopic {
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
   replies   ForumReply[]
+  votes     ForumVote[]
   upVotes   Int          @default(0)
   downVotes Int          @default(0)
 
   @@index([userId, createdAt])
   @@map("forum_topics")
+}
+
+model ForumVote {
+  id        String     @id @default(cuid())
+  topicId   String     @map("topic_id")
+  topic     ForumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  userId    String     @map("user_id")
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  direction Int // 1 = upvote, -1 = downvote
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@unique([topicId, userId])
+  @@index([userId, createdAt])
+  @@map("forum_votes")
 }
 
 model ForumReply {

@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
+import '../../core/utils/app_formatter.dart';
+import '../../core/utils/tax_hints.dart';
 
 class NtaBracketsScreen extends ConsumerStatefulWidget {
   const NtaBracketsScreen({super.key});
@@ -16,16 +18,9 @@ class NtaBracketsScreen extends ConsumerStatefulWidget {
 class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
   double _annualIncome = 3500000;
 
-  // Nigeria Tax Act 2025 progressive bands — mirrors the server's
-  // tax.service.ts widths exactly (first ₦800k of taxable income is 0%).
-  final _bands = [
-    _Band('₦0–₦800k', 0.0, 800000),
-    _Band('₦800k–₦3M', 0.15, 2200000),
-    _Band('₦3M–₦12M', 0.18, 9000000),
-    _Band('₦12M–₦25M', 0.21, 13000000),
-    _Band('₦25M–₦50M', 0.23, 25000000),
-    _Band('Above ₦50M', 0.25, double.infinity),
-  ];
+  // Nigeria Tax Act 2025 progressive bands — shared source of truth
+  // (kNtaBands mirrors the server's tax.service.ts widths exactly).
+  final _bands = kNtaBands;
 
   // First ₦800k of income is taxed at 0% (built into the bands above).
   double get _taxFreeThreshold => min(_annualIncome, 800000.0);
@@ -36,7 +31,7 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
     double tax = 0;
     for (final band in _bands) {
       if (remaining <= 0) break;
-      final bandLimit = band.limit == double.infinity ? remaining : min(band.limit, remaining);
+      final bandLimit = band.width == double.infinity ? remaining : min(band.width, remaining);
       tax += bandLimit * band.rate;
       remaining -= bandLimit;
     }
@@ -55,24 +50,18 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
         amounts.add(0);
         continue;
       }
-      final bandLimit = band.limit == double.infinity ? remaining : min(band.limit, remaining);
+      final bandLimit = band.width == double.infinity ? remaining : min(band.width, remaining);
       amounts.add(bandLimit * band.rate);
       remaining -= bandLimit;
     }
     return amounts;
   }
 
-  String _naira(double v) {
-    if (v >= 1000000) return '₦${(v / 1000000).toStringAsFixed(1)}M';
-    if (v >= 1000) return '₦${(v / 1000).toStringAsFixed(0)}K';
-    return '₦${v.toStringAsFixed(0)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final amounts = _bandAmounts;
     final maxAmount = amounts.isNotEmpty ? amounts.reduce(max) : 1.0;
@@ -187,16 +176,16 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
               style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            _statRow(theme, 'Total Tax Liability', _naira(_totalTax),
+            _statRow(theme, 'Total Tax Liability', AppFormatter.nairaShort(_totalTax),
                 Theme.of(context).brightness == Brightness.dark
                     ? AppColors.darkError
                     : AppColors.govRed),
-            _statRow(theme, 'First ₦800k (0% band)', _naira(_taxFreeThreshold),
+            _statRow(theme, 'First ₦800k (0% band)', AppFormatter.nairaShort(_taxFreeThreshold),
                 Theme.of(context).brightness == Brightness.dark
                     ? AppColors.darkSuccess
                     : AppColors.success),
-            _statRow(theme, 'Taxable Income', _naira(_chargeableIncome), theme.colorScheme.onSurface),
-            _statRow(theme, 'Monthly Take-Home', _naira(_monthlyTakeHome), theme.colorScheme.primary),
+            _statRow(theme, 'Taxable Income', AppFormatter.nairaShort(_chargeableIncome), theme.colorScheme.onSurface),
+            _statRow(theme, 'Monthly Take-Home', AppFormatter.nairaShort(_monthlyTakeHome), theme.colorScheme.primary),
           ],
         ),
       ),
@@ -384,9 +373,3 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
   }
 }
 
-class _Band {
-  final String label;
-  final double rate;
-  final double limit;
-  _Band(this.label, this.rate, this.limit);
-}

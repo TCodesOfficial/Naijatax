@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/app_formatter.dart';
 
 import '../../models/tax_profile.dart';
 
@@ -115,7 +116,7 @@ class CalculationHistoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final naira = NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 0);
+    final naira = AppFormatter.naira;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -146,7 +147,7 @@ class CalculationHistoryTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${naira.format(profile.annualGross)}/yr income',
+                      '${naira(profile.annualGross)}/yr income',
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
@@ -167,7 +168,7 @@ class CalculationHistoryTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    profile.isExempt ? 'No tax' : naira.format(profile.computedTax),
+                    profile.isExempt ? 'No tax' : naira(profile.computedTax),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: profile.isExempt
@@ -177,7 +178,7 @@ class CalculationHistoryTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Net ${naira.format(profile.netIncome)}',
+                    'Net ${naira(profile.netIncome)}',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

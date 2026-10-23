@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/utils/app_formatter.dart';
 import '../core/utils/tax_hints.dart';
 import '../models/tax_profile.dart';
 
@@ -13,7 +14,6 @@ import '../models/tax_profile.dart';
 /// (with a plain-English marginal-band explanation) → all 2025 bands
 /// as a reference → optional CIT note → disclaimer.
 class PdfService {
-  static final _naira0 = NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 0);
 
   static const _primary = PdfColor.fromInt(0xFF00288E);
   static const _grey = PdfColor.fromInt(0xFF444653);
@@ -119,13 +119,13 @@ class PdfService {
               children: [
                 pw.Row(
                   children: [
-                    _heroCell('Annual gross income', _naira0.format(profile.annualGross),
+                    _heroCell('Annual gross income', AppFormatter.naira(profile.annualGross),
                         PdfColors.black, t),
-                    _heroCell('Total tax payable', _naira0.format(profile.computedTax),
+                    _heroCell('Total tax payable', AppFormatter.naira(profile.computedTax),
                         _red, t),
-                    _heroCell('Monthly tax (PAYE)', _naira0.format(profile.computedTax / 12),
+                    _heroCell('Monthly tax (PAYE)', AppFormatter.naira(profile.computedTax / 12),
                         _red, t),
-                    _heroCell('Annual take-home', _naira0.format(profile.netIncome),
+                    _heroCell('Annual take-home', AppFormatter.naira(profile.netIncome),
                         _green, t, isLast: true),
                   ],
                 ),
@@ -140,7 +140,7 @@ class PdfService {
                       style: t(bold: true, size: 10, color: _primary),
                     ),
                     pw.Text(
-                      'You save ${_naira0.format(profile.savings)} vs. the old tax regime',
+                      'You save ${AppFormatter.naira(profile.savings)} vs. the old tax regime',
                       style: t(bold: true, size: 10, color: _green),
                     ),
                   ],
@@ -154,17 +154,17 @@ class PdfService {
           pw.Text('How we worked out your taxable income',
               style: pw.TextStyle(font: boldFont, fontSize: 13)),
           pw.SizedBox(height: 6),
-          _stepRow('Annual gross income', _naira0.format(profile.annualGross), t),
+          _stepRow('Annual gross income', AppFormatter.naira(profile.annualGross), t),
           _stepRow(
             'Less: pension deduction (${pensionRatePct.toStringAsFixed(0)}% of gross)',
-            '- ${_naira0.format(profile.pensionDeduction)}',
+            '- ${AppFormatter.naira(profile.pensionDeduction)}',
             t,
           ),
           _stepRow(
             profile.rentRelief > 0
                 ? 'Less: rent relief (20% of rent paid, capped at ₦500,000)'
                 : 'Less: rent relief (none claimed)',
-            '- ${_naira0.format(profile.rentRelief)}',
+            '- ${AppFormatter.naira(profile.rentRelief)}',
             t,
           ),
           pw.Container(
@@ -178,7 +178,7 @@ class PdfService {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text('Taxable income', style: t(bold: true, size: 12)),
-                pw.Text(_naira0.format(profile.taxableIncome), style: t(bold: true, size: 12)),
+                pw.Text(AppFormatter.naira(profile.taxableIncome), style: t(bold: true, size: 12)),
               ],
             ),
           ),
@@ -201,7 +201,7 @@ class PdfService {
                   pw.SizedBox(height: 4),
                   pw.Text(
                     'You chose a flat ${marginalRatePct.toStringAsFixed(0)}% rate, applied to your '
-                    'entire taxable income of ${_naira0.format(profile.taxableIncome)}. '
+                    'entire taxable income of ${AppFormatter.naira(profile.taxableIncome)}. '
                     'This figure is not band-progressive.',
                     style: t(size: 10, color: _grey),
                   ),
@@ -259,11 +259,11 @@ class PdfService {
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text(_naira0.format(b.taxableAmount), style: t(size: 10)),
+                        child: pw.Text(AppFormatter.naira(b.taxableAmount), style: t(size: 10)),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text(_naira0.format(b.tax), style: t(size: 10)),
+                        child: pw.Text(AppFormatter.naira(b.tax), style: t(size: 10)),
                       ),
                     ],
                   );

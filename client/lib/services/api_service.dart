@@ -27,6 +27,24 @@ class ApiService {
         handler.next(options);
       },
       onError: (error, handler) async {
+        // Unwrap the server's {error:{message}} envelope so UI error states
+        // show the friendly server message instead of raw DioException text.
+        if (error.type == DioExceptionType.badResponse) {
+          final data = error.response?.data;
+          if (data is Map && data['error'] is Map) {
+            final serverMsg = (data['error'] as Map)['message'];
+            if (serverMsg is String && serverMsg.isNotEmpty) {
+              handler.next(DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: error.type,
+                error: serverMsg,
+                message: serverMsg,
+              ));
+              return;
+            }
+          }
+        }
         // Pass 401 errors through — Supabase handles session expiry
         // via onAuthStateChange. Auto-signing out here destroys the
         // user's session when the server JWT secret is misconfigured.
@@ -97,9 +115,14 @@ class ApiService {
   }
 
   // ── Forum ────────────────────────────────────────────────────────────────
-  Future<List<dynamic>> getTopics({String? tag}) async {
-    final res = await _dio.get('/forum',
-        queryParameters: tag != null ? {'tag': tag} : null);
+  Future<List<dynamic>> getTopics({String? tag, String? q}) async {
+    final res = await _dio.get(
+      '/forum',
+      queryParameters: {
+        if (tag != null && tag.isNotEmpty) 'tag': tag,
+        if (q != null && q.isNotEmpty) 'q': q,
+      },
+    );
     return res.data['data'] as List<dynamic>;
   }
 
@@ -118,15 +141,41 @@ class ApiService {
     await _dio.post('/forum/$topicId/replies', data: {'content': content});
   }
 
+  /// Casts a vote — returns the persisted vote plus counter deltas.
+  Future<Map<String, dynamic>> voteTopic(String topicId, int direction) async {
+    final res = await _dio.post('/forum/$topicId/votes',
+        data: {'direction': direction});
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<void> retractVote(String topicId) async {
+    await _dio.delete('/forum/$topicId/votes');
+  }
+
+  Future<void> acceptReply(String replyId) async {
+    await _dio.patch('/forum/replies/$replyId/accept');
+  }
+
   // ── Quiz ─────────────────────────────────────────────────────────────────
   Future<List<dynamic>> getQuizQuestions({int count = 7}) async {
     final res = await _dio.get('/quiz/questions', queryParameters: {'count': count});
     return res.data['data'] as List<dynamic>;
   }
 
-  Future<void> submitScore(int score, int total) async {
-    await _dio
-        .post('/quiz/scores', data: {'score': score, 'totalQuestions': total});
+  /// Ask the server to grade one answer — returns
+  /// `{isCorrect, correctIndex, explanation}`.
+  Future<Map<String, dynamic>> checkQuizAnswer(
+      String questionId, int selectedIndex) async {
+    final res = await _dio.post('/quiz/questions/$questionId/check',
+        data: {'selectedIndex': selectedIndex});
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+  /// Submit the full answer set; the server computes and persists the score.
+  Future<Map<String, dynamic>> submitScore(
+      List<Map<String, dynamic>> answers) async {
+    final res = await _dio.post('/quiz/scores', data: {'answers': answers});
+    return res.data['data'] as Map<String, dynamic>;
   }
 
   Future<List<dynamic>> getScoreHistory() async {
@@ -135,12 +184,6 @@ class ApiService {
   }
 
   // ── News ─────────────────────────────────────────────────────────────────
-  Future<List<dynamic>> getArticles({bool featured = false}) async {
-    final res =
-        await _dio.get('/news', queryParameters: {'featured': featured});
-    return res.data['data'] as List<dynamic>;
-  }
-
   Future<List<dynamic>> getPublicArticles({bool featured = false, String? category, int limit = 50}) async {
     final queryParams = <String, dynamic>{
       'featured': featured,
@@ -152,11 +195,6 @@ class ApiService {
     final res =
         await _dio.get('/news/public', queryParameters: queryParams);
     return res.data['data'] as List<dynamic>;
-  }
-
-  Future<Map<String, dynamic>> getEconomicMetrics() async {
-    final res = await _dio.get('/news/metrics');
-    return res.data['data'] as Map<String, dynamic>;
   }
 
   Future<dynamic> getInflationData({int years = 10}) async {

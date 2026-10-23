@@ -208,11 +208,16 @@ export async function syncTaxNews() {
       }
     }
 
-    // Keep the table lean: retain only the newest MAX_ARTICLES.
-    const total = await prisma.taxArticle.count();
-    if (total > MAX_ARTICLES) {
+    // Keep the table lean: retain only the newest MAX_ARTICLES synced
+    // articles. Seeded educational articles (publishedAt=null) are permanent
+    // and must never be pruned — the old nulls-last ordering deleted them first.
+    const prunableCount = await prisma.taxArticle.count({
+      where: { publishedAt: { not: null } },
+    });
+    if (prunableCount > MAX_ARTICLES) {
       const overflow = await prisma.taxArticle.findMany({
-        orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
+        where: { publishedAt: { not: null } },
+        orderBy: [{ publishedAt: { sort: 'desc' } }, { createdAt: 'desc' }],
         skip: MAX_ARTICLES,
         select: { id: true },
       });
@@ -269,49 +274,4 @@ export async function getPublicArticles(
 
   cache.set(cacheKey, result, 5 * 60 * 1000); // 5 min TTL
   return result;
-}
-
-export async function getTaxArticles(featuredOnly = false, limit = 50) {
-  return await prisma.taxArticle.findMany({
-    where: featuredOnly ? { isFeatured: true } : undefined,
-    orderBy: ARTICLE_ORDER,
-    take: limit,
-    select: {
-      id: true,
-      title: true,
-      summary: true,
-      source: true,
-      category: true,
-      url: true,
-      isFeatured: true,
-      publishedAt: true,
-      createdAt: true,
-    },
-  });
-}
-
-export async function getCategories(): Promise<string[]> {
-  const cached = cache.get('categories');
-  if (cached) return cached;
-
-  const result = await prisma.taxArticle.groupBy({
-    by: ['category'],
-    where: { category: { not: null } },
-  }).then(groups => groups.map(g => g.category).filter(Boolean) as string[]);
-
-  cache.set('categories', result, 60 * 60 * 1000); // 1 hour TTL
-  return result;
-}
-
-export async function getEconomicMetrics() {
-  return {
-    inflationRate: '33.69%',
-    minimumWage: '₦70,000',
-    currency: 'NGN (₦)',
-    taxCalendar: [
-      { event: 'PAYE Annual Returns filing deadline', date: 'March 31 Annually', status: 'Upcoming' },
-      { event: 'Company Income Tax (CIT) filing deadline', date: 'June 30 Annually', status: 'Upcoming' },
-      { event: 'Value Added Tax (VAT) monthly remittance', date: '21st of every month', status: 'Recurring' }
-    ]
-  };
 }

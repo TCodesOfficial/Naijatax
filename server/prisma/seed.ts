@@ -2,11 +2,15 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from "@prisma/client";
 import "dotenv/config";
 
-// Supabase pooler uses self-signed SSL certs — disable verification so the
-// connection succeeds (same as src/config/database.ts).
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Supabase's pooler certificate chain has a self-signed root; scope the
+// verification opt-out to this connection only (same as src/config/database.ts).
+const dbUrl = new URL(process.env.DIRECT_URL!);
+dbUrl.searchParams.delete('sslmode');
 
-const adapter = new PrismaPg({ connectionString: process.env.DIRECT_URL! });
+const adapter = new PrismaPg({
+  connectionString: dbUrl.toString(),
+  ssl: { rejectUnauthorized: false },
+});
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -142,16 +146,16 @@ async function main() {
       explanation: "The 2025 reforms raise the minimum annual income tax threshold to ₦800,000, completely exempting low-income earners earning minimum wage (₦70,000 monthly) from paying PAYE tax.",
     },
     {
-      question: "What is the tax rate applied to income between ₦800,001 and ₦3,800,000 under the new progressive bands?",
-      options: ["10%", "15%", "20%", "25%"],
+      question: "What is the tax rate applied to income between ₦800,001 and ₦3,000,000 under the new progressive bands?",
+      options: ["10%", "15%", "18%", "25%"],
       correctIndex: 1,
-      explanation: "The second tax band applies a 15% rate to annual income between ₦800,001 and ₦3,800,000.",
+      explanation: "The second tax band applies a 15% rate to annual income between ₦800,001 and ₦3,000,000.",
     },
     {
-      question: "What is the top marginal PAYE tax rate for income exceeding ₦20,800,000 annually?",
-      options: ["20%", "22%", "25%", "30%"],
+      question: "What is the top marginal PAYE tax rate for income exceeding ₦50,000,000 annually?",
+      options: ["20%", "23%", "25%", "30%"],
       correctIndex: 2,
-      explanation: "Income above ₦20,800,000 annually is taxed at the top rate of 25%.",
+      explanation: "Income above ₦50,000,000 annually is taxed at the top rate of 25%.",
     },
     {
       question: "What is the mandatory employee pension contribution rate deducted from gross salary?",
@@ -172,16 +176,16 @@ async function main() {
       explanation: "The minimum wage was set at ₦70,000 monthly (₦840,000 annually), meaning minimum wage earners are mostly exempt from PAYE.",
     },
     {
-      question: "Which tax band applies to income between ₦3,800,001 and ₦6,800,000?",
-      options: ["15%", "20%", "22%", "25%"],
+      question: "What is the tax rate applied to income between ₦3,000,001 and ₦12,000,000?",
+      options: ["15%", "18%", "21%", "25%"],
       correctIndex: 1,
-      explanation: "The third tax band applies a 20% rate to annual income between ₦3,800,001 and ₦6,800,000.",
+      explanation: "The third tax band applies an 18% rate to annual income between ₦3,000,001 and ₦12,000,000.",
     },
     {
-      question: "What is the PAYE rate for income between ₦6,800,001 and ₦20,800,000?",
-      options: ["15%", "20%", "22%", "25%"],
-      correctIndex: 2,
-      explanation: "The fourth tax band applies a 22% rate to annual income between ₦6,800,001 and ₦20,800,000.",
+      question: "What is the PAYE rate for income between ₦12,000,001 and ₦25,000,000?",
+      options: ["18%", "21%", "23%", "25%"],
+      correctIndex: 1,
+      explanation: "The fourth tax band applies a 21% rate to annual income between ₦12,000,001 and ₦25,000,000.",
     },
 
     // ─── VAT ────────────────────────────────────────────────────────────────
@@ -514,8 +518,8 @@ async function main() {
     {
       question: "How many tax bands exist in the new PAYE progressive system?",
       options: ["3 bands", "4 bands", "5 bands", "6 bands"],
-      correctIndex: 2,
-      explanation: "There are 5 bands: 0% (up to ₦800K), 15% (₦800K–₦3.8M), 20% (₦3.8M–₦6.8M), 22% (₦6.8M–₦20.8M), and 25% (above ₦20.8M).",
+      correctIndex: 3,
+      explanation: "There are 6 bands: 0% (up to ₦800K), 15% (₦800K–₦3M), 18% (₦3M–₦12M), 21% (₦12M–₦25M), 23% (₦25M–₦50M), and 25% (above ₦50M).",
     },
     {
       question: "Which document proves that a company has paid all its taxes?",
@@ -575,6 +579,9 @@ async function main() {
     },
   ];
 
+  // Quiz questions are pure seed content — replace wholesale so re-seeding
+  // stays idempotent and content updates (e.g. band fixes) reach the DB.
+  await prisma.quizQuestion.deleteMany({});
   for (const q of quizQuestions) {
     await prisma.quizQuestion.create({
       data: {
@@ -601,7 +608,7 @@ async function main() {
     {
       title: "Understanding PAYE calculations under the new bands",
       summary: "Learn how to calculate your personal income tax using the progressive annual brackets and mandatory deductions.",
-      content: "Under the new 2025 progressive tax bands, personal income tax is calculated annually. The first ₦800,000 is exempt (0%). The next ₦3,000,000 is taxed at 15%. The following ₦3,000,000 at 20%. The next ₦14,000,000 at 22%. Anything above ₦20,800,000 is taxed at 25%. Deductions include 8% pension and rent relief (20% of rent paid, capped at ₦500,000/year).",
+      content: "Under the new 2025 progressive tax bands, personal income tax is calculated annually. The first ₦800,000 is exempt (0%). The next ₦2,200,000 (up to ₦3,000,000) is taxed at 15%. The next ₦9,000,000 (up to ₦12,000,000) at 18%. The next ₦13,000,000 (up to ₦25,000,000) at 21%. The next ₦25,000,000 (up to ₦50,000,000) at 23%. Anything above ₦50,000,000 is taxed at 25%. Deductions include 8% pension and rent relief (20% of rent paid, capped at ₦500,000/year).",
       source: "KPMG Advisory",
       category: "PAYE",
       isFeatured: false,
@@ -760,6 +767,9 @@ async function main() {
     },
   ];
 
+  // Seeded articles carry url=null (RSS sync always sets a url) — clearing
+  // them first keeps re-seeds idempotent without touching synced news.
+  await prisma.taxArticle.deleteMany({ where: { url: null } });
   for (const article of articles) {
     await prisma.taxArticle.create({ data: article });
   }

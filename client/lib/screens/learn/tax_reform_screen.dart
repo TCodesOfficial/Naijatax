@@ -12,7 +12,7 @@ class TaxReformScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final sections = [
       LearnSection(
@@ -35,10 +35,11 @@ class TaxReformScreen extends StatelessWidget {
             'Under the new progressive tax bands, personal income tax is calculated annually. The system provides significant relief for low and middle-income earners while maintaining a fair top marginal rate for high earners.',
         highlights: [
           'First ₦800,000: Exempt (0% rate) — up from ₦300,000 under the old system',
-          'Next ₦3,000,000: Taxed at 15%',
-          'Next ₦3,000,000: Taxed at 20%',
-          'Next ₦14,000,000: Taxed at 22%',
-          'Above ₦20,800,000: Top rate of 25%',
+          'Next ₦2,200,000 (up to ₦3,000,000): 15%',
+          'Next ₦9,000,000 (up to ₦12,000,000): 18%',
+          'Next ₦13,000,000 (up to ₦25,000,000): 21%',
+          'Next ₦25,000,000 (up to ₦50,000,000): 23%',
+          'Above ₦50,000,000: Top rate of 25%',
           'Mandatory 8% employee pension contribution (tax-deductible)',
           'Rent relief: 20% of rent paid, capped at ₦500,000 per year',
         ],
@@ -57,7 +58,7 @@ class TaxReformScreen extends StatelessWidget {
           'Digital services: Clear scope for VAT on electronic and digital services provided in Nigeria',
           '50+ items classified under the new VAT framework',
         ],
-        linkRoute: '/calculator',
+        linkRoute: '/vat-items',
         linkLabel: 'Check VAT Items',
       ),
       LearnSection(
@@ -296,6 +297,17 @@ class TaxReformScreen extends StatelessWidget {
               onTap: () => context.go('/vat-items'),
             ),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _actionCard(
+              context,
+              theme,
+              icon: Icons.school_outlined,
+              label: 'Browse Guides',
+              subtitle: 'Read tax education articles',
+              onTap: () => context.go('/dashboard/education'),
+            ),
+          ),
         ],
       );
     }
@@ -337,6 +349,17 @@ class TaxReformScreen extends StatelessWidget {
                 label: 'See VAT Items',
                 subtitle: 'Browse rates & exemptions',
                 onTap: () => context.go('/vat-items'),
+              ),
+            ),
+            SizedBox(
+              width: cardWidth,
+              child: _actionCard(
+                context,
+                theme,
+                icon: Icons.school_outlined,
+                label: 'Browse Guides',
+                subtitle: 'Read tax education articles',
+                onTap: () => context.go('/dashboard/education'),
               ),
             ),
           ],
@@ -414,7 +437,7 @@ class TaxReformScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 900;
+        final isWide = constraints.maxWidth > AppConstants.tabletBreakpoint;
         final itemWidth = isWide
             ? (constraints.maxWidth - 16) / 2
             : constraints.maxWidth;

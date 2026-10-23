@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import * as jose from 'jose';
 import { env } from '../config/env.js';
+import { prisma } from '../config/database.js';
+import { errorResponse } from '../utils/response.js';
 
 export interface DecodedUser {
   id: string;
@@ -8,30 +10,46 @@ export interface DecodedUser {
   role: string;
 }
 
-let _publicKey: CryptoKey | null = null;
+const SUPABASE_ISSUER = `${env.SUPABASE_URL.replace(/\/+$/, '')}/auth/v1`;
+// API keys (legacy JWT format) carry these roles; they must never authenticate.
+const REJECTED_ROLES = new Set(['anon', 'service_role']);
 
-async function getPublicKey(): Promise<CryptoKey> {
-  if (_publicKey) return _publicKey;
+// Remote JWKS: jose handles caching and refetches automatically when an
+// unknown kid appears (Supabase signing-key rotation).
+let _jwks: ReturnType<typeof jose.createRemoteJWKSet> | null = null;
 
-  const jwksUrl = `${env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`;
-  const res = await fetch(jwksUrl);
-  if (!res.ok) throw new Error(`Failed to fetch JWKS: ${res.status}`);
-  const jwks = await res.json() as { keys: jose.JWK[] };
-  const jwk = jwks.keys[0];
-  _publicKey = (await jose.importJWK(jwk, jwk.alg)) as CryptoKey;
-  return _publicKey;
+function getJwks(): ReturnType<typeof jose.createRemoteJWKSet> {
+  if (!_jwks) {
+    _jwks = jose.createRemoteJWKSet(
+      new URL(`${SUPABASE_ISSUER}/.well-known/jwks.json`),
+      { cooldownDuration: 30_000, cacheMaxAge: 10 * 60_000 },
+    );
+  }
+  return _jwks;
 }
 
 async function decodeToken(token: string): Promise<DecodedUser> {
-  const publicKey = await getPublicKey();
-  const { payload } = await jose.jwtVerify(token, publicKey, {
-    algorithms: ['ES256'],
+  const { payload } = await jose.jwtVerify(token, getJwks(), {
+    issuer: SUPABASE_ISSUER,
+    audience: 'authenticated',
+    algorithms: ['ES256', 'RS256'],
   });
   const p = payload as Record<string, unknown>;
+
+  const tokenRole = typeof p.role === 'string' ? p.role : '';
+  const appMeta = (p.app_metadata ?? {}) as Record<string, unknown>;
+  const metaRole = typeof appMeta.role === 'string' ? appMeta.role : '';
+  if (REJECTED_ROLES.has(tokenRole) || REJECTED_ROLES.has(metaRole)) {
+    throw new Error('API keys are not valid access tokens');
+  }
+
+  const id = (p.sub as string) || '';
+  if (!id) throw new Error('Token missing subject');
+
   return {
-    id: (p.sub as string) || '',
+    id,
     email: (p.email as string) || '',
-    role: (p.role as string) || 'USER',
+    role: metaRole || 'USER',
   };
 }
 
@@ -39,31 +57,51 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Access token required. Please log in or sign up.' },
-    });
+    return errorResponse(
+      res,
+      'UNAUTHORIZED',
+      'Access token required. Please log in or sign up.',
+      401,
+    );
   }
 
   try {
     req.user = await decodeToken(authHeader.split(' ')[1]);
     next();
   } catch {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'INVALID_TOKEN', message: 'Your session has expired or is invalid. Please log in again.' },
-    });
+    return errorResponse(
+      res,
+      'INVALID_TOKEN',
+      'Your session has expired or is invalid. Please log in again.',
+      401,
+    );
   }
 }
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.user || req.user.role !== 'ADMIN') {
-    return res.status(403).json({
-      success: false,
-      error: { code: 'FORBIDDEN', message: 'Admin access required.' },
-    });
+// The Supabase JWT's role claim is always "authenticated" for real users,
+// so admin status comes from our own users.role column.
+export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return errorResponse(
+      res,
+      'UNAUTHORIZED',
+      'Access token required. Please log in or sign up.',
+      401,
+    );
   }
-  next();
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { role: true },
+    });
+    if (user?.role !== 'ADMIN') {
+      return errorResponse(res, 'FORBIDDEN', 'Admin access required.', 403);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 export async function optionalAuth(req: Request, res: Response, next: NextFunction) {

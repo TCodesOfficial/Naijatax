@@ -32,9 +32,12 @@ class TaxArticle {
         category: json['category'] as String? ?? 'COMPLIANCE',
         url: json['url'] as String?,
         isFeatured: json['isFeatured'] as bool? ?? false,
+        // Stable sentinel — DateTime.now() shifted cached dates on every
+        // parse (articles re-sorted and displayed different dates).
         createdAt: json['createdAt'] != null
-            ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
-            : DateTime.now(),
+            ? DateTime.tryParse(json['createdAt'] as String) ??
+                DateTime.fromMillisecondsSinceEpoch(0)
+            : DateTime.fromMillisecondsSinceEpoch(0),
         publishedAt: json['publishedAt'] != null
             ? DateTime.tryParse(json['publishedAt'] as String)
             : null,
@@ -42,17 +45,4 @@ class TaxArticle {
 
   /// Original publish time when known, otherwise when we stored it.
   DateTime get effectiveDate => publishedAt ?? createdAt;
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'summary': summary,
-        'content': content,
-        'source': source,
-        'category': category,
-        'url': url,
-        'isFeatured': isFeatured,
-        'createdAt': createdAt.toIso8601String(),
-        'publishedAt': publishedAt?.toIso8601String(),
-      };
 }

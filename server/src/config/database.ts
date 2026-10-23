@@ -6,14 +6,19 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-// pg v9 forces sslmode=require to verify-full, rejecting Supabase's
-// self-signed pooler certificate. Disable TLS cert verification so
-// the connection succeeds. The connection is still encrypted via TLS.
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
+// Supabase's pooler certificate chain has a self-signed root, so full
+// verification fails. Instead of globally disabling TLS verification
+// (which would also exempt Gemini/JWKS/RSS connections), scope it to
+// the database connection only: strip sslmode (pg treats require as
+// verify-full and would override the option below) and opt out of
+// certificate verification per-connection. The connection is still
+// encrypted end-to-end via TLS.
 const createPrismaClient = () => {
+  const url = new URL(env.DATABASE_URL);
+  url.searchParams.delete('sslmode');
   const adapter = new PrismaPg({
-    connectionString: env.DATABASE_URL,
+    connectionString: url.toString(),
+    ssl: { rejectUnauthorized: false },
   });
   return new PrismaClient({
     adapter,

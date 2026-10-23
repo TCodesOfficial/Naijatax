@@ -3,16 +3,16 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../core/constants/app_constants.dart';
-import '../core/theme/theme_colors.dart';
-import '../core/utils/app_formatter.dart';
-import '../models/tax_profile.dart';
-import '../models/article_model.dart';
-import '../providers/auth_provider.dart';
-import '../providers/tax_provider.dart';
-import '../providers/article_provider.dart';
-import '../providers/inflation_provider.dart';
-import '../services/pdf_service.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/theme_colors.dart';
+import '../../core/utils/app_formatter.dart';
+import '../../models/tax_profile.dart';
+import '../../models/article_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/tax_provider.dart';
+import '../../providers/article_provider.dart';
+import '../../providers/inflation_provider.dart';
+import '../../services/pdf_service.dart';
 
 /// Returns [darkColor] in dark mode, [lightColor] in light mode.
 Color _semanticColor(BuildContext context, Color lightColor, Color darkColor) {
@@ -40,7 +40,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
     ref.read(articlesProvider.notifier).fetchArticles();
     ref.read(inflationProvider.notifier).fetch();
-    ref.read(articlesProvider.notifier).fetchMetrics();
   }
 
   @override
@@ -53,7 +52,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     final authState = ref.watch(authProvider);
@@ -840,8 +839,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         barTouchData: BarTouchData(
                           touchTooltipData: BarTouchTooltipData(
                             getTooltipItem: (group, groupIdx, rod, rodIdx) {
+                              final idx = group.x.toInt();
+                              if (idx < 0 || idx >= state.data.length) {
+                                return null;
+                              }
                               return BarTooltipItem(
-                                '${state.data[group.x.toInt()].year}\n${rod.toY.toStringAsFixed(1)}%',
+                                '${state.data[idx].year}\n${rod.toY.toStringAsFixed(1)}%',
                                 GoogleFonts.plusJakartaSans(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -858,7 +861,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
                                 final idx = value.toInt();
-                                if (idx < state.data.length) {
+                                if (idx >= 0 && idx < state.data.length) {
                                   if (isMobile && idx % 2 != 0 && idx != state.data.length - 1) {
                                     return const SizedBox.shrink();
                                   }
@@ -1045,7 +1048,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                _timeAgo(article.effectiveDate),
+                AppFormatter.timeAgo(article.effectiveDate),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -1076,14 +1079,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
     );
-  }
-
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inDays > 7) return '${(diff.inDays / 7).floor()}w ago';
-    if (diff.inDays > 0) return '${diff.inDays}d ago';
-    if (diff.inHours > 0) return '${diff.inHours}h ago';
-    return 'Just now';
   }
 }
 

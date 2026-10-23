@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-import '../core/constants/app_constants.dart';
-import '../core/theme/theme_colors.dart';
-import '../providers/auth_provider.dart';
-import '../providers/tax_provider.dart';
-import '../services/pdf_service.dart';
-import '../widgets/calculation_history_list.dart';
-import '../widgets/tax_charts_widget.dart';
-import 'calculator/amounts_form.dart';
-import 'calculator/percentage_form.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/theme_colors.dart';
+import '../../core/utils/app_formatter.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/tax_provider.dart';
+import '../../services/pdf_service.dart';
+import '../../widgets/calculation_history_list.dart';
+import '../../widgets/tax_charts_widget.dart';
+import 'amounts_form.dart';
+import 'percentage_form.dart';
 
 class AssessmentFormScreen extends ConsumerStatefulWidget {
   const AssessmentFormScreen({super.key});
@@ -23,9 +23,6 @@ class AssessmentFormScreen extends ConsumerStatefulWidget {
 
 class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
   int _mode = 0; // 0 = Amounts, 1 = Percentages
-
-  final _naira =
-      NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
 
   @override
   void initState() {
@@ -154,27 +151,27 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                     ),
                     const SizedBox(height: 12),
                     _resultRow('Annual Gross Income',
-                        _naira.format(taxState.profile!.annualGross)),
+                        AppFormatter.nairaDecimal(taxState.profile!.annualGross)),
                     _resultRow('Pension Deductible',
-                        _naira.format(taxState.profile!.pensionDeduction)),
+                        AppFormatter.nairaDecimal(taxState.profile!.pensionDeduction)),
                     _resultRow('Rent Relief Portion',
-                        _naira.format(taxState.profile!.rentRelief)),
+                        AppFormatter.nairaDecimal(taxState.profile!.rentRelief)),
                     const Divider(height: 24),
                     _resultRow(
                       'Computed Monthly Tax (PAYE)',
-                      _naira.format(taxState.profile!.computedTax / 12),
+                      AppFormatter.nairaDecimal(taxState.profile!.computedTax / 12),
                       valueColor: theme.colorScheme.error,
                       bold: true,
                     ),
                     _resultRow(
                       'Computed Annual Tax (PAYE)',
-                      _naira.format(taxState.profile!.computedTax),
+                      AppFormatter.nairaDecimal(taxState.profile!.computedTax),
                       valueColor: theme.colorScheme.error,
                       bold: true,
                     ),
                     _resultRow(
                       'Annual Net Take-Home',
-                      _naira.format(taxState.profile!.netIncome),
+                      AppFormatter.nairaDecimal(taxState.profile!.netIncome),
                       valueColor: Theme.of(context).brightness == Brightness.dark
                           ? AppColors.darkSuccess
                           : AppColors.success,
@@ -182,7 +179,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                     ),
                     _resultRow(
                       'Annual Savings vs. Old Act',
-                      _naira.format(taxState.profile!.savings),
+                      AppFormatter.nairaDecimal(taxState.profile!.savings),
                       valueColor: theme.colorScheme.secondary,
                       bold: true,
                     ),

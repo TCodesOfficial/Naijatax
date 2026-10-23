@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_snack.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/avatar_service.dart';
@@ -32,6 +33,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final available = await BiometricService.isAvailable();
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(AppConstants.biometricKey) ?? false;
+    if (!mounted) return;
     setState(() {
       _biometricHardwareAvailable = available;
       _biometricEnabled = enabled;
@@ -43,10 +45,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final success = await BiometricService.authenticate(
         reason: 'Verify your identity to enable biometric sign-in',
       );
-      if (!success) return;
+      if (!success || !mounted) return;
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.biometricKey, enabled);
+    if (!mounted) return;
     setState(() {
       _biometricEnabled = enabled;
     });
@@ -65,15 +68,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (result.ok && result.url != null) {
       await ref.read(authProvider.notifier).updateAvatar(result.url!);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Profile photo updated!'), backgroundColor: Colors.green),
-        );
+        showAppSnack(context, 'Profile photo updated!', success: true);
       }
     } else if (result.error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error!), backgroundColor: Colors.red),
-      );
+      showAppSnack(context, result.error!, error: true);
     }
   }
 
@@ -109,17 +107,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (result.ok) {
       await ref.read(authProvider.notifier).deleteAvatar();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Profile photo removed'), backgroundColor: Colors.green),
-        );
+        showAppSnack(context, 'Profile photo removed', success: true);
       }
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(result.error ?? 'Delete failed'),
-            backgroundColor: Colors.red),
-      );
+      showAppSnack(context, result.error ?? 'Delete failed', error: true);
     }
   }
 
@@ -253,35 +244,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.tertiaryContainer,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.verified,
-                                        size: 14,
-                                        color: theme.colorScheme.onPrimaryContainer,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Verified',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onPrimaryContainer,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                               ],
                             ),
                             if (email.isNotEmpty) ...[
@@ -312,7 +274,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           title: 'Personal Details',
           subtitle: 'Update your name, contact info, and address.',
           onTap: () {
-            if (authState.isGuest) {
+            if (authState.isRestricted) {
               showGuestRestrictionDialog(context);
             } else {
               context.push('/profile/personal-details');
@@ -328,21 +290,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
         _settingsTile(
           theme,
-          icon: Icons.account_balance_outlined,
-          title: 'Tax Preferences',
-          subtitle: 'Manage your default tax region and filing status.',
-          onTap: () {},
-        ),
-        _settingsTile(
-          theme,
           icon: Icons.notifications_active_outlined,
           title: 'Notification Settings',
           subtitle: 'Control email and push alert preferences.',
           trailing: _comingSoonBadge(theme),
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('This feature is coming soon!')),
-            );
+            showAppSnack(context, 'This feature is coming soon!');
           },
         ),
         _settingsTile(
@@ -418,9 +371,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('This feature is coming soon!')),
-                    );
+                    showAppSnack(context, 'This feature is coming soon!');
                   },
                 ),
                 ],
@@ -444,23 +395,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           title: 'My Documents',
           subtitle: 'Manage bank statements and tax reports.',
           onTap: () {
-            if (authState.isGuest) {
+            if (authState.isRestricted) {
               showGuestRestrictionDialog(context);
             } else {
               context.push('/profile/documents');
-            }
-          },
-        ),
-        _settingsTile(
-          theme,
-          icon: Icons.verified_user_outlined,
-          title: 'Verify Account',
-          subtitle: 'Complete identity verification for full access.',
-          onTap: () {
-            if (authState.isGuest) {
-              showGuestRestrictionDialog(context);
-            } else {
-              context.push('/profile/verify');
             }
           },
         ),
@@ -490,7 +428,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ],
                   ),
                 );
-                if (confirmed == true) {
+                if (confirmed == true && mounted) {
                   ref.read(authProvider.notifier).signOut();
                 }
               },

@@ -31,7 +31,13 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.push('/learn/quiz'),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/learn/quiz');
+            }
+          },
         ),
         title: const Text('Quiz Performance History'),
       ),

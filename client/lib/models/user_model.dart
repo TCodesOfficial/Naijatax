@@ -32,16 +32,4 @@ class UserModel {
         onboarded: json['onboarded'] as bool? ?? false,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        'phone': phone,
-        'displayName': displayName,
-        'role': role,
-        'avatarUrl': avatarUrl,
-        'address': address,
-        'onboarded': onboarded,
-        'createdAt': createdAt.toIso8601String(),
-      };
 }

@@ -1,11 +1,11 @@
 flutter_native_splash:
   color: "#00288E"
-  image: assets/images/logo_square.png
+  image: assets/images/NaijaTax_short_logo_main.png
 
   # Android
   android_12:
     color: "#00288E"
-    image: assets/images/logo_square.png
+    image: assets/images/NaijaTax_short_logo_main.png
 
   # iOS
   ios: true

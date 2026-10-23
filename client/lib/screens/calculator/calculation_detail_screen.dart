@@ -3,32 +3,80 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_formatter.dart';
 import '../../models/tax_profile.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/tax_provider.dart';
 import '../../services/pdf_service.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/tax_charts_widget.dart';
 
 /// Full detail of a single saved calculation: summary stats, PAYE rows,
 /// charts, bracket breakdown and PDF export.
-class CalculationDetailScreen extends ConsumerWidget {
+class CalculationDetailScreen extends ConsumerStatefulWidget {
   final TaxProfile? profile;
 
-  const CalculationDetailScreen({super.key, this.profile});
+  /// Route `:id` fallback — resolved against tax history when [profile]
+  /// was not passed via `extra` (deep links, browser refresh).
+  final String? profileId;
+
+  const CalculationDetailScreen({super.key, this.profile, this.profileId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CalculationDetailScreen> createState() =>
+      _CalculationDetailScreenState();
+}
+
+class _CalculationDetailScreenState
+    extends ConsumerState<CalculationDetailScreen> {
+  bool _historyRequested = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.profile == null && widget.profileId != null) {
+      _requestHistory();
+    }
+  }
+
+  void _requestHistory() {
+    if (_historyRequested) return;
+    _historyRequested = true;
+    Future.microtask(() => ref.read(taxProvider.notifier).fetchHistory());
+  }
+
+  TaxProfile? _resolve(TaxState state) {
+    if (widget.profile != null) return widget.profile;
+    final pid = widget.profileId;
+    if (pid == null) return null;
+    for (final item in state.history) {
+      final itemKey =
+          item.id?.toString() ?? item.createdAt?.millisecondsSinceEpoch.toString();
+      if (itemKey == pid) return item;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
-    final naira =
-        NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
+    final naira = AppFormatter.nairaDecimal;
     final dateFormat = DateFormat('d MMMM yyyy · h:mm a');
-    final p = profile;
+    final taxState = ref.watch(taxProvider);
+    final p = _resolve(taxState);
     final userName = ref.read(authProvider).user?.displayName;
 
     if (p == null) {
+      // Deep link: keep loading until the first history fetch settles.
+      if (widget.profileId != null &&
+          (!_historyRequested || taxState.historyLoading)) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
       return SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(16, 16, 16, hasBottomNav ? 92 : 16),
         child: SectionCard(
@@ -97,22 +145,22 @@ class CalculationDetailScreen extends ConsumerWidget {
             title: 'Summary',
             child: Column(
               children: [
-                _row(theme, 'Annual Gross Income', naira.format(p.annualGross)),
-                _row(theme, 'Pension Deduction', naira.format(p.pensionDeduction)),
-                _row(theme, 'Rent Relief', naira.format(p.rentRelief)),
-                _row(theme, 'Taxable Income', naira.format(p.taxableIncome)),
+                _row(theme, 'Annual Gross Income', naira(p.annualGross)),
+                _row(theme, 'Pension Deduction', naira(p.pensionDeduction)),
+                _row(theme, 'Rent Relief', naira(p.rentRelief)),
+                _row(theme, 'Taxable Income', naira(p.taxableIncome)),
                 const Divider(height: 24),
                 _row(
                   theme,
                   'Annual Tax (PAYE)',
-                  naira.format(p.computedTax),
+                  naira(p.computedTax),
                   bold: true,
                   valueColor: theme.colorScheme.error,
                 ),
                 _row(
                   theme,
                   'Monthly Tax',
-                  naira.format(p.computedTax / 12),
+                  naira(p.computedTax / 12),
                   bold: true,
                   valueColor: theme.colorScheme.error,
                 ),
@@ -125,7 +173,7 @@ class CalculationDetailScreen extends ConsumerWidget {
                 _row(
                   theme,
                   'Savings vs Old Act',
-                  naira.format(p.savings),
+                  naira(p.savings),
                   bold: true,
                   valueColor: theme.colorScheme.secondary,
                 ),
@@ -160,7 +208,7 @@ class CalculationDetailScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'On ${naira.format(b.taxableAmount)}',
+                              'On ${naira(b.taxableAmount)}',
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -181,7 +229,7 @@ class CalculationDetailScreen extends ConsumerWidget {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          naira.format(b.tax),
+                          naira(b.tax),
                           textAlign: TextAlign.right,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -207,12 +255,12 @@ class CalculationDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _statGrid(ThemeData theme, NumberFormat naira, TaxProfile p) {
+  Widget _statGrid(ThemeData theme, String Function(double) naira, TaxProfile p) {
     final cards = [
-      (Icons.public_outlined, 'Annual Gross', naira.format(p.annualGross), theme.colorScheme.primary),
-      (Icons.receipt_outlined, 'PAYE Tax', naira.format(p.computedTax), theme.colorScheme.error),
-      (Icons.account_balance_wallet_outlined, 'Take-Home', naira.format(p.netIncome), Colors.green),
-      (Icons.trending_down_rounded, 'Savings', naira.format(p.savings), theme.colorScheme.secondary),
+      (Icons.public_outlined, 'Annual Gross', naira(p.annualGross), theme.colorScheme.primary),
+      (Icons.receipt_outlined, 'PAYE Tax', naira(p.computedTax), theme.colorScheme.error),
+      (Icons.account_balance_wallet_outlined, 'Take-Home', naira(p.netIncome), Colors.green),
+      (Icons.trending_down_rounded, 'Savings', naira(p.savings), theme.colorScheme.secondary),
     ];
 
     return GridView.count(

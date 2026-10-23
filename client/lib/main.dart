@@ -89,6 +89,25 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Release config missing: show a clear, actionable error instead of
+    // silently pointing Dio at a dead localhost/cleartext endpoint.
+    if (AppConstants.apiBaseUrl.isEmpty) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text(
+                'App configuration error:\nAPI_BASE_URL was not provided at build time.\n\nRebuild with --dart-define-from-file=config.prod.json',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final router = ref.watch(routerProvider);
     final isDarkMode = ref.watch(themeProvider);
 

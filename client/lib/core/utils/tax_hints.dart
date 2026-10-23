@@ -45,7 +45,6 @@ class FlatEstimate {
 class TaxHints {
   const TaxHints._();
 
-  static const double defaultPensionRate = 0.08;
   static const double defaultRentReliefRate = 0.20;
   static const double rentReliefCap = 500000;
   static const double citSmallTurnoverCap = 100000000;

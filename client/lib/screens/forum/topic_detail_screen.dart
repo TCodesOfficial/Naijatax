@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/utils/app_snack.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/forum_provider.dart';
 import '../../widgets/animated_button.dart';
@@ -32,8 +33,8 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     super.dispose();
   }
 
-  void _submitReply(AuthState authState) {
-    if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
+  void _submitReply(AuthState authState) async {
+    if (authState.isRestricted) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -60,7 +61,15 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     final content = _replyController.text.trim();
     if (content.isEmpty) return;
 
-    ref.read(forumProvider.notifier).replyToTopic(widget.topicId, content);
+    final err = await ref
+        .read(forumProvider.notifier)
+        .replyToTopic(widget.topicId, content);
+    if (!mounted) return;
+    if (err != null) {
+      showAppSnack(context, err);
+      return;
+    }
+    // Clear only on success so a failed reply keeps the user's draft.
     _replyController.clear();
   }
 
@@ -70,6 +79,9 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
     final authState = ref.watch(authProvider);
     final forumState = ref.watch(forumProvider);
     final topic = forumState.selectedTopic;
+    final isTopicOwner = topic != null &&
+        authState.user != null &&
+        authState.user!.id == topic.user.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -77,7 +89,13 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
           message: 'Back to discussions',
           child: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/forum'),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/forum');
+              }
+            },
           ),
         ),
         title: const Text('Topic Discussion'),
@@ -115,7 +133,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Asked by ${topic.user.email.split('@').first}',
+                                      'Asked by ${topic.user.name}',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodySmall?.copyWith(
@@ -167,7 +185,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      reply.user.email.split('@').first,
+                                      reply.user.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -193,6 +211,37 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                         ),
+                                      ),
+                                    )
+                                  else if (isTopicOwner)
+                                    TextButton.icon(
+                                      onPressed: () async {
+                                        final err = await ref
+                                            .read(forumProvider.notifier)
+                                            .acceptReply(
+                                                widget.topicId, reply.id);
+                                        if (!context.mounted) return;
+                                        if (err != null) {
+                                          showAppSnack(context, err);
+                                        }
+                                      },
+                                      icon: Icon(
+                                        Icons.check_circle_outline,
+                                        size: 16,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      label: Text(
+                                        'Mark as best answer',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8),
+                                        visualDensity:
+                                            VisualDensity.compact,
                                       ),
                                     ),
                                 ],

@@ -9,12 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
 
   # ── State Management ────────────────────────────────────────────────────────
   flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
 
   # ── Navigation ──────────────────────────────────────────────────────────────
   go_router: ^17.3.0
@@ -67,18 +64,12 @@ dependencies:
   url_launcher: ^6.3.0
 
   # ── UI Enhancements ──────────────────────────────────────────────────────────
-  shimmer: ^3.0.0
   flutter_markdown: ^0.7.0
-
-  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  build_runner: ^2.4.12
-  riverpod_generator: ^2.4.0
-  hive_ce_generator: ^1.9.2
   flutter_launcher_icons: ^0.14.1
   flutter_native_splash: ^2.4.3
 
@@ -86,7 +77,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/icons/
   fonts:
     - family: PlusJakartaSans
       fonts:

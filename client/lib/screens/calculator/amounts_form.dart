@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/utils/app_snack.dart';
 import '../../core/utils/tax_hints.dart';
 import '../../services/api_service.dart';
 import '../../widgets/animated_button.dart';
@@ -83,7 +84,7 @@ class _AmountsFormState extends State<AmountsForm>
       );
 
       if (result == null || result.files.isEmpty) {
-        setState(() => _isUploading = false);
+        if (mounted) setState(() => _isUploading = false);
         return;
       }
 
@@ -92,6 +93,7 @@ class _AmountsFormState extends State<AmountsForm>
       final dioFile = MultipartFile.fromBytes(bytes, filename: file.name);
 
       final parsed = await ApiService.instance.parseStatement(dioFile);
+      if (!mounted) return;
 
       // Auto-fill form values with parsed values
       if (parsed['monthlyIncome'] != null) {
@@ -109,19 +111,17 @@ class _AmountsFormState extends State<AmountsForm>
         _isUploading = false;
       });
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Statement parsed and inputs pre-filled!'),
-            backgroundColor: Colors.green),
-      );
+      showAppSnack(context, 'Statement parsed and inputs pre-filled!',
+          success: true);
 
       _calculate();
     } catch (e) {
-      setState(() {
-        _isUploading = false;
-        _uploadError = 'Parsing failed: ${e.toString()}';
-      });
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadError = 'Parsing failed: ${e.toString()}';
+        });
+      }
     }
   }
 

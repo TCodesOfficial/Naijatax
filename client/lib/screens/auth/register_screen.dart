@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_snack.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/animated_button.dart';
-import '../../widgets/app_logo.dart';
 import '../../widgets/custom_text_field.dart';
+import 'auth_shell.dart';
+import 'otp_pane.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -44,12 +46,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void _submitEmail() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_passwordController.text != _confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Passwords do not match'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showAppSnack(context, 'Passwords do not match', error: true);
         return;
       }
       ref
@@ -65,20 +62,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _submitPhone() async {
-    final phone = '+234${_phoneController.text.trim()}';
-    if (_phoneController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your phone number')),
-      );
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
+    final phone = '+234${_phoneController.text.trim()}';
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Passwords do not match'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+      showAppSnack(context, 'Passwords do not match', error: true);
       return;
     }
 
@@ -87,148 +76,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         .signUpWithPhone(phone, _passwordController.text);
   }
 
-  void _verifyOtp() async {
-    if (_otpController.text.trim().length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
-      );
-      return;
-    }
-
-    await ref
-        .read(authProvider.notifier)
-        .verifyOtp(_pendingPhone!, _otpController.text.trim());
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 900;
-
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.status == AuthStatus.authenticated) {
-        final router = GoRouter.of(context);
-        if (!mounted) return;
-        router.go('/onboarding');
-      } else if (next.needsOtpVerification) {
-        setState(() {
-          _otpSent = true;
-          _pendingPhone = next.pendingPhone;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('OTP sent! Check your phone.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: theme.colorScheme.error,
-          ),
-        );
-      }
+      handleAuthStateChange(
+        context,
+        next,
+        mounted: mounted,
+        authenticatedRoute: '/onboarding',
+        onOtpSent: (pendingPhone) {
+          setState(() {
+            _otpSent = true;
+            _pendingPhone = pendingPhone;
+          });
+        },
+      );
     });
 
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.08),
-              theme.colorScheme.surface,
-              theme.colorScheme.secondary.withValues(alpha: 0.06),
-            ],
-          ),
-        ),
-        child: isDesktop
-            ? _buildDesktopLayout(theme, authState)
-            : _buildMobileLayout(theme, authState),
-      ),
-    );
-  }
-
-  Widget _buildDesktopLayout(ThemeData theme, AuthState authState) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 5,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.primaryContainer,
-                ],
-              ),
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(48),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const AppLogo(radius: 40, iconSize: 44),
-                    const SizedBox(height: 24),
-                    Text(
-                      AppConstants.appName,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Master the 2025 Nigeria Tax Act Reforms.\nCalculate, learn, and stay compliant.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 4,
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: _buildFormCard(theme, authState),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileLayout(ThemeData theme, AuthState authState) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: _buildFormCard(theme, authState),
-        ),
-      ),
+    return AuthShell(
+      tagline:
+          'Master the 2025 Nigeria Tax Act Reforms.\nCalculate, learn, and stay compliant.',
+      builder: (_) => _buildFormCard(theme, authState),
     );
   }
 
@@ -488,37 +359,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           icon: const Icon(Icons.send, size: 18),
                         ),
                       ] else ...[
-                        Text(
-                          'Enter the 6-digit code sent to $_pendingPhone',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        CustomTextField(
+                        OtpPane(
                           controller: _otpController,
-                          label: 'OTP Code',
-                          hintText: '000000',
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          prefixIcon: const Icon(Icons.pin_outlined, size: 18),
-                        ),
-                        const SizedBox(height: 12),
-                        AnimatedButton(
-                          onPressed: _verifyOtp,
-                          text: 'Verify & Create Account',
+                          pendingPhone: _pendingPhone,
                           isLoading: authState.status == AuthStatus.loading,
-                          icon: const Icon(Icons.check_circle, size: 18),
-                        ),
-                        const SizedBox(height: 6),
-                        TextButton(
-                          onPressed: () {
+                          verifyButtonText: 'Verify & Create Account',
+                          compact: true,
+                          onChangeNumber: () {
                             setState(() {
                               _otpSent = false;
                             });
                           },
-                          child: const Text('Change phone number', style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ],
@@ -553,9 +404,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             await ref.read(authProvider.notifier).signInWithGoogle();
                           } catch (e) {
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('$e'), backgroundColor: Colors.red),
-                              );
+                              showAppSnack(context, '$e', error: true);
                             }
                           }
                         },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/guest_restriction_dialog.dart';
@@ -12,10 +13,10 @@ class VerifyAccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
+    final isDesktop = size.width >= AppConstants.tabletBreakpoint;
     final authState = ref.watch(authProvider);
 
-    if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
+    if (authState.isRestricted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showGuestRestrictionDialog(context);
       });

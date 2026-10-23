@@ -23,7 +23,6 @@ class AppColors {
   static const Color surfaceContainer  = Color(0xFFE9EDFF);
   static const Color surfaceHigh    = Color(0xFFE1E8FD);
   static const Color surfaceHighest = Color(0xFFDCE2F7);
-  static const Color surfaceGray    = Color(0xFFF9FAFB);
   static const Color white          = Color(0xFFFFFFFF);
 
   // ── Text (Light Mode) ──────────────────────────────────────────────────────
@@ -45,7 +44,6 @@ class AppColors {
   static const Color darkBorder           = Color(0xFF2A3A5C); // Standard border
   static const Color darkBorderSubtle     = Color(0xFF1F2E47); // Subtle divider
   static const Color darkOutline          = Color(0xFF6B82B0); // Muted blue-grey outline text
-  static const Color darkOutlineVariant   = Color(0xFF253045); // Low-contrast outline variant
 
   // ── Dark Mode: Text ───────────────────────────────────────────────────────
   static const Color darkTextPrimary      = Color(0xFFE8EEFF); // Crisp white-blue primary text
@@ -78,10 +76,8 @@ class AppColors {
 
   // Success — bright mint green (readable on dark backgrounds)
   static const Color darkSuccess          = Color(0xFF4ADE80); // Bright emerald
-  static const Color darkGovRed           = Color(0xFFF87171); // Tax red (bright for dark)
 
   // ── Inverse (for snackbars, tooltips, etc.) ──────────────────────────────
   static const Color inverseSurface       = Color(0xFFE4E6F0); // Light for dark inverse
   static const Color inverseOnSurface     = Color(0xFF2A3350);
-  static const Color inversePrimary       = Color(0xFF7EB3FF); // Matches darkPrimary
 }

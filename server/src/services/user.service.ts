@@ -49,7 +49,7 @@ export async function getUserProfile(userId: string) {
   });
 }
 
-export interface UpdateUserProfileInput {
+interface UpdateUserProfileInput {
   displayName?: string;
   phone?: string;
   address?: string;

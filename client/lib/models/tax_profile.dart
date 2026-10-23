@@ -64,12 +64,8 @@ class TaxProfile {
             : null,
         monthlyIncome: _parseNum(json['monthlyIncome']),
         annualGross: _parseNum(json['annualGross']),
-        pensionDeduction: _parseNum(json['pensionDeduction']) != 0
-            ? _parseNum(json['pensionDeduction'])
-            : _parseNum(json['pensionRate']),
-        rentRelief: _parseNum(json['rentRelief']) != 0
-            ? _parseNum(json['rentRelief'])
-            : _parseNum(json['rentPaid']),
+        pensionDeduction: _parseNum(json['pensionDeduction']),
+        rentRelief: _parseNum(json['rentRelief']),
         taxableIncome: _parseNum(json['taxableIncome']),
         computedTax: _parseNum(json['computedTax']),
         netIncome: _parseNum(json['netIncome']),
@@ -85,14 +81,4 @@ class TaxProfile {
   /// Effective tax rate as a percentage
   double get effectiveTaxRate =>
       annualGross > 0 ? (computedTax / annualGross) * 100 : 0;
-
-  /// Net income as a percentage of gross (for pie chart)
-  double get netIncomePercent =>
-      annualGross > 0 ? (netIncome / annualGross) * 100 : 0;
-
-  double get taxPercent =>
-      annualGross > 0 ? (computedTax / annualGross) * 100 : 0;
-
-  double get pensionPercent =>
-      annualGross > 0 ? (pensionDeduction / annualGross) * 100 : 0;
 }

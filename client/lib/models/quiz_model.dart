@@ -2,24 +2,35 @@ class QuizQuestion {
   final String id;
   final String question;
   final List<String> options;
-  final int correctIndex;
-  final String explanation;
+  // Null until answered — the server only reveals these via the per-question
+  // check endpoint after the user picks an option.
+  final int? correctIndex;
+  final String? explanation;
 
   const QuizQuestion({
     required this.id,
     required this.question,
     required this.options,
-    required this.correctIndex,
-    required this.explanation,
+    this.correctIndex,
+    this.explanation,
   });
 
   factory QuizQuestion.fromJson(Map<String, dynamic> json) => QuizQuestion(
         id: json['id'] as String,
         question: json['question'] as String,
         options: (json['options'] as List).map((e) => e.toString()).toList(),
-        correctIndex: json['correctIndex'] as int,
-        explanation: json['explanation'] as String,
+        correctIndex: json['correctIndex'] as int?,
+        explanation: json['explanation'] as String?,
       );
+}
+
+class QuizAnswer {
+  final String questionId;
+  final int selectedIndex;
+  const QuizAnswer({required this.questionId, required this.selectedIndex});
+
+  Map<String, dynamic> toJson() =>
+      {'questionId': questionId, 'selectedIndex': selectedIndex};
 }
 
 class QuizScore {

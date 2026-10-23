@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/app_formatter.dart';
 
 import '../../core/utils/tax_hints.dart';
 import '../../providers/tax_provider.dart';
@@ -33,9 +33,6 @@ class _PercentageFormState extends ConsumerState<PercentageForm>
   static const _bandOptions = [0.0, 15.0, 18.0, 21.0, 23.0, 25.0];
   static const _pensionOptions = [0.0, 5.0, 8.0, 10.0, 15.0];
   static const _reliefOptions = [0.0, 10.0, 20.0];
-
-  final _naira =
-      NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
 
   @override
   bool get wantKeepAlive => true;
@@ -211,7 +208,7 @@ class _PercentageFormState extends ConsumerState<PercentageForm>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _naira.format(est.computedTax),
+                        AppFormatter.nairaDecimal(est.computedTax),
                         style: theme.textTheme.headlineSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,

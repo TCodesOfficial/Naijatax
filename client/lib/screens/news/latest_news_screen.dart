@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/app_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,7 +29,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final articlesState = ref.watch(articlesProvider);
 
@@ -133,8 +134,8 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
                         )
                       : LayoutBuilder(
                           builder: (context, constraints) {
-                            final crossAxisCount = constraints.maxWidth > 900 ? 3 : 2;
-                            final childAspectRatio = constraints.maxWidth > 900 ? 1.3 : 1.15;
+                            final crossAxisCount = constraints.maxWidth > AppConstants.tabletBreakpoint ? 3 : 2;
+                            final childAspectRatio = constraints.maxWidth > AppConstants.tabletBreakpoint ? 1.3 : 1.15;
                             return GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -260,7 +261,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         ),
         const SizedBox(width: 8),
         Text(
-          '${article.source} · ${_timeAgo(article.effectiveDate)}',
+          '${article.source} · ${AppFormatter.timeAgo(article.effectiveDate)}',
           style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
@@ -298,7 +299,7 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _timeAgo(article.effectiveDate),
+                    AppFormatter.timeAgo(article.effectiveDate),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -326,14 +327,5 @@ class _LatestNewsScreenState extends ConsumerState<LatestNewsScreen> {
         ),
       ),
     );
-  }
-
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inDays > 7) return '${(diff.inDays / 7).floor()}w ago';
-    if (diff.inDays > 0) return '${diff.inDays}d ago';
-    if (diff.inHours > 0) return '${diff.inHours}h ago';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
-    return 'Just now';
   }
 }

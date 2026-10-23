@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/app_snack.dart';
 import '../../models/forum_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/forum_provider.dart';
 import '../../widgets/animated_button.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../widgets/guest_restriction_dialog.dart';
 
 class TopicListScreen extends ConsumerStatefulWidget {
   const TopicListScreen({super.key});
@@ -19,6 +23,12 @@ class TopicListScreen extends ConsumerStatefulWidget {
 class _TopicListScreenState extends ConsumerState<TopicListScreen> {
   String? _selectedTag;
   final List<String> _tags = ['All', 'PAYE', 'VAT', 'Business Tax', 'General'];
+  final _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
+  // Create-topic sheet state (State fields so sheet rebuilds keep them).
+  bool _submittingTopic = false;
+  String? _createError;
 
   @override
   void initState() {
@@ -26,8 +36,42 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
     Future.microtask(() => ref.read(forumProvider.notifier).fetchTopics());
   }
 
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String? get _searchQuery {
+    final q = _searchController.text.trim();
+    return q.isEmpty ? null : q;
+  }
+
+  void _refreshTopics() {
+    ref
+        .read(forumProvider.notifier)
+        .fetchTopics(tag: _selectedTag, q: _searchQuery);
+  }
+
+  Future<void> _handleVote(
+      ThemeData theme, ForumTopic topic, int direction) async {
+    final auth = ref.read(authProvider);
+    if (auth.isRestricted) {
+      showGuestRestrictionDialog(context);
+      return;
+    }
+    final err = await ref
+        .read(forumProvider.notifier)
+        .voteTopic(topic.id, direction);
+    if (!mounted) return;
+    if (err != null) {
+      showAppSnack(context, err);
+    }
+  }
+
   void _showCreateTopicSheet(ThemeData theme, AuthState authState) {
-    if (authState.isGuest || authState.status == AuthStatus.unauthenticated) {
+    if (authState.isRestricted) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -54,6 +98,8 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     List<String> chosenTags = [];
+    _submittingTopic = false;
+    _createError = null;
 
     showModalBottomSheet(
       context: context,
@@ -120,21 +166,68 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                   }).toList(),
                 ),
                 const SizedBox(height: 24),
-                AnimatedButton(
-                  onPressed: () {
-                    if (titleController.text.isNotEmpty &&
-                        contentController.text.isNotEmpty) {
-                      ref
-                          .read(forumProvider.notifier)
-                          .addNewTopic(
-                            titleController.text.trim(),
-                            contentController.text.trim(),
-                            chosenTags,
-                          );
-                      Navigator.pop(context);
-                    }
+                StatefulBuilder(
+                  builder: (sheetContext, setSheetState) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_createError != null) ...[
+                          Text(
+                            _createError!,
+                            style: TextStyle(
+                              color: theme.colorScheme.error,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        AnimatedButton(
+                          isLoading: _submittingTopic,
+                          onPressed: _submittingTopic
+                              ? null
+                              : () async {
+                                  final title = titleController.text.trim();
+                                  final content =
+                                      contentController.text.trim();
+                                  if (title.length < 5) {
+                                    setSheetState(() => _createError =
+                                        'Title must be at least 5 characters.');
+                                    return;
+                                  }
+                                  if (content.length < 10) {
+                                    setSheetState(() => _createError =
+                                        'Description must be at least 10 characters.');
+                                    return;
+                                  }
+                                  setSheetState(() {
+                                    _submittingTopic = true;
+                                    _createError = null;
+                                  });
+                                  final err = await ref
+                                      .read(forumProvider.notifier)
+                                      .addNewTopic(
+                                          title, content, chosenTags);
+                                  if (err != null) {
+                                    setSheetState(() {
+                                      _submittingTopic = false;
+                                      _createError = err;
+                                    });
+                                    return;
+                                  }
+                                  _submittingTopic = false;
+                                  if (sheetContext.mounted) {
+                                    Navigator.pop(sheetContext);
+                                  }
+                                  if (mounted) {
+                                    _refreshTopics();
+                                  }
+                                },
+                          text: 'Submit Topic',
+                        ),
+                      ],
+                    );
                   },
-                  text: 'Submit Topic',
                 ),
                 const SizedBox(height: 24),
               ],
@@ -163,9 +256,24 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search discussions...',
                       prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? Tooltip(
+                              message: 'Clear search',
+                              child: IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchDebounce?.cancel();
+                                  _searchController.clear();
+                                  _refreshTopics();
+                                  setState(() {});
+                                },
+                              ),
+                            )
+                          : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -174,6 +282,14 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                         vertical: 12,
                       ),
                     ),
+                    onChanged: (value) {
+                      setState(() {});
+                      _searchDebounce?.cancel();
+                      _searchDebounce =
+                          Timer(const Duration(milliseconds: 300), () {
+                        _refreshTopics();
+                      });
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -211,9 +327,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                       ),
                       onSelected: (selected) {
                         setState(() => _selectedTag = tag == 'All' ? null : tag);
-                        ref
-                            .read(forumProvider.notifier)
-                            .fetchTopics(tag: _selectedTag);
+                        _refreshTopics();
                       },
                     ),
                   ),
@@ -228,8 +342,22 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
             child: forumState.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : forumState.topics.isEmpty
-                ? const Center(
-                    child: Text('No discussions yet. Be the first to ask!'),
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        forumState.error ??
+                            (_searchQuery != null || _selectedTag != null
+                                ? 'No discussions match your filters.'
+                                : 'No discussions yet. Be the first to ask!'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: forumState.error != null
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
                   )
                 : ListView.separated(
                     padding: EdgeInsets.fromLTRB(
@@ -267,19 +395,48 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
               // Vote column
               Column(
                 children: [
-                  Icon(
-                    Icons.keyboard_arrow_up,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  Text(
-                    '${topic.upVotes}',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                  IconButton(
+                    onPressed: () => _handleVote(theme, topic, 1),
+                    tooltip: topic.myVote == 1 ? 'Remove upvote' : 'Upvote',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 28,
+                    ),
+                    icon: Icon(
+                      Icons.keyboard_arrow_up,
+                      color: topic.myVote == 1
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: theme.colorScheme.onSurfaceVariant,
+                  Text(
+                    '${topic.score}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: topic.myVote != null
+                          ? theme.colorScheme.primary
+                          : null,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _handleVote(theme, topic, -1),
+                    tooltip: topic.myVote == -1
+                        ? 'Remove downvote'
+                        : 'Downvote',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 28,
+                    ),
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: topic.myVote == -1
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -358,7 +515,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                         ],
                         Flexible(
                           child: Text(
-                            'by ${topic.user.email.split('@').first}',
+                            'by ${topic.user.name}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelSmall?.copyWith(

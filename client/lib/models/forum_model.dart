@@ -1,9 +1,15 @@
 class ForumUser {
   final String id;
-  final String email;
-  const ForumUser({required this.id, required this.email});
-  factory ForumUser.fromJson(Map<String, dynamic> json) =>
-      ForumUser(id: json['id'] as String, email: json['email'] as String);
+  final String? displayName;
+  final String? avatarUrl;
+  const ForumUser({required this.id, this.displayName, this.avatarUrl});
+  factory ForumUser.fromJson(Map<String, dynamic> json) => ForumUser(
+    id: json['id'] as String,
+    displayName: json['displayName'] as String?,
+    avatarUrl: json['avatarUrl'] as String?,
+  );
+  String get name =>
+      (displayName?.isNotEmpty ?? false) ? displayName!.trim() : 'Member';
 }
 
 class ForumReply {
@@ -39,6 +45,9 @@ class ForumTopic {
   final int replyCount;
   final int upVotes;
   final int downVotes;
+
+  /// Signed-in viewer's vote (1, -1) or null when unvoted/anonymous.
+  final int? myVote;
   final DateTime createdAt;
   final List<ForumReply>? replies;
 
@@ -51,9 +60,33 @@ class ForumTopic {
     required this.replyCount,
     this.upVotes = 0,
     this.downVotes = 0,
+    this.myVote,
     required this.createdAt,
     this.replies,
   });
+
+  ForumTopic copyWith({
+    int? upVotes,
+    int? downVotes,
+    int? myVote,
+    bool clearMyVote = false,
+    List<ForumReply>? replies,
+  }) =>
+      ForumTopic(
+        id: id,
+        title: title,
+        content: content,
+        tags: tags,
+        user: user,
+        replyCount: replyCount,
+        upVotes: upVotes ?? this.upVotes,
+        downVotes: downVotes ?? this.downVotes,
+        myVote: clearMyVote ? null : (myVote ?? this.myVote),
+        createdAt: createdAt,
+        replies: replies ?? this.replies,
+      );
+
+  int get score => upVotes - downVotes;
 
   factory ForumTopic.fromJson(Map<String, dynamic> json) => ForumTopic(
     id: json['id'] as String,
@@ -65,6 +98,7 @@ class ForumTopic {
         (json['_count'] as Map<String, dynamic>?)?['replies'] as int? ?? 0,
     upVotes: json['upVotes'] as int? ?? 0,
     downVotes: json['downVotes'] as int? ?? 0,
+    myVote: json['myVote'] as int?,
     createdAt: DateTime.parse(json['createdAt'] as String),
     replies: json['replies'] != null
         ? (json['replies'] as List)

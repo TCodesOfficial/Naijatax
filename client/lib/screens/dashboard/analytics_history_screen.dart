@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
+import '../../core/utils/app_formatter.dart';
 import '../../models/tax_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/tax_provider.dart';
@@ -30,10 +31,10 @@ class _AnalyticsHistoryScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
+    final isMobile = size.width < AppConstants.mobileBreakpoint;
     final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final taxState = ref.watch(taxProvider);
-    final naira = NumberFormat.currency(locale: 'en_NG', symbol: '₦', decimalDigits: 2);
+    final naira = AppFormatter.nairaDecimal;
     final history = taxState.history;
 
     return SingleChildScrollView(
@@ -366,7 +367,7 @@ class _AnalyticsHistoryScreenState
     return DateFormat('d MMM yyyy').format(dt.toLocal());
   }
 
-  Widget _historyTable(ThemeData theme, List<TaxProfile> history, NumberFormat naira, bool isMobile) {
+  Widget _historyTable(ThemeData theme, List<TaxProfile> history, String Function(double) naira, bool isMobile) {
     if (history.isEmpty) {
       return Card(
         child: Padding(
@@ -457,12 +458,12 @@ class _AnalyticsHistoryScreenState
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(naira.format(h.annualGross), style: theme.textTheme.bodySmall),
+                        child: Text(naira(h.annualGross), style: theme.textTheme.bodySmall),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
-                          naira.format(h.computedTax),
+                          naira(h.computedTax),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: AppColors.govRed,
                             fontWeight: FontWeight.w600,
@@ -487,7 +488,7 @@ class _AnalyticsHistoryScreenState
     );
   }
 
-  Widget _historyMobileCard(ThemeData theme, TaxProfile h, NumberFormat naira) {
+  Widget _historyMobileCard(ThemeData theme, TaxProfile h, String Function(double) naira) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -509,7 +510,7 @@ class _AnalyticsHistoryScreenState
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  naira.format(h.computedTax),
+                  naira(h.computedTax),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.govRed,
                     fontWeight: FontWeight.w700,

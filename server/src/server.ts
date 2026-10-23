@@ -7,26 +7,45 @@ import sanitizeHtml from "sanitize-html";
 import { env } from "./config/env.js";
 import { prisma } from "./config/database.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { errorResponse } from "./utils/response.js";
 import apiRouter from "./routes/index.js";
 import { syncTaxNews } from "./services/news.service.js";
 
 const app = express();
 
-// ─── Rate Limiting ───────────────────────────────────────────────────────────
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
+// Behind Render's load balancer — one hop, so req.ip comes from
+// X-Forwarded-For and rate limiting keys correctly per client.
+app.set("trust proxy", 1);
+
+const limitResponse = (code: string, message: string) =>
+  ({
     success: false,
-    error: {
-      code: "RATE_LIMITED",
-      message: "Too many requests. Please try again later.",
-    },
-  },
-});
+    error: { code, message },
+  }) as const;
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+const WINDOW_MS = 15 * 60 * 1000;
+const makeLimiter = (max: number) =>
+  rateLimit({
+    windowMs: WINDOW_MS,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: limitResponse(
+      "RATE_LIMITED",
+      "Too many requests. Please try again later.",
+    ),
+  });
+
+const limiter = makeLimiter(500);
 app.use(limiter);
+
+// Tighter limits on the costliest endpoints: AI calls hit paid providers
+// (Gemini/Groq) and statement parsing uploads + AI, so abuse can't rack up
+// provider bills from a single client.
+const aiLimiter = makeLimiter(30);
+const parseLimiter = makeLimiter(10);
+const calculateLimiter = makeLimiter(120);
 
 // ─── Security & Parsing Middleware ───────────────────────────────────────────
 app.use(compression());
@@ -63,24 +82,36 @@ app.use((req, _res, next) => {
 });
 
 // ─── Base Health Route for UptimeRobot ───────────────────────────────────────
-// ✅ FIXED: Moved here so it executes before the 404 catcher intercepts it!
-app.get("/", async (req: Request, res: Response) => {
-  await prisma.$queryRaw`SELECT 1`;
-  res.status(200).json({ success: true, message: "Server is running" });
+// Moved here so it executes before the 404 catcher intercepts it.
+app.get("/", async (_req: Request, res: Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    // Same envelope as GET /api/v1/health below.
+    res.status(200).json({
+      success: true,
+      status: "NaijaTax Enlighten API is running ✅",
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    errorResponse(res, "UNAVAILABLE", "Database unavailable.", 503);
+  }
 });
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
+app.use(`${env.API_PREFIX}/ai/message`, aiLimiter);
+app.use(`${env.API_PREFIX}/tax/parse-statement`, parseLimiter);
+app.use(`${env.API_PREFIX}/tax/calculate`, calculateLimiter);
 app.use(env.API_PREFIX, apiRouter);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    error: {
-      code: "NOT_FOUND",
-      message: "The requested endpoint does not exist.",
-    },
-  });
+  errorResponse(
+    res,
+    "NOT_FOUND",
+    "The requested endpoint does not exist.",
+    404,
+  );
 });
 
 // ─── Global Error Handler ────────────────────────────────────────────────────
@@ -99,6 +130,16 @@ function scheduleNewsSync() {
     syncTaxNews().catch((e) => console.warn("[NEWS] Scheduled sync failed:", e));
   }, NEWS_SYNC_INTERVAL_MS);
 }
+
+// ─── Process-level safety nets ───────────────────────────────────────────────
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+  // The process state may be compromised — exit and let the platform restart.
+  process.exit(1);
+});
 
 // ─── Server Bootstrap ────────────────────────────────────────────────────────
 async function runApp() {

@@ -11,8 +11,8 @@ import { successResponse, errorResponse } from '../utils/response.js';
 import { Request } from 'express';
 
 const messageSchema = z.object({
-  content: z.string().min(1, 'Message content cannot be empty'),
-  sessionId: z.string().optional(),
+  content: z.string().min(1, 'Message content cannot be empty').max(4000),
+  sessionId: z.string().max(64).optional(),
 });
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {

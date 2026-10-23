@@ -71,10 +71,11 @@ class VatState {
   }
 }
 
-class VatNotifier extends StateNotifier<VatState> {
+class VatNotifier extends Notifier<VatState> {
   bool _loaded = false;
 
-  VatNotifier() : super(const VatState());
+  @override
+  VatState build() => const VatState();
 
   Future<void> fetchIfNeeded() async {
     if (_loaded && state.items.isNotEmpty) return;
@@ -103,6 +104,4 @@ class VatNotifier extends StateNotifier<VatState> {
   }
 }
 
-final vatProvider = StateNotifierProvider<VatNotifier, VatState>((ref) {
-  return VatNotifier();
-});
+final vatProvider = NotifierProvider<VatNotifier, VatState>(VatNotifier.new);

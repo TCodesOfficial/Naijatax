@@ -306,7 +306,7 @@ function buildUserContext(ctx: UserPersonalContext | null): string {
    Prisma Chat Session Persistent Layer Data Methods
    ========================================== */
 
-export async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
+async function getOrCreateChatSession(userId: string, sessionId?: string, title = 'New Conversation') {
   if (sessionId) {
     // Only fetch the session shell — messages are fetched separately with a
     // capped take, so including them here wasted a large DB transfer.
@@ -355,15 +355,18 @@ export async function sendChatMessage(userId: string, content: string, sessionId
   const session = await getOrCreateChatSession(userId, sessionId, content.substring(0, 40));
   const tSession = Date.now();
 
-  // Fetch the last 10 messages (enough context, light payload) and save the
-  // user's message in parallel — plus personalisation data (first name + the
+  // Read history BEFORE saving the new user message. Running both in parallel
+  // let the create win the race, so the just-saved message landed in history
+  // AND was appended again by toGeminiMessages — the prompt contained it twice.
+  const history = await prisma.chatMessage.findMany({
+    where: { sessionId: session.id },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
+
+  // Save the user's message plus personalisation data (first name + the
   // user's own recent calculations; never contact details).
-  const [history, _userMsg, dbUser, recentCalculations] = await Promise.all([
-    prisma.chatMessage.findMany({
-      where: { sessionId: session.id },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    }),
+  const [_userMsg, dbUser, recentCalculations] = await Promise.all([
     prisma.chatMessage.create({
       data: { sessionId: session.id, role: 'user', content },
     }),
@@ -407,18 +410,31 @@ export async function sendChatMessage(userId: string, content: string, sessionId
   });
   const tGemini = Date.now();
 
-  const isBusy =
+  const isFallback =
     responseContent === AI_BUSY_FALLBACK ||
+    responseContent === AI_TIMEOUT_MSG ||
     responseContent.includes('busy processing') ||
     responseContent.includes('unable to process');
 
-  const aiMessage = await prisma.chatMessage.create({
-    data: {
-      sessionId: session.id,
-      role: 'assistant',
-      content: isBusy ? AI_BUSY_FALLBACK : responseContent,
-    }
-  });
+  // Transient fallbacks are returned to the user but never written to the DB —
+  // persisting them would inject "please try again" noise into every future
+  // prompt's history. The client only reads message.content, sessionId and
+  // sessionTitle, so a synthetic message object is safe to return.
+  const aiMessage = isFallback
+    ? {
+        id: '',
+        sessionId: session.id,
+        role: 'assistant',
+        content: responseContent,
+        createdAt: new Date(),
+      }
+    : await prisma.chatMessage.create({
+        data: {
+          sessionId: session.id,
+          role: 'assistant',
+          content: responseContent,
+        },
+      });
 
   // Fire-and-forget: session ordering touch shouldn't block the user's reply.
   prisma.chatSession

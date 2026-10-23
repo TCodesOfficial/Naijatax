@@ -49,7 +49,10 @@ signingConfigs {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("release")
 
-            isMinifyEnabled = true
+            // Minification disabled for local test builds: R8 needs more RAM
+            // than this 8 GB machine can spare (GC-thrash). Re-enable for
+            // store/production builds — proguard-rules.pro is in place.
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
