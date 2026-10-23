@@ -63,6 +63,22 @@ class StorageService {
         .toList();
   }
 
+  // ── User Profile Cache (per-user) ──────────────────────────────────────
+  // Refreshed on every AuthNotifier.fetchMe() call; read on session
+  // restore while the server round-trip is still in flight.
+  static Future<void> saveUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    await Hive.box('app_settings').put('userProfile_$userId', data);
+  }
+
+  static Map<String, dynamic>? getUserProfile(String userId) {
+    final raw = Hive.box('app_settings').get('userProfile_$userId');
+    if (raw == null) return null;
+    return Map<String, dynamic>.from(raw as Map);
+  }
+
   // ── App Settings ─────────────────────────────────────────────────────────
   static Future<void> setSetting(String key, dynamic value) async {
     final box = Hive.box('app_settings');

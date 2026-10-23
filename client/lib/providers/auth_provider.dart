@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -58,8 +60,9 @@ class AuthNotifier extends Notifier<AuthState> {
   final _routerRefreshNotifier = _RouterRefreshNotifier();
   ChangeNotifier get refreshNotifier => _routerRefreshNotifier;
 
-  static bool? _onboardedCache;
-  static DateTime? _onboardedCacheTime;
+  /// Onboarding status is stored per user so accounts sharing a device
+  /// never inherit each other's completed state.
+  static String _onboardedKey(String userId) => 'onboarded_$userId';
 
   void _emit(AuthState newState) {
     state = newState;
@@ -73,27 +76,40 @@ class AuthNotifier extends Notifier<AuthState> {
       phone: u.phone,
       displayName: u.userMetadata?['display_name'] as String?,
       avatarUrl: u.userMetadata?['avatar_url'] as String?,
-      role: 'USER',
+      // Sessions never carry the app role; use the last value cached from
+      // the server (/users/me), defaulting to USER for fresh devices.
+      role:
+          StorageService.getUserProfile(u.id)?['role'] as String? ?? 'USER',
       onboarded: onboarded,
       createdAt: DateTime.now(),
     );
   }
 
-  Future<bool> _fetchOnboarded() async {
-    // Use in-memory cache (5 min TTL)
-    if (_onboardedCache != null && _onboardedCacheTime != null) {
-      if (DateTime.now().difference(_onboardedCacheTime!).inMinutes < 5) {
-        return _onboardedCache!;
-      }
-    }
+  /// Server-truth onboarding flag, or null when the request failed.
+  /// Failures must never surface as `false` — a network blip would erase a
+  /// previous "onboarded" state and send returning users to onboarding.
+  Future<bool?> _fetchOnboardedFromServer() async {
     try {
       final data = await ApiService.instance.getOnboardedStatus();
       final result = data['onboarded'] as bool? ?? false;
-      _onboardedCache = result;
-      _onboardedCacheTime = DateTime.now();
       return result;
     } catch (_) {
-      return _onboardedCache ?? false;
+      return null;
+    }
+  }
+
+  /// Resolve onboarding BEFORE routing: server truth with a bounded 3s
+  /// timeout, falling back to this user's last persisted value.
+  Future<bool> _resolveOnboarded(User u) async {
+    try {
+      final data = await ApiService.instance
+          .getOnboardedStatus()
+          .timeout(const Duration(seconds: 3));
+      final result = data['onboarded'] as bool? ?? false;
+      await StorageService.setSetting(_onboardedKey(u.id), result);
+      return result;
+    } catch (_) {
+      return StorageService.getSetting<bool>(_onboardedKey(u.id)) ?? false;
     }
   }
 
@@ -104,23 +120,30 @@ class AuthNotifier extends Notifier<AuthState> {
       if (session != null) {
         _listenToAuthChanges();
         final user = session.user;
-        final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
+        final cachedOnboarded =
+            StorageService.getSetting<bool>(_onboardedKey(user.id)) ?? false;
         final initialState = AuthState(
           status: AuthStatus.authenticated,
           user: _userFromSession(user, onboarded: cachedOnboarded),
         );
-        // Lazy sync: fetch onboarded in background, update if changed
+        // Background refresh — but only when the server actually answered,
+        // so an offline refresh can never wipe the real value. Also pulls
+        // the full profile (incl. role) into the fresh Hive cache.
         Future.microtask(() async {
-          final onboarded = await _fetchOnboarded();
-          await StorageService.setSetting('onboarded', onboarded);
+          final onboarded = await _fetchOnboardedFromServer();
+          if (onboarded == null) return;
+          await StorageService.setSetting(_onboardedKey(user.id), onboarded);
           final currentUser = state.user;
-          if (currentUser != null && currentUser.id == user.id && currentUser.onboarded != onboarded) {
+          if (currentUser != null &&
+              currentUser.id == user.id &&
+              currentUser.onboarded != onboarded) {
             _emit(AuthState(
               status: state.status,
               user: _userFromSession(user, onboarded: onboarded),
             ));
           }
         });
+        Future.microtask(fetchMe);
         return initialState;
       }
     } catch (_) {
@@ -145,31 +168,26 @@ class AuthNotifier extends Notifier<AuthState> {
             event == AuthChangeEvent.tokenRefreshed) {
           if (session != null) {
             final user = session.user;
-            if (event == AuthChangeEvent.signedIn) {
-              // Emit immediately with cached onboarded (non-blocking)
-              final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
+            if (event == AuthChangeEvent.signedIn ||
+                event == AuthChangeEvent.passwordRecovery) {
+              await StorageService.clearUserCache();
+              // Resolve onboarded BEFORE routing so a returning user lands
+              // straight on the dashboard instead of flashing through the
+              // onboarding screen first.
+              final onboarded = await _resolveOnboarded(user);
               _emit(
                 AuthState(
                   status: AuthStatus.authenticated,
-                  user: _userFromSession(user, onboarded: cachedOnboarded),
+                  user: _userFromSession(user, onboarded: onboarded),
                 ),
               );
-              // Fetch real onboarded in background (non-blocking)
-              StorageService.clearUserCache();
-              _fetchOnboarded().then((onboarded) async {
-                await StorageService.setSetting('onboarded', onboarded);
-                if (state.user?.id == user.id && state.user?.onboarded != onboarded) {
-                  _emit(
-                    AuthState(
-                      status: state.status,
-                      user: _userFromSession(user, onboarded: onboarded),
-                    ),
-                  );
-                }
-              });
+              // Full profile sync (role, address, avatar) in the background.
+              unawaited(fetchMe());
             } else {
-              // Token refresh: use cached onboarded, don't make API call
-              final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
+              // Token refresh: keep the persisted per-user value — no API call.
+              final cachedOnboarded =
+                  StorageService.getSetting<bool>(_onboardedKey(user.id)) ??
+                      false;
               _emit(
                 AuthState(
                   status: AuthStatus.authenticated,
@@ -181,12 +199,9 @@ class AuthNotifier extends Notifier<AuthState> {
         } else if (event == AuthChangeEvent.signedOut) {
           await StorageService.clearAllUserData();
           ref.read(taxProvider.notifier).reset();
-          await StorageService.setSetting('onboarded', false);
           // A fresh sign-out must land on the login screen, not restore a
           // guest session chosen earlier.
           await StorageService.setSetting('guest', false);
-          _onboardedCache = null;
-          _onboardedCacheTime = null;
           _emit(const AuthState(status: AuthStatus.unauthenticated));
         }
       });
@@ -213,12 +228,13 @@ class AuthNotifier extends Notifier<AuthState> {
         return;
       }
       await StorageService.clearUserCache();
-      // Use cached onboarded status — don't block sign-in on API call
-      final cachedOnboarded = StorageService.getSetting<bool>('onboarded') ?? false;
+      // Resolve onboarding from the server (bounded) so the router only ever
+      // sees trustworthy values — no onboarding/dash flash-flicker.
+      final onboarded = await _resolveOnboarded(u);
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: _userFromSession(u, onboarded: cachedOnboarded),
+          user: _userFromSession(u, onboarded: onboarded),
         ),
       );
     } on AuthException catch (e) {
@@ -266,7 +282,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
       await StorageService.clearUserCache();
       // New user: onboarded is always false
-      await StorageService.setSetting('onboarded', false);
+      await StorageService.setSetting(_onboardedKey(u.id), false);
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
@@ -350,7 +366,7 @@ class AuthNotifier extends Notifier<AuthState> {
         return;
       }
       await StorageService.clearUserCache();
-      final onboarded = await _fetchOnboarded();
+      final onboarded = await _resolveOnboarded(u);
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
@@ -423,24 +439,13 @@ class AuthNotifier extends Notifier<AuthState> {
         return 'Invalid or expired code. Request a new one.';
       }
       await StorageService.clearUserCache();
-      final cachedOnboarded =
-          StorageService.getSetting<bool>('onboarded') ?? false;
+      final onboarded = await _resolveOnboarded(u);
       _emit(
         AuthState(
           status: AuthStatus.authenticated,
-          user: _userFromSession(u, onboarded: cachedOnboarded),
+          user: _userFromSession(u, onboarded: onboarded),
         ),
       );
-      // Background sync of the onboarded flag (mirrors sign-in).
-      _fetchOnboarded().then((onboarded) async {
-        await StorageService.setSetting('onboarded', onboarded);
-        if (state.user?.id == u.id && state.user?.onboarded != onboarded) {
-          _emit(AuthState(
-            status: state.status,
-            user: _userFromSession(u, onboarded: onboarded),
-          ));
-        }
-      });
       return null;
     } on AuthException catch (e) {
       return e.message;
@@ -466,9 +471,23 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> signInWithGoogle() async {
     if (kIsWeb) {
+      // prompt=select_account forces Google's account chooser even when the
+      // browser already holds an active Google session.
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: _getRedirectUrl(),
+        queryParams: const {'prompt': 'select_account'},
+      );
+      return;
+    }
+
+    // iOS: native google_sign_in was never configured (no GIDClientID /
+    // REVERSED_CLIENT_ID in Info.plist), so use the browser OAuth flow —
+    // the previously-working path, which always offers Google's chooser.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'naijatax://',
       );
       return;
     }
@@ -476,6 +495,9 @@ class AuthNotifier extends Notifier<AuthState> {
     final googleSignIn = GoogleSignIn(
       serverClientId: AppConstants.googleWebClientId,
     );
+    // Clear any cached identity so the chooser always appears instead of
+    // silently resuming the previously signed-in account.
+    await googleSignIn.signOut();
     final googleUser = await googleSignIn.signIn();
     if (googleUser == null) throw 'Google sign-in was cancelled';
     final googleAuth = await googleUser.authentication;
@@ -504,8 +526,6 @@ class AuthNotifier extends Notifier<AuthState> {
     await StorageService.clearAllUserData();
     await StorageService.clearAllSettingsExcept(['darkMode']);
     ref.read(taxProvider.notifier).reset();
-    _onboardedCache = null;
-    _onboardedCacheTime = null;
     _emit(const AuthState(status: AuthStatus.unauthenticated));
   }
 
@@ -517,9 +537,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (_) {
       // Server update failed — still update local state so user can proceed
     }
-    await StorageService.setSetting('onboarded', true);
-    _onboardedCache = true;
-    _onboardedCacheTime = DateTime.now();
+    await StorageService.setSetting(_onboardedKey(current.id), true);
     _emit(AuthState(
       status: state.status,
       user: UserModel(
@@ -559,6 +577,8 @@ class AuthNotifier extends Notifier<AuthState> {
     String? phone,
     String? address,
     String? avatarUrl,
+    String? role,
+    bool? onboarded,
   }) {
     final current = state.user;
     if (current == null) return;
@@ -570,19 +590,22 @@ class AuthNotifier extends Notifier<AuthState> {
           email: current.email,
           phone: phone ?? current.phone,
           displayName: displayName ?? current.displayName,
-          role: current.role,
+          role: role ?? current.role,
           avatarUrl: avatarUrl ?? current.avatarUrl,
           address: address ?? current.address,
-          onboarded: current.onboarded,
+          onboarded: onboarded ?? current.onboarded,
           createdAt: current.createdAt,
         ),
       ),
     );
   }
 
-  /// Pulls the DB profile (address etc.) and merges into local state.
+  /// Pulls the DB profile (address, role, avatar…) and merges into local
+  /// state, then stores the fresh copy in Hive for the next cold start.
   Future<void> fetchMe() async {
     if (!state.isAuthenticated) return;
+    final current = state.user;
+    if (current == null) return;
     try {
       final data = await ApiService.instance.getMe();
       _applyLocalUser(
@@ -590,7 +613,9 @@ class AuthNotifier extends Notifier<AuthState> {
         phone: data['phone'] as String?,
         address: data['address'] as String?,
         avatarUrl: data['avatarUrl'] as String?,
+        role: data['role'] as String?,
       );
+      await StorageService.saveUserProfile(current.id, data);
     } catch (_) {
       // Offline / server unreachable — keep local state
     }

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -837,7 +838,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
-          );
+          )
+              .animate(onPlay: (controller) => controller.repeat())
+              .fadeIn(duration: 350.ms, delay: (180 * i).ms)
+              .fadeOut(duration: 350.ms);
         }),
       ),
     );
