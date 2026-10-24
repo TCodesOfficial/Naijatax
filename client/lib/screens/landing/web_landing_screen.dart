@@ -351,6 +351,40 @@ class WebLandingScreen extends StatelessWidget {
 
   // ─── Features Grid ──────────────────────────────────────────────────────
   Widget _buildFeatures(BuildContext context, ThemeData theme, bool isDesktop) {
+    final featureCards = <Widget>[
+      _featureCard(
+        theme,
+        icon: Icons.calculate_outlined,
+        title: 'PAYE Calculator',
+        description:
+            'Compute accurate PAYE using NTA 2025 progressive brackets and relief deductions.',
+        color: theme.colorScheme.primary,
+      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+      _featureCard(
+        theme,
+        icon: Icons.smart_toy_outlined,
+        title: 'AI Tax Assistant',
+        description:
+            'Ask questions about Nigerian tax law and get instant, contextual answers from AI.',
+        color: theme.colorScheme.secondary,
+      ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+      _featureCard(
+        theme,
+        icon: Icons.groups_outlined,
+        title: 'Community Forum',
+        description:
+            'Connect with tax professionals and peers to discuss compliance questions.',
+        color: theme.colorScheme.tertiary,
+      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
+      _featureCard(
+        theme,
+        icon: Icons.school_outlined,
+        title: 'Tax Education',
+        description:
+            'Learn about the 2025 reforms through guides, articles, and interactive quizzes.',
+        color: theme.colorScheme.error,
+      ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
+    ];
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
@@ -365,6 +399,7 @@ class WebLandingScreen extends StatelessWidget {
             children: [
               Text(
                 'Everything You Need',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
@@ -374,53 +409,35 @@ class WebLandingScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'Powerful tools to navigate Nigerian tax compliance with ease',
+                textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 48),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: isDesktop ? 4 : 2,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: isDesktop ? 1.0 : 0.95,
-                children: [
-                  _featureCard(
-                    theme,
-                    icon: Icons.calculate_outlined,
-                    title: 'PAYE Calculator',
-                    description:
-                        'Compute accurate PAYE using NTA 2025 progressive brackets and relief deductions.',
-                    color: theme.colorScheme.primary,
-                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
-                  _featureCard(
-                    theme,
-                    icon: Icons.smart_toy_outlined,
-                    title: 'AI Tax Assistant',
-                    description:
-                        'Ask questions about Nigerian tax law and get instant, contextual answers from AI.',
-                    color: theme.colorScheme.secondary,
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
-                  _featureCard(
-                    theme,
-                    icon: Icons.groups_outlined,
-                    title: 'Community Forum',
-                    description:
-                        'Connect with tax professionals and peers to discuss compliance questions.',
-                    color: theme.colorScheme.tertiary,
-                  ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1),
-                  _featureCard(
-                    theme,
-                    icon: Icons.school_outlined,
-                    title: 'Tax Education',
-                    description:
-                        'Learn about the 2025 reforms through guides, articles, and interactive quizzes.',
-                    color: theme.colorScheme.error,
-                  ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.1),
-                ],
-              ),
+              // A fixed-aspect 2-column grid is far too short for these cards
+              // on phones (~150px wide) and overflowed; stack them at their
+              // natural height below the mobile breakpoint instead.
+              if (MediaQuery.sizeOf(context).width < AppConstants.mobileBreakpoint)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final card in featureCards) ...[
+                      card,
+                      if (card != featureCards.last) const SizedBox(height: 16),
+                    ],
+                  ],
+                )
+              else
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: isDesktop ? 4 : 2,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: isDesktop ? 1.0 : 0.95,
+                  children: featureCards,
+                ),
             ],
           ),
         ),
@@ -502,6 +519,7 @@ class WebLandingScreen extends StatelessWidget {
             children: [
               Text(
                 'How It Works',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,

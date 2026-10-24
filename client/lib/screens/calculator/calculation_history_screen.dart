@@ -30,7 +30,6 @@ class _CalculationHistoryScreenState
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < AppConstants.mobileBreakpoint;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final taxState = ref.watch(taxProvider);
 
     final items = taxState.history;
@@ -42,7 +41,7 @@ class _CalculationHistoryScreenState
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
-        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+        (isMobile ? 16.0 : 24.0) + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

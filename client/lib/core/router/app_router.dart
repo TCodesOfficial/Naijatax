@@ -33,6 +33,7 @@ import '../../screens/quiz/quiz_play_screen.dart';
 import '../../screens/support/support_center_screen.dart';
 import '../../screens/vat/vat_items_screen.dart';
 import '../../widgets/adaptive_scaffold.dart';
+import '../../widgets/app_logo.dart';
 import '../../models/tax_profile.dart';
 import 'transitions.dart';
 
@@ -68,13 +69,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           isPasswordReset;
       final isOnboarding = location == '/onboarding';
       final isLanding = location == '/landing';
+      final isSplash = location == '/splash';
 
-      // ── LOADING: Don't redirect while auth state is resolving ──────────
+      // ── LOADING: Don't redirect while a sign-in request is in flight ───
       if (authState.status == AuthStatus.loading) return null;
+
+      // ── RESOLVING: session exists, onboarding status not confirmed yet ─
+      // Park on the splash so neither onboarding nor the dashboard flashes.
+      if (authState.isResolving) {
+        return (isSplash || isPasswordReset) ? null : '/splash';
+      }
 
       // ── RULE 1: Authenticated/guest users on auth routes or landing → go straight to dashboard ─────
       if (isAuthenticatedLike &&
-          (isAuthRoute || isLanding) &&
+          (isAuthRoute || isLanding || isSplash) &&
           !isPasswordReset) {
         return '/dashboard';
       }
@@ -148,6 +156,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       );
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const _SplashScreen(),
+      ),
       GoRoute(
         path: '/landing',
         pageBuilder: (context, state) => appTransitionPage(
@@ -426,3 +438,32 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Shown while a restored session's onboarding status is being confirmed.
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogo(radius: 48, iconSize: 52),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: scheme.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

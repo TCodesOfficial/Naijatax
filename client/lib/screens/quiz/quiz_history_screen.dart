@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../providers/quiz_provider.dart';
 
@@ -24,8 +23,6 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final quizState = ref.watch(quizProvider);
-    final size = MediaQuery.of(context).size;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +47,7 @@ class _QuizHistoryScreenState extends ConsumerState<QuizHistoryScreen> {
                     16,
                     16,
                     16,
-                    hasBottomNav ? 92 : 16,
+                    16 + MediaQuery.paddingOf(context).bottom,
                   ),
                   itemCount: quizState.history.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../core/utils/app_formatter.dart';
 import '../../providers/auth_provider.dart';
@@ -50,8 +49,6 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final taxState = ref.watch(taxProvider);
-    final size = MediaQuery.of(context).size;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final history = taxState.history.take(5).toList();
 
     return SingleChildScrollView(
@@ -59,7 +56,7 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
         16,
         16,
         16,
-        hasBottomNav ? 92 : 16,
+        16 + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -202,10 +199,13 @@ class _AssessmentFormScreenState extends ConsumerState<AssessmentFormScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Recent Calculations',
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                      Flexible(
+                        child: Text(
+                          'Recent Calculations',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       if (history.isNotEmpty)
                         TextButton.icon(
@@ -317,9 +317,19 @@ class _ModePaneState extends State<_ModePane>
           opacity: curved.value,
           child: Transform.translate(
             offset: Offset(_direction * 24 * (1 - curved.value), 0),
-            child: IndexedStack(
-              index: widget.mode,
-              children: widget.children,
+            // IndexedStack sizes itself to its tallest child, which left a
+            // large blank gap under the shorter form. Offstage children keep
+            // their state but take no space.
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < widget.children.length; i++)
+                  Visibility(
+                    visible: i == widget.mode,
+                    maintainState: true,
+                    child: widget.children[i],
+                  ),
+              ],
             ),
           ),
         );

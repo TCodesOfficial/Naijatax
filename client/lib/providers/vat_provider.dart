@@ -48,11 +48,12 @@ class VatState {
     String? error,
     VatFilter? filter,
     String? searchQuery,
+    bool clearError = false,
   }) =>
       VatState(
         items: items ?? this.items,
         isLoading: isLoading ?? this.isLoading,
-        error: error ?? this.error,
+        error: clearError ? null : (error ?? this.error),
         filter: filter ?? this.filter,
         searchQuery: searchQuery ?? this.searchQuery,
       );
@@ -83,7 +84,7 @@ class VatNotifier extends Notifier<VatState> {
   }
 
   Future<void> fetchItems({String? query, String? status}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final res = await ApiService.instance.searchVat(query: query, status: status);
       final items = res.map((e) => VatItem.fromJson(e as Map<String, dynamic>)).toList();

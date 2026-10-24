@@ -39,7 +39,6 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
     final filteredItems = vatState.filteredItems;
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < AppConstants.mobileBreakpoint;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return SingleChildScrollView(
       controller: _scrollController,
@@ -47,7 +46,7 @@ class _VatItemsScreenState extends ConsumerState<VatItemsScreen> {
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
-        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+        (isMobile ? 16.0 : 24.0) + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

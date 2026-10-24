@@ -14,6 +14,9 @@ class MobileLandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
+      // Paint the gradient behind the transparent app bar too; otherwise the
+      // bar area shows the bare canvas and its white text/buttons vanish.
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -85,138 +88,150 @@ class MobileLandingScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              children: [
-                const Spacer(flex: 2),
+          // Scrollable with a min height so the Spacers still distribute
+          // space on tall phones, but short viewports (iPhone SE) scroll
+          // instead of overflowing.
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      children: [
+                        const Spacer(flex: 2),
 
-                // Logo
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
+                        // Logo
+                        Container(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: const AppLogo(radius: 40, iconSize: 44),
+                        ).animate().scale(
+                              delay: 200.ms,
+                              duration: 500.ms,
+                              begin: const Offset(0.8, 0.8),
+                              end: const Offset(1, 1),
+                              curve: Curves.easeOutBack,
+                            ),
+
+                        const SizedBox(height: 28),
+
+                        // App name
+                        Text(
+                          AppConstants.appShortName,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -0.72,
+                          ),
+        ).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(
+                              begin: 0.3,
+                              end: 0,
+                              delay: 300.ms,
+                              duration: 500.ms,
+                              curve: Curves.easeOut,
+                            ),
+
+                        const SizedBox(height: 8),
+
+                        // Tagline
+                        Text(
+                          'Understand Your Taxes.\nMaster Your Finances.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            height: 1.5,
+                          ),
+                        ).animate().fadeIn(delay: 450.ms, duration: 500.ms).slideY(
+                              begin: 0.3,
+                              end: 0,
+                              delay: 450.ms,
+                              duration: 500.ms,
+                              curve: Curves.easeOut,
+                            ),
+
+                        const Spacer(flex: 3),
+
+                        // Feature highlights
+                        _FeatureItem(
+                          icon: Icons.calculate_outlined,
+                          label: 'Instant Tax Calculations',
+                          delay: 550,
+                        ),
+                        const SizedBox(height: 16),
+                        _FeatureItem(
+                          icon: Icons.psychology_outlined,
+                          label: 'AI-Powered Tax Assistant',
+                          delay: 650,
+                        ),
+                        const SizedBox(height: 16),
+                        _FeatureItem(
+                          icon: Icons.school_outlined,
+                          label: 'Learn Nigerian Tax Law',
+                          delay: 750,
+                        ),
+
+                        const Spacer(flex: 3),
+
+                        // Get Started button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () => context.go('/login'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: GoogleFonts.inter(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            child: const Text('Get Started'),
+                          ),
+                        ).animate().fadeIn(delay: 850.ms, duration: 500.ms).slideY(
+                              begin: 0.4,
+                              end: 0,
+                              delay: 850.ms,
+                              duration: 500.ms,
+                              curve: Curves.easeOut,
+                            ),
+
+                        const SizedBox(height: 16),
+
+                        // Sign In link
+                        TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: Text(
+                            'I already have an account',
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ).animate().fadeIn(delay: 950.ms, duration: 500.ms),
+
+                        const SizedBox(height: 24),
+                      ],
                     ),
                   ),
-                  child: const AppLogo(radius: 40, iconSize: 44),
-                ).animate().scale(
-                      delay: 200.ms,
-                      duration: 500.ms,
-                      begin: const Offset(0.8, 0.8),
-                      end: const Offset(1, 1),
-                      curve: Curves.easeOutBack,
-                    ),
-
-                const SizedBox(height: 28),
-
-                // App name
-                Text(
-                  AppConstants.appShortName,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: -0.72,
-                  ),
-).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(
-                      begin: 0.3,
-                      end: 0,
-                      delay: 300.ms,
-                      duration: 500.ms,
-                      curve: Curves.easeOut,
-                    ),
-
-                const SizedBox(height: 8),
-
-                // Tagline
-                Text(
-                  'Understand Your Taxes.\nMaster Your Finances.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withValues(alpha: 0.8),
-                    height: 1.5,
-                  ),
-                ).animate().fadeIn(delay: 450.ms, duration: 500.ms).slideY(
-                      begin: 0.3,
-                      end: 0,
-                      delay: 450.ms,
-                      duration: 500.ms,
-                      curve: Curves.easeOut,
-                    ),
-
-                const Spacer(flex: 3),
-
-                // Feature highlights
-                _FeatureItem(
-                  icon: Icons.calculate_outlined,
-                  label: 'Instant Tax Calculations',
-                  delay: 550,
                 ),
-                const SizedBox(height: 16),
-                _FeatureItem(
-                  icon: Icons.psychology_outlined,
-                  label: 'AI-Powered Tax Assistant',
-                  delay: 650,
-                ),
-                const SizedBox(height: 16),
-                _FeatureItem(
-                  icon: Icons.school_outlined,
-                  label: 'Learn Nigerian Tax Law',
-                  delay: 750,
-                ),
-
-                const Spacer(flex: 3),
-
-                // Get Started button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => context.go('/login'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      textStyle: GoogleFonts.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    child: const Text('Get Started'),
-                  ),
-                ).animate().fadeIn(delay: 850.ms, duration: 500.ms).slideY(
-                      begin: 0.4,
-                      end: 0,
-                      delay: 850.ms,
-                      duration: 500.ms,
-                      curve: Curves.easeOut,
-                    ),
-
-                const SizedBox(height: 16),
-
-                // Sign In link
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: Text(
-                    'I already have an account',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ).animate().fadeIn(delay: 950.ms, duration: 500.ms),
-
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
           ),
         ),
@@ -250,12 +265,14 @@ class _FeatureItem extends StatelessWidget {
           child: Icon(icon, color: Colors.white, size: 22),
         ),
         const SizedBox(width: 16),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.9),
+        Flexible(
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
           ),
         ),
       ],

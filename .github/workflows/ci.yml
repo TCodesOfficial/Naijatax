@@ -23,6 +23,14 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
       - run: npm ci
+      # The generated Prisma client must exist before tsc: without it
+      # @prisma/client is a stub and every import/type inference fails
+      # (TS2305 + cascading implicit-any errors). Dummy URLs are fine —
+      # generate never connects to the database.
+      - run: npx prisma generate
+        env:
+          DIRECT_URL: "postgresql://ci:ci@localhost:5432/ci"
+          DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
       - run: npx tsc --noEmit
       # vitest.config.ts supplies dummy env vars, so no secrets are needed.
       - run: npm test

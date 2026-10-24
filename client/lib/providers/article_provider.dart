@@ -21,12 +21,13 @@ class ArticlesState {
     List<TaxArticle>? articles,
     String? selectedCategory,
     String? error,
+    bool clearError = false,
   }) =>
       ArticlesState(
         isLoading: isLoading ?? this.isLoading,
         articles: articles ?? this.articles,
         selectedCategory: selectedCategory ?? this.selectedCategory,
-        error: error ?? this.error,
+        error: clearError ? null : (error ?? this.error),
       );
 }
 
@@ -41,7 +42,7 @@ class ArticlesNotifier extends Notifier<ArticlesState> {
   }
 
   Future<void> fetchArticles({String? category}) async {
-    state = state.copyWith(isLoading: true, error: null, selectedCategory: category);
+    state = state.copyWith(isLoading: true, clearError: true, selectedCategory: category);
     try {
       final List<dynamic> data = await ApiService.instance.getPublicArticles(category: category);
       final list = data.map((e) => TaxArticle.fromJson(e as Map<String, dynamic>)).toList();

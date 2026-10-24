@@ -109,25 +109,35 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
                   // State-safe tab switch: the shell subtree stays mounted
                   // (IndexedStack under the hood) — only fade + micro-slide
                   // the container when the branch index changes.
-                  child: AnimatedBuilder(
-                    animation: _tabController,
-                    builder: (context, child) {
-                      final curved = CurvedAnimation(
-                        parent: _tabController,
-                        curve: Curves.easeOutCubic,
-                      );
-                      return FadeTransition(
-                        opacity: curved,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: Offset(_tabDirection * 0.012, 0),
-                            end: Offset.zero,
-                          ).animate(curved),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: navigationShell,
+                  // The app bar above already consumed the top (notch/status
+                  // bar) inset; strip it (via a body-level context so the
+                  // extendBody bottom inset is kept) so nested AppBars and
+                  // SafeAreas in the tabs don't add it a second time.
+                  child: Builder(
+                    builder: (context) => MediaQuery.removePadding(
+                      context: context,
+                      removeTop: true,
+                      child: AnimatedBuilder(
+                        animation: _tabController,
+                        builder: (context, child) {
+                          final curved = CurvedAnimation(
+                            parent: _tabController,
+                            curve: Curves.easeOutCubic,
+                          );
+                          return FadeTransition(
+                            opacity: curved,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(_tabDirection * 0.012, 0),
+                                end: Offset.zero,
+                              ).animate(curved),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: navigationShell,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -230,142 +240,147 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
           right: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
         ),
       ),
-      child: Column(
-        children: [
-          // Logo
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Row(
-              children: [
-                const AppLogo(radius: 18, iconSize: 20),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    AppConstants.appShortName,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.primary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-
-          // Nav Items
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                _sidebarItem(
-                  context,
-                  theme,
-                  'Home',
-                  Icons.home_outlined,
-                  Icons.home,
-                  0,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'Calculator',
-                  Icons.calculate_outlined,
-                  Icons.calculate,
-                  1,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'Learn',
-                  Icons.menu_book_outlined,
-                  Icons.menu_book,
-                  5,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'AI Assistant',
-                  Icons.smart_toy_outlined,
-                  Icons.smart_toy,
-                  2,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'Community',
-                  Icons.groups_outlined,
-                  Icons.groups,
-                  3,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'VAT Items',
-                  Icons.receipt_long_outlined,
-                  Icons.receipt_long,
-                  6,
-                ),
-                _sidebarItem(
-                  context,
-                  theme,
-                  'Profile',
-                  Icons.person_outlined,
-                  Icons.person,
-                  4,
-                ),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1),
-
-          // User section at bottom
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Tooltip(
-              message: 'View profile',
-              child: GestureDetector(
-                onTap: () => context.go('/profile'),
-                child: Row(
-                  children: [
-                    UserAvatar(
-                      avatarUrl: avatarUrl,
-                      displayName: displayName,
-                      radius: 18,
-                      fallbackIcon: Icons.account_circle_outlined,
-                      iconSize: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            displayName,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            isGuest ? 'Guest Mode' : 'View Profile',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+      // Keep the logo/user section clear of the status bar and home
+      // indicator on iPad (native), where the sidebar layout is used.
+      child: SafeArea(
+        right: false,
+        child: Column(
+          children: [
+            // Logo
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Row(
+                children: [
+                  const AppLogo(radius: 18, iconSize: 20),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      AppConstants.appShortName,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+
+            // Nav Items
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: [
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'Home',
+                    Icons.home_outlined,
+                    Icons.home,
+                    0,
+                  ),
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'Calculator',
+                    Icons.calculate_outlined,
+                    Icons.calculate,
+                    1,
+                  ),
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'Learn',
+                    Icons.menu_book_outlined,
+                    Icons.menu_book,
+                    5,
+                  ),
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'AI Assistant',
+                    Icons.smart_toy_outlined,
+                    Icons.smart_toy,
+                    2,
+                  ),
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'Community',
+                    Icons.groups_outlined,
+                    Icons.groups,
+                    3,
+                  ),
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'VAT Items',
+                    Icons.receipt_long_outlined,
+                    Icons.receipt_long,
+                    6,
+                  ),
+                  _sidebarItem(
+                    context,
+                    theme,
+                    'Profile',
+                    Icons.person_outlined,
+                    Icons.person,
+                    4,
+                  ),
+                ],
+              ),
+            ),
+
+            const Divider(height: 1),
+
+            // User section at bottom
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Tooltip(
+                message: 'View profile',
+                child: GestureDetector(
+                  onTap: () => context.go('/profile'),
+                  child: Row(
+                    children: [
+                      UserAvatar(
+                        avatarUrl: avatarUrl,
+                        displayName: displayName,
+                        radius: 18,
+                        fallbackIcon: Icons.account_circle_outlined,
+                        iconSize: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              displayName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              isGuest ? 'Guest Mode' : 'View Profile',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -449,78 +464,89 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
     final stripColor = theme.brightness == Brightness.dark
         ? theme.colorScheme.surface
         : AppColors.surfaceContainer;
-    return Stack(
-      clipBehavior: Clip.none, // raised active circle overflows above the bar
+    // CurvedNavigationBar has a fixed 75px height and ignores the bottom
+    // safe area, so on notched iPhones (native) the icons/labels sat on
+    // the home indicator. Pad below the bar with the strip colour.
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        CurvedNavigationBar(
-          index: navIndex,
-          onTap: (index) {
-            navigationShell.goBranch(
-              index,
-              initialLocation: index == navigationShell.currentIndex,
-            );
-          },
-          height: 75,
-          color: stripColor,
-          buttonBackgroundColor: theme.colorScheme.primary,
-          backgroundColor: Colors.transparent,
-          animationDuration: const Duration(milliseconds: 350),
-          animationCurve: Curves.easeInOut,
-          items: <Widget>[
-            Icon(
-              navIndex == 0 ? Icons.home : Icons.home_outlined,
-              size: 26,
-              color: navIndex == 0 ? Colors.white : inactiveColor,
+        Stack(
+          clipBehavior: Clip.none, // raised active circle overflows above the bar
+          children: [
+            CurvedNavigationBar(
+              index: navIndex,
+              onTap: (index) {
+                navigationShell.goBranch(
+                  index,
+                  initialLocation: index == navigationShell.currentIndex,
+                );
+              },
+              height: 75,
+              color: stripColor,
+              buttonBackgroundColor: theme.colorScheme.primary,
+              backgroundColor: Colors.transparent,
+              animationDuration: const Duration(milliseconds: 350),
+              animationCurve: Curves.easeInOut,
+              items: <Widget>[
+                Icon(
+                  navIndex == 0 ? Icons.home : Icons.home_outlined,
+                  size: 26,
+                  color: navIndex == 0 ? Colors.white : inactiveColor,
+                ),
+                Icon(
+                  navIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
+                  size: 26,
+                  color: navIndex == 1 ? Colors.white : inactiveColor,
+                ),
+                Icon(
+                  navIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
+                  size: 26,
+                  color: navIndex == 2 ? Colors.white : inactiveColor,
+                ),
+                Icon(
+                  navIndex == 3 ? Icons.groups : Icons.groups_outlined,
+                  size: 26,
+                  color: navIndex == 3 ? Colors.white : inactiveColor,
+                ),
+                Icon(
+                  navIndex == 4 ? Icons.person : Icons.person_outline,
+                  size: 26,
+                  color: navIndex == 4 ? Colors.white : inactiveColor,
+                ),
+              ],
             ),
-            Icon(
-              navIndex == 1 ? Icons.calculate : Icons.calculate_outlined,
-              size: 26,
-              color: navIndex == 1 ? Colors.white : inactiveColor,
-            ),
-            Icon(
-              navIndex == 2 ? Icons.smart_toy : Icons.smart_toy_outlined,
-              size: 26,
-              color: navIndex == 2 ? Colors.white : inactiveColor,
-            ),
-            Icon(
-              navIndex == 3 ? Icons.groups : Icons.groups_outlined,
-              size: 26,
-              color: navIndex == 3 ? Colors.white : inactiveColor,
-            ),
-            Icon(
-              navIndex == 4 ? Icons.person : Icons.person_outline,
-              size: 26,
-              color: navIndex == 4 ? Colors.white : inactiveColor,
+            // Static labels: never animate, taps pass through to the bar below.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 6,
+              child: IgnorePointer(
+                child: Row(
+                  children: List.generate(labels.length, (i) {
+                    final active = navIndex == i;
+                    return Expanded(
+                      child: Center(
+                        child: Text(
+                          labels[i],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                            color: active ? theme.colorScheme.primary : inactiveColor,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
             ),
           ],
         ),
-        // Static labels: never animate, taps pass through to the bar below.
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 6,
-          child: IgnorePointer(
-            child: Row(
-              children: List.generate(labels.length, (i) {
-                final active = navIndex == i;
-                return Expanded(
-                  child: Center(
-                    child: Text(
-                      labels[i],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                        color: active ? theme.colorScheme.primary : inactiveColor,
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ),
+        if (bottomInset > 0)
+          Container(height: bottomInset, color: stripColor),
       ],
     );
   }

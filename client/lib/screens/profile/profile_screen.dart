@@ -124,15 +124,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ? (authState.user!.displayName ?? authState.user!.email?.split('@').first ?? 'User')
         : 'Guest User';
     final String email = authState.user?.email ?? '';
-    final size = MediaQuery.of(context).size;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
         16,
         16,
         16,
-        hasBottomNav ? 92 : 16,
+        16 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
         // ─── Profile Card ────────────────────────────────────────────────
@@ -250,6 +248,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),

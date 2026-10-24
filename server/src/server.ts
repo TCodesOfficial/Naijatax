@@ -99,6 +99,12 @@ app.get("/", async (_req: Request, res: Response) => {
 });
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
+// API responses are per-user and change often; without this, mobile Safari
+// may reuse a cached GET (e.g. profile, history) and show stale data.
+app.use(env.API_PREFIX, (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 app.use(`${env.API_PREFIX}/ai/message`, aiLimiter);
 app.use(`${env.API_PREFIX}/tax/parse-statement`, parseLimiter);
 app.use(`${env.API_PREFIX}/tax/calculate`, calculateLimiter);
