@@ -246,7 +246,6 @@ class _PersonalDetailsScreenState
     final user = authState.user;
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < AppConstants.mobileBreakpoint;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     final displayName = user?.displayName ??
         user?.email?.split('@').first ??
@@ -257,7 +256,7 @@ class _PersonalDetailsScreenState
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
-        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+        (isMobile ? 16.0 : 24.0) + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -112,12 +112,17 @@ class AuthShell extends StatelessWidget {
   }
 
   Widget _buildMobileLayout(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: builder(context),
+    // SafeArea keeps the form clear of the notch / home indicator once it
+    // scrolls (e.g. keyboard open), and the vertical padding stops it from
+    // touching the screen edges when the content is taller than the viewport.
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: builder(context),
+          ),
         ),
       ),
     );

@@ -68,34 +68,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 itemCount: _slides.length,
                 itemBuilder: (context, idx) {
                   final slide = _slides[idx];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          slide.icon,
-                          size: 100,
-                          color: theme.colorScheme.primary,
-                        ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
-                        const SizedBox(height: 40),
-                        Text(
-                          slide.title,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineLarge?.copyWith(
+                  // Centered, but scrollable so short viewports (iPhone SE /
+                  // Safari with toolbars, landscape) don't overflow.
+                  return Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            slide.icon,
+                            size: 100,
                             color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0.0),
-                        const SizedBox(height: 16),
-                        Text(
-                          slide.description,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ).animate().fade(delay: 400.ms),
-                      ],
+                          ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
+                          const SizedBox(height: 40),
+                          Text(
+                            slide.title,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0.0),
+                          const SizedBox(height: 16),
+                          Text(
+                            slide.description,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ).animate().fade(delay: 400.ms),
+                        ],
+                      ),
                     ),
                   );
                 },

@@ -291,7 +291,7 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
         isDesktop ? 24 : 16,
         isDesktop ? 24 : 16,
         isDesktop ? 24 : 16,
-        isDesktop ? 24 : 92,
+        (isDesktop ? 24.0 : 16.0) + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

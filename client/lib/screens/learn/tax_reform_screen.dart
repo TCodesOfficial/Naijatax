@@ -13,7 +13,6 @@ class TaxReformScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < AppConstants.mobileBreakpoint;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final sections = [
       LearnSection(
         title: 'Overview of the NTA 2025',
@@ -108,7 +107,7 @@ class TaxReformScreen extends StatelessWidget {
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
-        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+        (isMobile ? 16.0 : 24.0) + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

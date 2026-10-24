@@ -355,7 +355,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Expanded(
@@ -392,11 +392,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
               isGuest
                   ? 'Sign in to chat with the AI Tax Assistant.'
                   : 'AI can make mistakes. Verify important financial decisions.',
+              textAlign: TextAlign.center,
               style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
             ),
           ),

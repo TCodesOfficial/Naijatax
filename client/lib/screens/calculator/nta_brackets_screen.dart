@@ -62,7 +62,6 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < AppConstants.mobileBreakpoint;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
     final amounts = _bandAmounts;
     final maxAmount = amounts.isNotEmpty ? amounts.reduce(max) : 1.0;
 
@@ -71,7 +70,7 @@ class _NtaBracketsScreenState extends ConsumerState<NtaBracketsScreen> {
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
         isMobile ? 16 : 24,
-        hasBottomNav ? (isMobile ? 16 : 24) + 76 : (isMobile ? 16 : 24),
+        (isMobile ? 16.0 : 24.0) + MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

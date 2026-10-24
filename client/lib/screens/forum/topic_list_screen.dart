@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/app_snack.dart';
 import '../../models/forum_model.dart';
 import '../../providers/auth_provider.dart';
@@ -243,8 +242,6 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
     final forumState = ref.watch(forumProvider);
-    final size = MediaQuery.of(context).size;
-    final hasBottomNav = size.width < AppConstants.tabletBreakpoint;
 
     return Scaffold(
       body: Column(
@@ -364,7 +361,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
                       16,
                       8,
                       16,
-                      hasBottomNav ? 84 : 8,
+                      8 + MediaQuery.paddingOf(context).bottom,
                     ),
                     itemCount: forumState.topics.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 12),

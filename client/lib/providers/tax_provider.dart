@@ -28,11 +28,12 @@ class TaxState {
     String? error,
     List<TaxProfile>? history,
     bool? historyLoading,
+    bool clearError = false,
   }) =>
       TaxState(
         status: status ?? this.status,
         profile: profile ?? this.profile,
-        error: error ?? this.error,
+        error: clearError ? null : (error ?? this.error),
         history: history ?? this.history,
         historyLoading: historyLoading ?? this.historyLoading,
       );
@@ -49,7 +50,7 @@ class TaxNotifier extends Notifier<TaxState> {
   }
 
   Future<void> fetchFromServer() async {
-    state = state.copyWith(status: TaxStatus.loading, error: null);
+    state = state.copyWith(status: TaxStatus.loading, clearError: true);
     try {
       final data = await ApiService.instance.getLatestTaxProfile();
       if (data != null) {
@@ -91,7 +92,7 @@ class TaxNotifier extends Notifier<TaxState> {
     double? flatRate,
     double? rentReliefRate,
   }) async {
-    state = state.copyWith(status: TaxStatus.loading, error: null);
+    state = state.copyWith(status: TaxStatus.loading, clearError: true);
     try {
       final body = <String, dynamic>{
         'monthlyIncome': monthlyIncome,

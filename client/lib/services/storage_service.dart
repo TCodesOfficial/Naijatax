@@ -98,11 +98,17 @@ class StorageService {
     await articlesBox.clear();
   }
 
-  static Future<void> clearAllSettingsExcept(List<String> keepKeys) async {
+  static Future<void> clearAllSettingsExcept(
+    List<String> keepKeys, {
+    List<String> keepPrefixes = const [],
+  }) async {
     final box = Hive.box('app_settings');
     final keep = <String, dynamic>{};
     for (final key in keepKeys) {
       keep[key] = box.get(key);
+    }
+    for (final key in box.keys.whereType<String>()) {
+      if (keepPrefixes.any(key.startsWith)) keep[key] = box.get(key);
     }
     await box.clear();
     for (final entry in keep.entries) {

@@ -120,9 +120,11 @@ class TaxChartsWidget extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+        Flexible(
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+          ),
         ),
       ],
     );
