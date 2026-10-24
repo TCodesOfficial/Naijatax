@@ -531,6 +531,15 @@ class AuthNotifier extends Notifier<AuthState> {
     _emit(const AuthState(status: AuthStatus.guest));
   }
 
+  /// A guest chose to log in or sign up. The guest session must end first:
+  /// the router treats guests like signed-in users and would otherwise
+  /// bounce them from the landing/login screens back to the dashboard.
+  Future<void> leaveGuestMode() async {
+    if (!state.isGuest) return;
+    await StorageService.setSetting('guest', false);
+    _emit(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
   Future<void> signOut() async {
     await _client.auth.signOut();
     await StorageService.clearAllUserData();

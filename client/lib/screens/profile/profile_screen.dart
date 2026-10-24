@@ -448,7 +448,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => context.go('/login'),
+              onPressed: () => goToSignIn(context),
               icon: const Icon(Icons.login),
               label: const Text('Log In / Register'),
             ),

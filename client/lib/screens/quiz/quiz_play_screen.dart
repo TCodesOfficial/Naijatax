@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/theme_colors.dart';
 import '../../core/utils/app_snack.dart';
 import '../../models/quiz_model.dart';
+import '../../widgets/guest_restriction_dialog.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/quiz_provider.dart';
 import '../../services/api_service.dart';
@@ -178,7 +179,7 @@ class _QuizPlayScreenState extends ConsumerState<QuizPlayScreen> {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () => goToSignIn(context),
                 child: const Text('Log In / Register'),
               ),
             ],

@@ -7,6 +7,7 @@ import '../core/constants/app_constants.dart';
 import '../core/theme/theme_colors.dart';
 import '../providers/auth_provider.dart';
 import 'app_logo.dart';
+import 'guest_restriction_dialog.dart';
 import 'user_avatar.dart';
 
 class AdaptiveScaffoldDestination {
@@ -191,7 +192,7 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
               ? Tooltip(
                   message: 'Log in',
                   child: GestureDetector(
-                    onTap: () => context.go('/login'),
+                    onTap: () => goToSignIn(context),
                     child: CircleAvatar(
                       radius: 16,
                       backgroundColor: theme.colorScheme.primaryContainer,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/utils/app_snack.dart';
+import '../../widgets/guest_restriction_dialog.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/forum_provider.dart';
 import '../../widgets/animated_button.dart';
@@ -48,7 +49,7 @@ class _TopicDetailScreenState extends ConsumerState<TopicDetailScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                context.go('/login');
+                goToSignIn(context);
               },
               child: const Text('Log In'),
             ),

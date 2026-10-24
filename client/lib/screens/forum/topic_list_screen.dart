@@ -84,7 +84,7 @@ class _TopicListScreenState extends ConsumerState<TopicListScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                context.go('/login');
+                goToSignIn(context);
               },
               child: const Text('Log In'),
             ),

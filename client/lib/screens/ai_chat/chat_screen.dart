@@ -718,7 +718,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           const SizedBox(height: 24),
           Center(
             child: ElevatedButton.icon(
-              onPressed: () => context.go('/login'),
+              onPressed: () => goToSignIn(context),
               icon: const Icon(Icons.login, size: 18),
               label: const Text('Log In / Sign Up'),
             ),

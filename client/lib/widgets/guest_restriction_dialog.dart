@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../providers/auth_provider.dart';
+
+/// Takes a guest to the landing page so they can sign up or log in.
+/// Ends the guest session first, otherwise the router sends guests on the
+/// landing/login screens straight back to the dashboard.
+Future<void> goToSignIn(BuildContext context) async {
+  final router = GoRouter.of(context);
+  final auth = ProviderScope.containerOf(context, listen: false)
+      .read(authProvider.notifier);
+  await auth.leaveGuestMode();
+  router.go('/landing');
+}
 
 void showGuestRestrictionDialog(BuildContext context) {
   final theme = Theme.of(context);
@@ -45,7 +59,7 @@ void showGuestRestrictionDialog(BuildContext context) {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(ctx).pop();
-                    context.go('/login');
+                    goToSignIn(context);
                   },
                   child: const Text('Log In'),
                 ),
