@@ -86,13 +86,32 @@ class AuthNotifier extends Notifier<AuthState> {
       displayName: cached?['displayName'] as String? ??
           u.userMetadata?['display_name'] as String? ??
           u.userMetadata?['full_name'] as String?,
-      avatarUrl: cached?['avatarUrl'] as String? ??
+      avatarUrl: _customAvatar(u) ??
+          cached?['avatarUrl'] as String? ??
           u.userMetadata?['avatar_url'] as String?,
       address: cached?['address'] as String?,
       role: cached?['role'] as String? ?? 'USER',
       onboarded: onboarded,
       createdAt: DateTime.now(),
     );
+  }
+
+  /// A photo the user uploaded themselves. Stored under its own metadata key
+  /// because Google sign-in rewrites `avatar_url` with the Google photo on
+  /// every login, which used to replace the user's chosen picture.
+  String? _customAvatar(User? u) {
+    final v = u?.userMetadata?['custom_avatar_url'];
+    return v is String ? v : null;
+  }
+
+  /// True for accounts created in the last few minutes — used only when the
+  /// server can't be reached, so brand-new users still see onboarding while
+  /// returning users are never sent through it again.
+  bool _isNewAccount(User u) {
+    final created = DateTime.tryParse(u.createdAt);
+    if (created == null) return false;
+    return DateTime.now().toUtc().difference(created.toUtc()) <
+        const Duration(minutes: 15);
   }
 
   /// Instant onboarding answer with no network call: the Supabase user
@@ -122,7 +141,7 @@ class AuthNotifier extends Notifier<AuthState> {
   /// Failures must never surface as `false` — a network blip would erase a
   /// previous "onboarded" state and send returning users to onboarding.
   Future<bool?> _fetchOnboardedFromServer({
-    Duration timeout = const Duration(seconds: 10),
+    Duration timeout = const Duration(seconds: 4),
   }) async {
     try {
       final data =
@@ -168,7 +187,9 @@ class AuthNotifier extends Notifier<AuthState> {
       final serverValue = await _fetchOnboardedFromServer();
       // Signed out (or switched account) while waiting — drop the result.
       if (_client.auth.currentUser?.id != u.id) return;
-      final onboarded = serverValue ?? false;
+      // Server unreachable (e.g. the free Render instance waking up): only
+      // brand-new accounts go to onboarding; everyone else goes straight in.
+      final onboarded = serverValue ?? !_isNewAccount(u);
       if (onboarded) await _markOnboarded(u.id, user: u);
       _emit(AuthState(
         status: AuthStatus.authenticated,
@@ -553,29 +574,41 @@ class AuthNotifier extends Notifier<AuthState> {
     _emit(const AuthState(status: AuthStatus.unauthenticated));
   }
 
+  /// Marks onboarding done immediately so Skip / Done respond at once; the
+  /// server is told in the background (it can take seconds to wake up).
   Future<void> completeOnboarding() async {
     final current = state.user;
     if (current == null) return;
-    try {
-      await ApiService.instance.completeOnboarding();
-    } catch (_) {
-      // Server update failed — still update local state so user can proceed
-    }
-    await _markOnboarded(current.id, user: _client.auth.currentUser);
     // Keeps address and other synced fields (the old rebuild dropped them).
     _applyLocalUser(onboarded: true);
+    await _markOnboarded(current.id, user: _client.auth.currentUser);
+    unawaited(
+      ApiService.instance.completeOnboarding().then((_) {}, onError: (_) {}),
+    );
   }
 
+  /// Saves the photo to both the account metadata and the server profile.
+  /// Only rolls back if neither save worked; one success is enough for the
+  /// new photo to survive a restart.
   Future<void> updateAvatar(String avatarUrl) async {
     final previous = state.user?.avatarUrl;
     _applyLocalUser(avatarUrl: avatarUrl);
+    var saved = false;
+    try {
+      await _client.auth.updateUser(
+        UserAttributes(data: {'custom_avatar_url': avatarUrl}),
+      );
+      saved = true;
+    } catch (_) {}
     try {
       await ApiService.instance.updateAvatar(avatarUrl);
-      await _client.auth.updateUser(
-        UserAttributes(data: {'avatar_url': avatarUrl}),
-      );
-    } catch (_) {
-      // Persist failed — roll back so the UI matches the server.
+      saved = true;
+    } catch (_) {}
+    final id = state.user?.id;
+    if (saved && id != null) {
+      final cached = StorageService.getUserProfile(id) ?? <String, dynamic>{};
+      await StorageService.saveUserProfile(id, {...cached, 'avatarUrl': avatarUrl});
+    } else if (!saved) {
       _applyLocalUser(avatarUrl: previous ?? '');
     }
   }
@@ -625,7 +658,10 @@ class AuthNotifier extends Notifier<AuthState> {
         displayName: data['displayName'] as String?,
         phone: data['phone'] as String?,
         address: data['address'] as String?,
-        avatarUrl: data['avatarUrl'] as String?,
+        // A photo the user chose wins over the server copy, which may still
+        // hold the Google picture if the server save failed earlier.
+        avatarUrl: _customAvatar(_client.auth.currentUser) ??
+            data['avatarUrl'] as String?,
         role: data['role'] as String?,
       );
       await StorageService.saveUserProfile(current.id, data);

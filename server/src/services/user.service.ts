@@ -12,10 +12,16 @@ const userSelect = {
   createdAt: true,
 } as const;
 
+// The users row is normally created by a Supabase trigger on sign-up. Writes
+// use upsert so a missing row (trigger not installed, older accounts) is
+// created instead of failing silently, which used to lose the saved photo
+// and the onboarding flag.
+
 export async function updateAvatarUrl(userId: string, avatarUrl: string) {
-  return await prisma.user.update({
+  return await prisma.user.upsert({
     where: { id: userId },
-    data: { avatarUrl },
+    update: { avatarUrl },
+    create: { id: userId, avatarUrl },
     select: {
       id: true,
       avatarUrl: true,
@@ -24,9 +30,10 @@ export async function updateAvatarUrl(userId: string, avatarUrl: string) {
 }
 
 export async function completeOnboarding(userId: string) {
-  return await prisma.user.update({
+  return await prisma.user.upsert({
     where: { id: userId },
-    data: { onboarded: true },
+    update: { onboarded: true },
+    create: { id: userId, onboarded: true },
     select: {
       id: true,
       onboarded: true,

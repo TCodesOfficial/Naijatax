@@ -68,6 +68,12 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>NaijaTax needs access to your photos so you can choose a profile picture.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>NaijaTax needs the camera so you can take a profile picture.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>NaijaTax uses Face ID to unlock the app securely.</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
