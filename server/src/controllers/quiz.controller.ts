@@ -33,8 +33,10 @@ export const getQuestions = asyncHandler(async (req: Request, res: Response) => 
 
 // Reveal correctness/explanation for a single question AFTER the user answers.
 export const checkAnswer = asyncHandler(async (req: Request, res: Response) => {
-  const { questionId } = z
-    .object({ questionId: z.string().min(1) })
+  // The route is /questions/:id/check, so the URL parameter is named `id`.
+  // Reading `questionId` here made every answer fail validation.
+  const { id: questionId } = z
+    .object({ id: z.string().min(1) })
     .parse(req.params);
   const { selectedIndex } = checkSchema.parse(req.body);
 
