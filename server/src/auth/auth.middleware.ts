@@ -53,6 +53,35 @@ async function decodeToken(token: string): Promise<DecodedUser> {
   };
 }
 
+// Tax profiles, chats, quiz scores and forum posts all reference users.id.
+// The users row is normally made by a Supabase sign-up trigger; if that row is
+// missing, every save fails with a foreign-key error. Create it on first sight.
+const knownUsers = new Set<string>();
+
+async function ensureUserRow(user: DecodedUser): Promise<void> {
+  if (knownUsers.has(user.id)) return;
+  try {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: { id: user.id, email: user.email || null },
+    });
+  } catch {
+    // The email may already belong to another row; create without it.
+    try {
+      await prisma.user.upsert({
+        where: { id: user.id },
+        update: {},
+        create: { id: user.id },
+      });
+    } catch (err) {
+      console.error('Could not create users row:', err);
+      return;
+    }
+  }
+  knownUsers.add(user.id);
+}
+
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
@@ -67,7 +96,6 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
   try {
     req.user = await decodeToken(authHeader.split(' ')[1]);
-    next();
   } catch {
     return errorResponse(
       res,
@@ -76,6 +104,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       401,
     );
   }
+  await ensureUserRow(req.user);
+  next();
 }
 
 // The Supabase JWT's role claim is always "authenticated" for real users,
@@ -117,5 +147,6 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
   } catch {
     req.user = undefined;
   }
+  if (req.user) await ensureUserRow(req.user);
   next();
 }

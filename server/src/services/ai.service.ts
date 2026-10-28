@@ -20,9 +20,6 @@ const AI_BUSY_FALLBACK =
   'The AI assistant is receiving too many requests right now. Please wait a few seconds and try again.';
 const AI_TIMEOUT_MSG = 'The AI took too long to respond. Please try again.';
 
-// ---- Provider fallback chain -------------------------------------------------
-// 1. Gemini primary -> 2. Groq (different provider, independent capacity)
-//    -> 3. Gemini again in case the spike has passed.
 type ProviderSlot = { kind: 'gemini'; model: string } | { kind: 'groq'; model: string };
 
 const GROQ_MODEL = 'openai/gpt-oss-120b';
@@ -42,7 +39,6 @@ function buildProviderChain(): ProviderSlot[] {
   ];
 }
 
-// Groq fallback via its OpenAI-compatible endpoint (Node's built-in fetch).
 async function callGroq(
   messages: GeminiMessage[],
   systemInstruction: string | undefined,
@@ -97,8 +93,6 @@ async function callGroq(
   return text;
 }
 
-// Single Gemini call with a hard per-attempt timeout. Throws on timeout /
-// empty response so the chain dispatcher can advance to the next slot.
 async function callGeminiModel(
   model: string,
   messages: GeminiMessage[],
@@ -208,9 +202,7 @@ async function callGemini(
   return lastFailure === 'timeout' ? AI_TIMEOUT_MSG : AI_BUSY_FALLBACK;
 }
 
-/**
- * Sanitizes and prepares history objects ensuring strict alternating user -> model roles
- */
+
 function toGeminiMessages(
   history: { role: string; content: string }[],
   currentMessage: string,
@@ -241,9 +233,6 @@ function toGeminiMessages(
   return messages;
 }
 
-// ─── Personalisation context (first name + last 5 calculations) ─────────────
-// Privacy rules: only the first name and the user's OWN calculation figures are
-// shared with the model. Email, phone and address never leave the database.
 
 interface UserPersonalContext {
   displayName: string | null;

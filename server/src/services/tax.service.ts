@@ -68,10 +68,7 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
 
   const flatRate = input.flatRate;
 
-  /**
-   * FIX: Define the explicit "width" (chunk size) of each tax band.
-   * This completely avoids the progressive cumulative calculation errors.
-   */
+ 
   const brackets = [
     { width: 800000, rate: 0.0, label: 'Exempt (First ₦800k)' },
     { width: 2200000, rate: 0.15, label: '₦800k to ₦3M @ 15%' },     // 3,000,000 - 800,000
@@ -115,14 +112,12 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
       remainingIncome -= taxableAmount;
     }
 
-    // If no taxable items were pushed (e.g. income is 0), populate a fallback row
     if (breakdown.length === 0) {
       breakdown.push({ bracket: 'Exempt (Taxable income is ₦0)', rate: 0.0, taxableAmount: 0, tax: 0 });
     }
   }
 
-  // Statutory exemption only — a user-selected 0% flat rate is not the same
-  // as the ₦800k personal exemption and must not save isExempt=true.
+  
   const isExempt = taxableIncome <= 800000;
   const netIncome = annualGross - computedTax - pensionDeduction;
 
@@ -164,8 +159,7 @@ export function calculateUnifiedTax(input: TaxAssessmentInput): TaxAssessmentRes
     } else if (turnover > 100000000) {
       citExemption = 'TAXABLE_20 (Medium Business - 20% Rate)';
     } else {
-      // Exemption not met: turnover not reported, or the ₦250M asset test
-      // failed (assets-only inputs must not claim "Medium" status).
+ 
       citExemption = 'TAXABLE_20 (Small Business conditions not met - 20% Rate)';
     }
   }

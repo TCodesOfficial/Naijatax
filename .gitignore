@@ -56,3 +56,13 @@ client/ios/.generated/
 client/ios/Flutter/Generated.xcconfig
 client/ios/Flutter/flutter_export_environment.sh
 client/macos/Flutter/GeneratedPluginRegistrant.swift
+# ==========================================
+# Documents (reports, slides, PDFs) - kept out of git
+# ==========================================
+*.doc
+*.docx
+*.ppt
+*.pptx
+*.pdf
+# Office temporary lock files
+~$*
